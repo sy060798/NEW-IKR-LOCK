@@ -53,7 +53,8 @@ function importExcel(e){
         let fs = parseInt(r["FS AMOUNT"])||0;
 
         dataIKR.push({
-          type: "IKR", // 🔥 PENANDA
+          id: Date.now() + Math.random(), // 🔥 WAJIB (ANTI TABRAKAN)
+          type: "IKR",
           region: r.REGION||"",
           tahun: r.TAHUN||"",
           wotype: r["WO TYPE"]||"",
@@ -155,7 +156,7 @@ function generatePivot(){
 // ================= SERVER =================
 async function uploadServer(){
   try{
-    await fetch(SERVER_URL+"/upload",{
+    await fetch(SERVER_URL + "/api/save",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
@@ -171,18 +172,12 @@ async function uploadServer(){
 
 async function loadServer(){
   try{
-    let r = await fetch(SERVER_URL+"/data");
-    let json = await r.json();
-
-    // 🔥 FILTER BIAR GAK TABRAKAN
-    if(Array.isArray(json)){
-      dataIKR = json.filter(d => d.type === "IKR");
-    }else if(json.data){
-      dataIKR = json.data;
-    }
-
+    let r = await fetch(SERVER_URL + "/api/get?type=IKR");
+    dataIKR = await r.json();
     render();
-  }catch{}
+  }catch{
+    console.log("Gagal load server");
+  }
 }
 
 // ================= GLOBAL =================
