@@ -67,11 +67,14 @@ function importExcel(e){
 
         let first = json[0];
 
-        if(
-          first["Wo End"] ||
-          first["WO END"] ||
-          first["City"] ||
-          first["Job Name"]
+       if(
+       first["Wo End"] ||
+       first["WO END"] ||
+       first["woEnd"] ||
+       first["City"] ||
+       first["city"] ||
+       first["Job Name"] ||
+       first["jobName"]
         ){
           isIMS = true;
         }
@@ -88,29 +91,55 @@ function importExcel(e){
 
       raw.forEach(r=>{
 
-        let city = r.City || r.CITY || "";
-        let woEnd = r["Wo End"] || r["WO END"] || "";
-        let job = r["Job Name"] || r["JOB NAME"] || "";
+        let city =
+  r.City ||
+  r.CITY ||
+  r.city ||
+  "";
+
+let woEnd =
+  r["Wo End"] ||
+  r["WO END"] ||
+  r["woEnd"] ||
+  "";
+
+let job =
+  r["Job Name"] ||
+  r["JOB NAME"] ||
+  r["jobName"] ||
+  "";
 
         if(!city || !woEnd) return;
 
         let woRaw =
-          r["Wo Total"] ??
-          r["WO TOTAL"] ??
-          r["WoTotal"] ??
-          r["WO_TOTAL"] ??
-          0;
+        r["Wo Total"] ??
+        r["WO TOTAL"] ??
+        r["WoTotal"] ??
+        r["WO_TOTAL"] ??
+        r["woTotal"] ??
+            0;
 
         let wo = parseAngka(woRaw);
 
         let date;
 
-        if(typeof woEnd === "string" && woEnd.includes("/")){
+        if(typeof woEnd === "number"){
+
+        date = new Date((woEnd - 25569) * 86400 * 1000);
+
+        }else if(typeof woEnd === "string" && woEnd.includes("/")){
+
           let [d,m,y] = woEnd.split(" ")[0].split("/");
           date = new Date(`${y}-${m}-${d}`);
-        }else{
+
+          }else if(typeof woEnd === "string" && woEnd.includes("-")){
+
+          date = new Date(woEnd.replace(" ", "T"));
+
+          }else{
+
           date = new Date(woEnd);
-        }
+          }
 
         if(isNaN(date)) return;
 
@@ -134,12 +163,12 @@ function importExcel(e){
         map[key].total++;
         map[key].woTotal += wo;
 
-        map[key].listWO.push({
-          wo:r["Wonumber"] || r["WONUMBER"] || "-",
-          ref:r["Reference Code"] || "-",
-          quo:r["Quotation Id"] || "-",
-          status:r["Status"] || "-"
-        });
+       map[key].listWO.push({
+        wo: r["Wonumber"] || r["WONUMBER"] || r["wonumber"] || "-",
+        ref: r["Reference Code"] || r["referenceCode"] || "-",
+        quo: r["Quotation Id"] || r["quotationId"] || "-",
+        status: r["Status"] || r["status"] || "-"
+      });
 
       });
 
