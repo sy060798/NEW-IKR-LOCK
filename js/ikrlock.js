@@ -35,6 +35,7 @@ function triggerUpload(){
   document.getElementById("file").click();
 }
 
+// 🔥 SUPPORT 2 FORMAT (IKCR + IMS)
 function importExcel(e){
   let file = e.target.files[0];
   if(!file) return;
@@ -45,15 +46,90 @@ function importExcel(e){
     let wb = XLSX.read(evt.target.result,{type:'binary'});
     dataIKR = [];
 
+    let raw = [];
+    let isIMS = false;
+
+    // ================= BACA FILE =================
     wb.SheetNames.forEach(s=>{
       let json = XLSX.utils.sheet_to_json(wb.Sheets[s]);
 
-      json.forEach(r=>{
+      if(json.length){
+        if(json[0]["Wo End"]) isIMS = true;
+        json.forEach(r=> raw.push(r));
+      }
+    });
+
+    // ================= FORMAT IMS =================
+    if(isIMS){
+
+      let map = {};
+
+      raw.forEach(r=>{
+        if(!r.City || !r["Wo End"]) return;
+
+        let tgl = r["Wo End"];
+        let date;
+
+        // 🔥 HANDLE FORMAT TANGGAL INDONESIA
+        if(typeof tgl === "string" && tgl.includes("/")){
+          let [d,m,y] = tgl.split(" ")[0].split("/");
+          date = new Date(`${y}-${m}-${d}`);
+        }else{
+          date = new Date(tgl);
+        }
+
+        let tahun = date.getFullYear();
+        let bulan = date.toLocaleString("id-ID",{month:"short"});
+
+        let key = r.City + "_" + bulan + "_" + r["Job Name"];
+
+        if(!map[key]){
+          map[key] = {
+            city: r.City,
+            tahun,
+            bulan,
+            job: r["Job Name"],
+            total: 0
+          };
+        }
+
+        map[key].total++;
+      });
+
+      // 🔥 HASIL REKAP MASUK KE IKR
+      Object.values(map).forEach(g=>{
+        let amount = Math.round(g.total * 1.11);
+
+        dataIKR.push({
+          id: Date.now() + Math.random(),
+          type: "IKR",
+          region: g.city,
+          tahun: g.tahun,
+          wotype: g.job,
+          bulan: g.bulan,
+          jumlah: g.total,
+          approved: 0,
+          amount: amount,
+          fs: 0,
+          selisih: amount,
+          remark: "",
+          invoice: "",
+          note: "",
+          done: "NO"
+        });
+      });
+
+    }
+
+    // ================= FORMAT LAMA =================
+    else{
+
+      raw.forEach(r=>{
         let amount = parseInt(r.AMOUNT)||0;
         let fs = parseInt(r["FS AMOUNT"])||0;
 
         dataIKR.push({
-          id: Date.now() + Math.random(), // 🔥 WAJIB (ANTI TABRAKAN)
+          id: Date.now() + Math.random(),
           type: "IKR",
           region: r.REGION||"",
           tahun: r.TAHUN||"",
@@ -70,7 +146,8 @@ function importExcel(e){
           done: r.DONE||"NO"
         });
       });
-    });
+
+    }
 
     render();
   };
