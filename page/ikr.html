@@ -13,10 +13,12 @@
 body{font-family:Arial;background:#0f0f0f;color:#fff;padding:20px}
 h2{text-align:center}
 
+/* ===== MENU ===== */
 .menu{display:flex;gap:10px;margin-bottom:15px}
 .menu button{background:#2c2c2c;color:white;border:none;padding:8px 14px;border-radius:6px;cursor:pointer}
 .menu button.active{background:#8e44ad}
 
+/* ===== BUTTON ===== */
 .btn-group{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}
 button{padding:8px 12px;border:none;border-radius:6px;cursor:pointer}
 .blue{background:#3498db;color:#fff}
@@ -25,11 +27,48 @@ button{padding:8px 12px;border:none;border-radius:6px;cursor:pointer}
 .green{background:#2ecc71;color:#fff}
 .purple{background:#8e44ad;color:#fff}
 
+/* ===== TABLE WRAP ===== */
 .table-wrap{overflow:auto;max-height:500px;background:#1c1c1c}
-table{width:100%;border-collapse:collapse;min-width:1200px}
-th,td{padding:6px;border-bottom:1px solid #333;font-size:12px;text-align:center}
+
+/* 🔥 TABLE FIX + BORDER FULL */
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:1200px;
+  border:1px solid #555;
+}
+
+th,td{
+  padding:6px;
+  border:1px solid #444;
+  font-size:12px;
+  text-align:center;
+}
+
 thead{background:#8e44ad}
 
+/* 🔥 HOVER */
+tr:hover{
+  background:#2a2a2a;
+}
+
+/* ===== POPUP ===== */
+#popupWO table{
+  border:1px solid #777;
+}
+
+#popupWO table th, 
+#popupWO table td{
+  font-size:12px;
+  padding:6px;
+  border:1px solid #555;
+}
+
+#popupWO button{
+  margin-right:8px;
+}
+
+/* ===== TAB ===== */
 .tab{display:none}
 .tab.active{display:block}
 </style>
@@ -37,13 +76,47 @@ thead{background:#8e44ad}
 
 <body>
 
+<!-- ===== POPUP ===== -->
+<div id="popupWO" style="display:none;
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,0.8);z-index:9999;">
+
+  <div style="background:#111;padding:20px;
+  width:90%;max-width:800px;margin:50px auto;
+  border-radius:10px;color:#fff">
+
+    <h3>Detail WO</h3>
+
+    <table width="100%" id="tblDetail">
+      <thead>
+        <tr>
+          <th>Wonumber</th>
+          <th>Reference</th>
+          <th>Quotation</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <br>
+
+    <button onclick="downloadDetail()">⬇ Download</button>
+    <button onclick="editDetail()">✏️ Edit</button>
+    <button onclick="closePopup()">❌ Cancel</button>
+
+  </div>
+</div>
+
 <h2>🔒 IKCR LOCK</h2>
 
+<!-- ===== MENU ===== -->
 <div class="menu">
   <button onclick="showTab('data',this)" class="active">Data</button>
   <button onclick="showTab('pivot',this)">Pivot</button>
 </div>
 
+<!-- ===== BUTTON ===== -->
 <div class="btn-group">
   <button class="blue" onclick="download()">Download</button>
   <button class="orange" onclick="triggerUpload()">Upload</button>
@@ -54,6 +127,7 @@ thead{background:#8e44ad}
   <input type="file" id="file" hidden>
 </div>
 
+<!-- ===== DATA ===== -->
 <div id="data" class="tab active">
   <div class="table-wrap">
     <table id="tbl">
@@ -81,11 +155,12 @@ thead{background:#8e44ad}
   </div>
 </div>
 
+<!-- ===== PIVOT ===== -->
 <div id="pivot" class="tab">
   <canvas id="chart"></canvas>
 </div>
 
-<!-- 🔥 INI KUNCI NYA -->
+<!-- 🔥 JS TETAP -->
 <script src="../js/ikrlock.js"></script>
 
 </body>
