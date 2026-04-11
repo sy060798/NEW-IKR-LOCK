@@ -454,11 +454,9 @@ window.hapusData = hapusData;
 window.generatePivot = generatePivot;
 window.uploadServer = uploadServer;
 window.showTab = showTab;
-
 window.showDetail = showDetail;
 window.closePopup = closePopup;
 window.downloadDetail = downloadDetail;
 window.editDetail = editDetail;
-
 // supaya github tidak silang
 export {};
