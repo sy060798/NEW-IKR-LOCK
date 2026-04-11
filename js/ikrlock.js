@@ -3,6 +3,9 @@ let chart = null;
 
 const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
 
+// 🔥 SIMPAN DETAIL POPUP
+let currentDetail = [];
+
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", ()=>{
   const file = document.getElementById("file");
@@ -97,12 +100,21 @@ function importExcel(e){
             bulan,
             job: r["Job Name"],
             total: 0,
-            woTotal: 0
+            woTotal: 0,
+            listWO: [] // 🔥 tambahan
           };
         }
 
         map[key].total++;
         map[key].woTotal += wo;
+
+        // 🔥 SIMPAN DETAIL WO
+        map[key].listWO.push({
+          wo: r["Wonumber"] || "-",
+          ref: r["Reference Code"] || "-",
+          quo: r["Quotation Id"] || "-",
+          status: r["Status"] || "-"
+        });
       });
 
       Object.values(map).forEach(g=>{
@@ -123,7 +135,8 @@ function importExcel(e){
           remark: "",
           invoice: "",
           note: "",
-          done: "NO"
+          done: "NO",
+          listWO: g.listWO || [] // 🔥 tambahan
         });
       });
 
@@ -150,7 +163,8 @@ function importExcel(e){
           remark: r.REMARK||"",
           invoice: r["NO INVOICE"]||"",
           note: r.NOTE||"",
-          done: r.DONE||"NO"
+          done: r.DONE||"NO",
+          listWO: [] // 🔥 biar aman
         });
       });
 
@@ -178,7 +192,15 @@ function render(){
       <td>${d.tahun}</td>
       <td>${d.wotype}</td>
       <td>${d.bulan}</td>
-      <td>${d.jumlah}</td>
+
+      <!-- 🔥 klik jumlah -->
+      <td>
+        <span onclick="showDetail(${i})"
+        style="cursor:pointer;color:cyan;text-decoration:underline">
+          ${d.jumlah}
+        </span>
+      </td>
+
       <td>${d.approved}</td>
       <td style="text-align:right">${format(d.amount)}</td>
       <td style="text-align:right">${format(d.fs)}</td>
@@ -196,6 +218,49 @@ function render(){
   });
 }
 
+// ================= POPUP DETAIL =================
+function showDetail(index){
+  let data = dataIKR[index];
+  currentDetail = data.listWO || [];
+
+  let tb = document.querySelector("#tblDetail tbody");
+  if(!tb) return;
+
+  tb.innerHTML = "";
+
+  currentDetail.forEach(d=>{
+    tb.innerHTML += `
+      <tr>
+        <td>${d.wo}</td>
+        <td>${d.ref}</td>
+        <td>${d.quo}</td>
+        <td>${d.status}</td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("popupWO").style.display = "block";
+}
+
+function closePopup(){
+  document.getElementById("popupWO").style.display = "none";
+}
+
+// ================= DOWNLOAD DETAIL =================
+function downloadDetail(){
+  let ws = XLSX.utils.json_to_sheet(currentDetail);
+
+  let wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "DETAIL_WO");
+
+  XLSX.writeFile(wb, "DETAIL_WO.xlsx");
+}
+
+// ================= EDIT =================
+function editDetail(){
+  alert("Mode edit bisa dikembangkan nanti");
+}
+
 // ================= EDIT =================
 function edit(i,f,v){dataIKR[i][f]=v;}
 function toggleDone(i,v){dataIKR[i].done=v?"YES":"NO";}
@@ -207,18 +272,17 @@ function hapusData(){
   render();
 }
 
-// ================= DOWNLOAD (ACCOUNTING EXCEL) =================
+// ================= DOWNLOAD =================
 function download(){
   let ws = XLSX.utils.json_to_sheet(dataIKR);
 
-  // 🔥 format accounting kolom H,I,J (Amount, FS, Selisih)
   let range = XLSX.utils.decode_range(ws['!ref']);
 
   for(let R = 1; R <= range.e.r; ++R){
     ["H","I","J"].forEach(col=>{
       let cell = ws[col + (R+1)];
       if(cell){
-        cell.t = "n"; // number
+        cell.t = "n";
         cell.z = '"Rp" #,##0;[Red]("Rp" #,##0)';
       }
     });
@@ -230,7 +294,7 @@ function download(){
   XLSX.writeFile(wb,"IKCR_LOCK.xlsx");
 }
 
-// ================= FORMAT UI =================
+// ================= FORMAT =================
 function format(n){
   let num = Number(n) || 0;
 
@@ -303,3 +367,9 @@ window.hapusData = hapusData;
 window.generatePivot = generatePivot;
 window.uploadServer = uploadServer;
 window.showTab = showTab;
+
+// 🔥 GLOBAL POPUP
+window.showDetail = showDetail;
+window.closePopup = closePopup;
+window.downloadDetail = downloadDetail;
+window.editDetail = editDetail;
