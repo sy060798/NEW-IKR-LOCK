@@ -3,75 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IKRLOCK Tracking</title>
+<title>IKCR LOCK</title>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body {
-    font-family: Arial;
-    background: #111;
-    color: #fff;
-    padding: 20px;
-}
+body{font-family:Arial;background:#111;color:#fff;padding:20px;}
+h2{text-align:center;}
 
-h2 {
-    text-align: center;
-}
+button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
+.blue{background:#3498db;color:white;}
+.orange{background:#f39c12;color:white;}
+.red{background:#e74c3c;color:white;}
 
-input, button {
-    padding: 8px;
-    margin: 5px;
-}
+.table-wrap{overflow:auto;background:#222;border-radius:10px;}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:6px;font-size:12px;text-align:center;border-bottom:1px solid #444;}
+thead th{background:#8e44ad;}
 
-table {
-    width: 100%;
-    margin-top: 20px;
-    border-collapse: collapse;
-    background: #222;
-}
-
-th, td {
-    padding: 10px;
-    border: 1px solid #444;
-    text-align: center;
-}
-
-button {
-    cursor: pointer;
+input,select{
+  background:#111;color:white;border:1px solid #555;padding:6px;border-radius:6px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>🔒 IKRLOCK TRACKING</h2>
+<h2>🔒 IKCR LOCK</h2>
 
-<!-- FORM -->
-<input id="wo" placeholder="WO">
-<input id="area" placeholder="Area">
-<input id="tanggal" type="date">
-<input id="status" placeholder="Status">
+<div>
+  <button class="blue" onclick="exportExcel()">⬇ Download</button>
+  <button class="orange" onclick="triggerUpload()">⬆ Upload</button>
+  <button class="red" onclick="hapusTerpilih()">🗑 Hapus</button>
+</div>
 
-<button onclick="simpanData()">Simpan</button>
+<input type="file" id="upload" hidden>
 
-<br>
+<div class="table-wrap">
+<table id="tableData">
+<thead>
+<tr>
+  <th>No</th>
+  <th><input type="checkbox" id="checkAll"></th>
 
-<input id="search" placeholder="Search..." oninput="searchData()">
+  <th>Region</th>
+  <th>Tahun</th>
+  <th>WO Type</th>
+  <th>Bulan</th>
 
-<!-- TABLE -->
-<table>
-    <thead>
-        <tr>
-            <th>No</th>
-            <th>WO</th>
-            <th>Area</th>
-            <th>Tanggal</th>
-            <th>Status</th>
-            <th>Aksi</th>
-        </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
+  <th>Jumlah WO</th>
+  <th>WO Approved</th>
+
+  <th>Amount</th>
+  <th>FS Amount</th>
+  <th>Selisih</th>
+
+  <th>Remarks</th>
+  <th>No Invoice</th>
+  <th>Note</th>
+  <th>Done Summary</th>
+
+  <th>Aksi</th>
+</tr>
+</thead>
+
+<tbody></tbody>
 </table>
+</div>
 
-<script src="ikrlock.js"></script>
+<script src="../js/ikrlock.js"></script>
 </body>
 </html>
