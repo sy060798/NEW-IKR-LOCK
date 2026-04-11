@@ -3,7 +3,7 @@ let chart = null;
 
 const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
 
-// INIT
+// ================= INIT =================
 document.addEventListener("DOMContentLoaded", ()=>{
   const file = document.getElementById("file");
   const checkAll = document.getElementById("checkAll");
@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   loadServer();
 });
 
-// TAB
+// ================= TAB =================
 function showTab(id,btn){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -30,7 +30,7 @@ function showTab(id,btn){
   if(id==="pivot") generatePivot();
 }
 
-// UPLOAD
+// ================= UPLOAD =================
 function triggerUpload(){
   document.getElementById("file").click();
 }
@@ -53,6 +53,7 @@ function importExcel(e){
         let fs = parseInt(r["FS AMOUNT"])||0;
 
         dataIKR.push({
+          type: "IKR", // 🔥 PENANDA
           region: r.REGION||"",
           tahun: r.TAHUN||"",
           wotype: r["WO TYPE"]||"",
@@ -76,7 +77,7 @@ function importExcel(e){
   reader.readAsBinaryString(file);
 }
 
-// RENDER
+// ================= RENDER =================
 function render(){
   let tb = document.querySelector("#tbl tbody");
   if(!tb) return;
@@ -108,16 +109,18 @@ function render(){
   });
 }
 
-// FUNCTION LAIN
+// ================= EDIT =================
 function edit(i,f,v){dataIKR[i][f]=v;}
 function toggleDone(i,v){dataIKR[i].done=v?"YES":"NO";}
 
+// ================= DELETE =================
 function hapusData(){
   let c = document.querySelectorAll(".chk");
   dataIKR = dataIKR.filter((_,i)=>!c[i].checked);
   render();
 }
 
+// ================= DOWNLOAD =================
 function download(){
   let ws = XLSX.utils.json_to_sheet(dataIKR);
   let wb = XLSX.utils.book_new();
@@ -127,7 +130,7 @@ function download(){
 
 function format(n){return Number(n).toLocaleString("id-ID");}
 
-// PIVOT
+// ================= PIVOT =================
 function generatePivot(){
   let map = {};
   dataIKR.forEach(d=>{
@@ -149,13 +152,16 @@ function generatePivot(){
   });
 }
 
-// SERVER
+// ================= SERVER =================
 async function uploadServer(){
   try{
     await fetch(SERVER_URL+"/upload",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(dataIKR)
+      body:JSON.stringify({
+        type:"IKR",
+        data:dataIKR
+      })
     });
     alert("Upload berhasil");
   }catch(e){
@@ -166,12 +172,20 @@ async function uploadServer(){
 async function loadServer(){
   try{
     let r = await fetch(SERVER_URL+"/data");
-    dataIKR = await r.json();
+    let json = await r.json();
+
+    // 🔥 FILTER BIAR GAK TABRAKAN
+    if(Array.isArray(json)){
+      dataIKR = json.filter(d => d.type === "IKR");
+    }else if(json.data){
+      dataIKR = json.data;
+    }
+
     render();
   }catch{}
 }
 
-// 🔥 WAJIB
+// ================= GLOBAL =================
 window.triggerUpload = triggerUpload;
 window.download = download;
 window.hapusData = hapusData;
