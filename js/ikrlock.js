@@ -330,27 +330,10 @@ function download(){
 
   let ws = XLSX.utils.json_to_sheet(dataIKR);
 
-  let range = XLSX.utils.decode_range(ws["!ref"]);
-
-  for(let R=1; R<=range.e.r; ++R){
-
-    ["H","I","J"].forEach(col=>{
-
-      let cell = ws[col+(R+1)];
-
-      if(cell){
-        cell.t = "n";
-        cell.z = '"Rp" #,##0;[Red]("Rp" #,##0)';
-      }
-
-    });
-
-  }
-
   let wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,"IKCR");
+  XLSX.utils.book_append_sheet(wb, ws, "IKCR");
 
-  XLSX.writeFile(wb,"IKCR_LOCK.xlsx");
+  XLSX.writeFile(wb, "IKCR_LOCK.xlsx");
 }
 
 // ================= FORMAT =================
