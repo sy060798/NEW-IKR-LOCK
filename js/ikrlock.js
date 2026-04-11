@@ -35,7 +35,7 @@ function triggerUpload(){
   document.getElementById("file").click();
 }
 
-// 🔥 SUPPORT 2 FORMAT (IKCR + IMS)
+// ================= IMPORT =================
 function importExcel(e){
   let file = e.target.files[0];
   if(!file) return;
@@ -49,7 +49,6 @@ function importExcel(e){
     let raw = [];
     let isIMS = false;
 
-    // ================= BACA FILE =================
     wb.SheetNames.forEach(s=>{
       let json = XLSX.utils.sheet_to_json(wb.Sheets[s]);
 
@@ -59,7 +58,7 @@ function importExcel(e){
       }
     });
 
-    // ================= FORMAT IMS =================
+    // ================= IMS =================
     if(isIMS){
 
       let map = {};
@@ -67,10 +66,18 @@ function importExcel(e){
       raw.forEach(r=>{
         if(!r.City || !r["Wo End"]) return;
 
+        let woRaw =
+          r["Wo Total"] ??
+          r["WO TOTAL"] ??
+          r["WoTotal"] ??
+          r["WO_TOTAL"] ??
+          0;
+
+        let wo = parseAngka(woRaw);
+
         let tgl = r["Wo End"];
         let date;
 
-        // 🔥 HANDLE FORMAT TANGGAL INDONESIA
         if(typeof tgl === "string" && tgl.includes("/")){
           let [d,m,y] = tgl.split(" ")[0].split("/");
           date = new Date(`${y}-${m}-${d}`);
@@ -89,16 +96,17 @@ function importExcel(e){
             tahun,
             bulan,
             job: r["Job Name"],
-            total: 0
+            total: 0,
+            woTotal: 0
           };
         }
 
         map[key].total++;
+        map[key].woTotal += wo;
       });
 
-      // 🔥 HASIL REKAP MASUK KE IKR
       Object.values(map).forEach(g=>{
-        let amount = Math.round(g.total * 1.11);
+        let amount = Math.round(g.woTotal * 1.11);
 
         dataIKR.push({
           id: Date.now() + Math.random(),
@@ -119,14 +127,13 @@ function importExcel(e){
         });
       });
 
-    }
-
+    } 
     // ================= FORMAT LAMA =================
     else{
 
       raw.forEach(r=>{
-        let amount = parseInt(r.AMOUNT)||0;
-        let fs = parseInt(r["FS AMOUNT"])||0;
+        let amount = parseAngka(r.AMOUNT);
+        let fs = parseAngka(r["FS AMOUNT"]);
 
         dataIKR.push({
           id: Date.now() + Math.random(),
@@ -173,9 +180,11 @@ function render(){
       <td>${d.bulan}</td>
       <td>${d.jumlah}</td>
       <td>${d.approved}</td>
-      <td>${format(d.amount)}</td>
-      <td>${format(d.fs)}</td>
-      <td style="color:${d.selisih!=0?'red':'lime'}">${format(d.selisih)}</td>
+      <td style="text-align:right">${format(d.amount)}</td>
+      <td style="text-align:right">${format(d.fs)}</td>
+      <td style="text-align:right;color:${d.selisih<0?'orange':(d.selisih>0?'red':'lime')}">
+        ${format(d.selisih)}
+      </td>
       <td contenteditable oninput="edit(${i},'remark',this.innerText)">${d.remark}</td>
       <td contenteditable oninput="edit(${i},'invoice',this.innerText)">${d.invoice}</td>
       <td contenteditable oninput="edit(${i},'note',this.innerText)">${d.note}</td>
@@ -198,15 +207,45 @@ function hapusData(){
   render();
 }
 
-// ================= DOWNLOAD =================
+// ================= DOWNLOAD (ACCOUNTING EXCEL) =================
 function download(){
   let ws = XLSX.utils.json_to_sheet(dataIKR);
+
+  // 🔥 format accounting kolom H,I,J (Amount, FS, Selisih)
+  let range = XLSX.utils.decode_range(ws['!ref']);
+
+  for(let R = 1; R <= range.e.r; ++R){
+    ["H","I","J"].forEach(col=>{
+      let cell = ws[col + (R+1)];
+      if(cell){
+        cell.t = "n"; // number
+        cell.z = '"Rp" #,##0;[Red]("Rp" #,##0)';
+      }
+    });
+  }
+
   let wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "IKCR");
+
   XLSX.writeFile(wb,"IKCR_LOCK.xlsx");
 }
 
-function format(n){return Number(n).toLocaleString("id-ID");}
+// ================= FORMAT UI =================
+function format(n){
+  let num = Number(n) || 0;
+
+  if(num < 0){
+    return `Rp (${Math.abs(num).toLocaleString("id-ID")})`;
+  }else{
+    return `Rp ${num.toLocaleString("id-ID")}`;
+  }
+}
+
+// ================= PARSE =================
+function parseAngka(v){
+  if(!v) return 0;
+  return parseInt(String(v).replace(/[^0-9]/g,"")) || 0;
+}
 
 // ================= PIVOT =================
 function generatePivot(){
