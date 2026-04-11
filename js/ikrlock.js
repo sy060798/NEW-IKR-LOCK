@@ -28,7 +28,9 @@ document.addEventListener("DOMContentLoaded", ()=>{
 function showTab(id,btn){
 
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
+
+  const el = document.getElementById(id);
+  if(el) el.classList.add("active");
 
   document.querySelectorAll(".menu button").forEach(b=>b.classList.remove("active"));
   if(btn) btn.classList.add("active");
@@ -49,10 +51,9 @@ function importExcel(e){
 
   let reader = new FileReader();
 
-  reader.onload = function(evt){
+  reader.onload = async function(evt){
 
     let wb = XLSX.read(evt.target.result,{type:'binary'});
-    dataIKR = [];
 
     let raw = [];
     let isIMS = false;
@@ -82,8 +83,9 @@ function importExcel(e){
 
         json.forEach(r=>raw.push(r));
       }
-
     });
+
+    let newData = [];
 
     // ================= IMS =================
     if(isIMS){
@@ -125,7 +127,8 @@ function importExcel(e){
         let tahun = date.getFullYear();
         let bulan = date.toLocaleString("id-ID",{month:"short"});
 
-        let key = city + "_" + bulan + "_" + job;
+        // 🔥 key sekarang pakai tahun juga
+        let key = city + "_" + tahun + "_" + bulan + "_" + job;
 
         if(!map[key]){
           map[key] = {
@@ -152,7 +155,7 @@ function importExcel(e){
 
         let amount = Math.round(g.woTotal * 1.11);
 
-        dataIKR.push({
+        newData.push({
           id: Date.now()+Math.random(),
           type:"IKR",
           region:g.city,
@@ -186,7 +189,7 @@ function importExcel(e){
         let amount = parseAngka(r.AMOUNT || r.Amount);
         let fs = parseAngka(r["FS AMOUNT"] || r["FS Amount"]);
 
-        dataIKR.push({
+        newData.push({
           id:Date.now()+Math.random(),
           type:"IKR",
           region:region,
@@ -206,15 +209,42 @@ function importExcel(e){
         });
 
       });
-
     }
 
-    render();
-    alert("Upload sukses : " + dataIKR.length + " data");
+    // ================= GABUNG DATA LAMA + BARU =================
+    dataIKR = [...dataIKR, ...newData];
 
+    sortData();
+    render();
+
+    alert("Upload sukses : " + newData.length + " data baru");
+
+    e.target.value = "";
   };
 
   reader.readAsBinaryString(file);
+}
+
+// ================= SORT =================
+function sortData(){
+
+  const urutBulan = {
+    Jan:1, Feb:2, Mar:3, Apr:4, Mei:5, Jun:6,
+    Jul:7, Agu:8, Sep:9, Okt:10, Nov:11, Des:12
+  };
+
+  dataIKR.sort((a,b)=>{
+
+    if(a.region !== b.region) return a.region.localeCompare(b.region);
+
+    if(Number(a.tahun) !== Number(b.tahun))
+      return Number(a.tahun) - Number(b.tahun);
+
+    if((urutBulan[a.bulan]||0)!==(urutBulan[b.bulan]||0))
+      return (urutBulan[a.bulan]||0)-(urutBulan[b.bulan]||0);
+
+    return a.wotype.localeCompare(b.wotype);
+  });
 }
 
 // ================= RENDER =================
@@ -408,7 +438,7 @@ async function uploadServer(){
         })
       });
 
-      console.log("Upload batch",i/chunkSize+1);
+      console.log("Upload batch", (i/chunkSize)+1);
     }
 
     alert("Upload berhasil");
@@ -426,6 +456,7 @@ async function loadServer(){
 
     if(!Array.isArray(dataIKR)) dataIKR=[];
 
+    sortData();
     render();
 
   }catch(e){
