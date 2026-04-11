@@ -3,18 +3,23 @@ let chart = null;
 
 const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
 
-// ================= INIT =================
+// INIT
 document.addEventListener("DOMContentLoaded", ()=>{
-  document.getElementById("file").addEventListener("change", importExcel);
+  const file = document.getElementById("file");
+  const checkAll = document.getElementById("checkAll");
 
-  document.getElementById("checkAll").addEventListener("change", e=>{
-    document.querySelectorAll(".chk").forEach(c=>c.checked=e.target.checked);
-  });
+  if(file) file.addEventListener("change", importExcel);
+
+  if(checkAll){
+    checkAll.addEventListener("change", e=>{
+      document.querySelectorAll(".chk").forEach(c=>c.checked=e.target.checked);
+    });
+  }
 
   loadServer();
 });
 
-// ================= TAB =================
+// TAB
 function showTab(id,btn){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -25,7 +30,7 @@ function showTab(id,btn){
   if(id==="pivot") generatePivot();
 }
 
-// ================= UPLOAD EXCEL =================
+// UPLOAD
 function triggerUpload(){
   document.getElementById("file").click();
 }
@@ -38,7 +43,6 @@ function importExcel(e){
 
   reader.onload = function(evt){
     let wb = XLSX.read(evt.target.result,{type:'binary'});
-
     dataIKR = [];
 
     wb.SheetNames.forEach(s=>{
@@ -72,9 +76,11 @@ function importExcel(e){
   reader.readAsBinaryString(file);
 }
 
-// ================= RENDER =================
+// RENDER
 function render(){
   let tb = document.querySelector("#tbl tbody");
+  if(!tb) return;
+
   tb.innerHTML = "";
 
   dataIKR.forEach((d,i)=>{
@@ -102,23 +108,16 @@ function render(){
   });
 }
 
-// ================= EDIT =================
-function edit(i,field,val){
-  dataIKR[i][field] = val;
-}
+// FUNCTION LAIN
+function edit(i,f,v){dataIKR[i][f]=v;}
+function toggleDone(i,v){dataIKR[i].done=v?"YES":"NO";}
 
-function toggleDone(i,val){
-  dataIKR[i].done = val ? "YES" : "NO";
-}
-
-// ================= DELETE =================
 function hapusData(){
-  let checks = document.querySelectorAll(".chk");
-  dataIKR = dataIKR.filter((_,i)=>!checks[i].checked);
+  let c = document.querySelectorAll(".chk");
+  dataIKR = dataIKR.filter((_,i)=>!c[i].checked);
   render();
 }
 
-// ================= DOWNLOAD =================
 function download(){
   let ws = XLSX.utils.json_to_sheet(dataIKR);
   let wb = XLSX.utils.book_new();
@@ -126,73 +125,56 @@ function download(){
   XLSX.writeFile(wb,"IKCR_LOCK.xlsx");
 }
 
-// ================= FORMAT =================
-function format(num){
-  return Number(num).toLocaleString("id-ID");
-}
+function format(n){return Number(n).toLocaleString("id-ID");}
 
-// ================= PIVOT =================
+// PIVOT
 function generatePivot(){
   let map = {};
-
   dataIKR.forEach(d=>{
     if(!map[d.bulan]) map[d.bulan]=0;
     map[d.bulan]+=d.amount;
   });
 
-  let labels = Object.keys(map);
-  let values = Object.values(map);
-
   let ctx = document.getElementById("chart");
+  if(!ctx) return;
 
   if(chart) chart.destroy();
 
   chart = new Chart(ctx,{
     type:"bar",
     data:{
-      labels:labels,
-      datasets:[{
-        label:"Total Amount",
-        data:values
-      }]
+      labels:Object.keys(map),
+      datasets:[{label:"Total Amount",data:Object.values(map)}]
     }
   });
 }
 
-// ================= SERVER =================
+// SERVER
 async function uploadServer(){
-  if(dataIKR.length===0){
-    alert("Data kosong!");
-    return;
-  }
-
   try{
-    let res = await fetch(SERVER_URL + "/upload",{
+    await fetch(SERVER_URL+"/upload",{
       method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
+      headers:{"Content-Type":"application/json"},
       body:JSON.stringify(dataIKR)
     });
-
-    await res.json();
-    alert("Upload berhasil ✅");
-
-  }catch(err){
-    alert("Gagal upload ❌");
-    console.error(err);
+    alert("Upload berhasil");
+  }catch(e){
+    alert("Gagal upload");
   }
 }
 
 async function loadServer(){
   try{
-    let res = await fetch(SERVER_URL + "/data");
-    let json = await res.json();
-
-    dataIKR = json;
+    let r = await fetch(SERVER_URL+"/data");
+    dataIKR = await r.json();
     render();
-
-  }catch(err){
-    console.log("Belum ada data server");
-  }
+  }catch{}
 }
+
+// 🔥 WAJIB
+window.triggerUpload = triggerUpload;
+window.download = download;
+window.hapusData = hapusData;
+window.generatePivot = generatePivot;
+window.uploadServer = uploadServer;
+window.showTab = showTab;
