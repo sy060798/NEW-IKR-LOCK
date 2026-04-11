@@ -15,12 +15,31 @@ h2{text-align:center}
 
 /* ===== MENU ===== */
 .menu{display:flex;gap:10px;margin-bottom:15px}
-.menu button{background:#2c2c2c;color:white;border:none;padding:8px 14px;border-radius:6px;cursor:pointer}
+.menu button{
+  background:#2c2c2c;
+  color:white;
+  border:none;
+  padding:8px 14px;
+  border-radius:6px;
+  cursor:pointer
+}
 .menu button.active{background:#8e44ad}
 
 /* ===== BUTTON ===== */
-.btn-group{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}
-button{padding:8px 12px;border:none;border-radius:6px;cursor:pointer}
+.btn-group{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:15px
+}
+
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer
+}
+
 .blue{background:#3498db;color:#fff}
 .orange{background:#f39c12;color:#fff}
 .red{background:#e74c3c;color:#fff}
@@ -28,9 +47,13 @@ button{padding:8px 12px;border:none;border-radius:6px;cursor:pointer}
 .purple{background:#8e44ad;color:#fff}
 
 /* ===== TABLE WRAP ===== */
-.table-wrap{overflow:auto;max-height:500px;background:#1c1c1c}
+.table-wrap{
+  overflow:auto;
+  max-height:500px;
+  background:#1c1c1c
+}
 
-/* 🔥 TABLE FIX + BORDER FULL */
+/* ===== TABLE ===== */
 table{
   width:100%;
   border-collapse:collapse;
@@ -47,7 +70,6 @@ th,td{
 
 thead{background:#8e44ad}
 
-/* 🔥 HOVER */
 tr:hover{
   background:#2a2a2a;
 }
@@ -57,7 +79,7 @@ tr:hover{
   border:1px solid #777;
 }
 
-#popupWO table th, 
+#popupWO table th,
 #popupWO table td{
   font-size:12px;
   padding:6px;
@@ -74,7 +96,7 @@ tr:hover{
   background:#8e44ad;
   z-index:2;
 }
-  
+
 /* ===== TAB ===== */
 .tab{display:none}
 .tab.active{display:block}
@@ -84,52 +106,72 @@ tr:hover{
 <body>
 
 <!-- ===== POPUP ===== -->
-<div id="popupWO" style="display:none;
-position:fixed;top:0;left:0;width:100%;height:100%;
-background:rgba(0,0,0,0.8);z-index:9999;">
+<div id="popupWO" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.8);
+z-index:9999;">
 
-  <div style="background:#111;padding:15px;
-  width:85%;max-width:650px;height:420px;
-  margin:60px auto;border-radius:10px;
-  color:#fff;display:flex;flex-direction:column;">
+<div style="
+background:#111;
+padding:15px;
+width:85%;
+max-width:650px;
+height:420px;
+margin:60px auto;
+border-radius:10px;
+color:#fff;
+display:flex;
+flex-direction:column;">
 
-    <h3 style="margin:0;">Detail WO</h3>
+<h3 style="margin:0">Detail WO</h3>
 
-    <!-- SCROLL AREA -->
-    <div style="overflow:auto;flex:1;margin-top:10px;">
-      
-      <table width="100%" id="tblDetail" style="border-collapse:collapse;">
-        <thead>
-          <tr>
-            <th>WO</th>
-            <th>Ref</th>
-            <th>Quotation</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+<div style="overflow:auto;flex:1;margin-top:10px">
 
-    </div>
+<table width="100%" id="tblDetail" style="border-collapse:collapse">
+<thead>
+<tr>
+<th>WO</th>
+<th>Ref</th>
+<th>Quotation</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
 
-    <!-- BUTTON SIMPLE (kecil & rapi) -->
-    <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end;">
-
-      <button onclick="downloadDetail()" 
-      style="padding:6px 10px;font-size:12px;">Download</button>
-
-      <button onclick="editDetail()" 
-      style="padding:6px 10px;font-size:12px;">Edit</button>
-
-      <button onclick="closePopup()" 
-      style="padding:6px 10px;font-size:12px;background:#333;color:#fff;">
-      Cancel</button>
-
-    </div>
-
-  </div>
 </div>
-  
+
+<div style="
+display:flex;
+gap:8px;
+margin-top:10px;
+justify-content:flex-end;">
+
+<button onclick="downloadDetail()" style="padding:6px 10px;font-size:12px">
+Download
+</button>
+
+<button onclick="editDetail()" style="padding:6px 10px;font-size:12px">
+Edit
+</button>
+
+<button onclick="closePopup()" style="
+padding:6px 10px;
+font-size:12px;
+background:#333;
+color:#fff;">
+Cancel
+</button>
+
+</div>
+</div>
+</div>
+
 <h2>🔒 IKCR LOCK</h2>
 
 <!-- ===== MENU ===== -->
@@ -143,38 +185,48 @@ background:rgba(0,0,0,0.8);z-index:9999;">
   <button class="blue" onclick="download()">Download</button>
   <button class="orange" onclick="triggerUpload()">Upload</button>
   <button class="red" onclick="hapusData()">Hapus</button>
-  <button class="purple" onclick="generatePivot()">Pivot</button>
+
+  <!-- 🔥 DIGANTI DARI PIVOT MENJADI UPLD IMS -->
+  <button class="purple" onclick="triggerUploadIMS()">Upld IMS</button>
+
   <button class="green" onclick="uploadServer()">Upload Server</button>
 
-  <input type="file" id="file" hidden>
+  <!-- FILE BIASA -->
+  <input type="file" id="file" hidden accept=".xlsx,.xls">
+
+  <!-- FILE IMS -->
+  <input type="file" id="fileIMS" hidden accept=".xlsx,.xls">
 </div>
 
 <!-- ===== DATA ===== -->
 <div id="data" class="tab active">
-  <div class="table-wrap">
-    <table id="tbl">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th><input type="checkbox" id="checkAll"></th>
-          <th>Region</th>
-          <th>Tahun</th>
-          <th>WO Type</th>
-          <th>Bulan</th>
-          <th>Jumlah WO</th>
-          <th>WO Approved</th>
-          <th>Amount</th>
-          <th>FS Amount</th>
-          <th>Selisih</th>
-          <th>Remark</th>
-          <th>No Invoice</th>
-          <th>Note</th>
-          <th>Done</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<div class="table-wrap">
+<table id="tbl">
+
+<thead>
+<tr>
+<th>No</th>
+<th><input type="checkbox" id="checkAll"></th>
+<th>Region</th>
+<th>Tahun</th>
+<th>WO Type</th>
+<th>Bulan</th>
+<th>Jumlah WO</th>
+<th>WO Approved</th>
+<th>Amount</th>
+<th>FS Amount</th>
+<th>Selisih</th>
+<th>Remark</th>
+<th>No Invoice</th>
+<th>Note</th>
+<th>Done</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+</div>
 </div>
 
 <!-- ===== PIVOT ===== -->
@@ -182,7 +234,7 @@ background:rgba(0,0,0,0.8);z-index:9999;">
   <canvas id="chart"></canvas>
 </div>
 
-<!-- 🔥 JS TETAP -->
+<!-- ===== JS ===== -->
 <script src="../js/ikrlock.js"></script>
 
 </body>
