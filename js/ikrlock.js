@@ -458,5 +458,4 @@ window.showDetail = showDetail;
 window.closePopup = closePopup;
 window.downloadDetail = downloadDetail;
 window.editDetail = editDetail;
-// supaya github tidak silang
-export {};
+
