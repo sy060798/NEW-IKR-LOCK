@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALL TREKING FS</title>
+
+<style>
+
+/* RESET */
+body{
+    margin:0;
+    font-family:'Segoe UI', sans-serif;
+}
+
+/* BACKGROUND */
+.bg{
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:url('https://images.unsplash.com/photo-1501785888041-af3ef285b470') no-repeat center/cover;
+    z-index:-2;
+}
+
+.overlay{
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    z-index:-1;
+}
+
+/* CENTER */
+.container{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+/* CARD */
+.card{
+    background:rgba(0,0,0,0.75);
+    padding:40px;
+    border-radius:20px;
+    text-align:center;
+    color:white;
+    width:350px;
+    backdrop-filter:blur(10px);
+}
+
+/* TITLE */
+.card h1{
+    margin-bottom:10px;
+    font-size:28px;
+}
+
+.card p{
+    color:#ccc;
+    margin-bottom:30px;
+}
+
+/* BUTTON KEREN */
+.btn{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(45deg,#1abc9c,#16a085);
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+    transition:0.3s;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+}
+
+/* HOVER */
+.btn:hover{
+    transform:scale(1.05);
+    box-shadow:0 5px 20px rgba(0,0,0,0.5);
+}
+
+/* ICON */
+.icon{
+    font-size:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="bg"></div>
+<div class="overlay"></div>
+
+<div class="container">
+    <div class="card">
+
+        <h1>📊 ALL TREKING FS</h1>
+        <p>Sistem Tracking Admin</p>
+
+        <button class="btn" onclick="goMyRep()">
+            <span class="icon">🚀</span>
+            Masuk ke MyRepublic
+        </button>
+
+    </div>
+</div>
+
+<script>
+
+function goMyRep(){
+    window.location.href = "page/treking-my-rep.html";
+}
+
+/* AUTO GANTI BACKGROUND */
+const bgList=[
+ "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
+ "https://images.unsplash.com/photo-1491553895911-0055eca6402d",
+ "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"
+];
+
+function changeBg(){
+    let bg=document.querySelector(".bg");
+    let i=Math.floor(Math.random()*bgList.length);
+    bg.style.backgroundImage=`url('${bgList[i]}')`;
+}
+
+changeBg();
+setInterval(changeBg,7200000);
+
+</script>
+
+</body>
+</html>
