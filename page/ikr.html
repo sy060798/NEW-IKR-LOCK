@@ -88,21 +88,21 @@ tr:hover{
 position:fixed;top:0;left:0;width:100%;height:100%;
 background:rgba(0,0,0,0.8);z-index:9999;">
 
-  <div style="background:#111;padding:20px;
-  width:90%;max-width:800px;height:500px;
-  margin:50px auto;border-radius:10px;
+  <div style="background:#111;padding:15px;
+  width:85%;max-width:650px;height:420px;
+  margin:60px auto;border-radius:10px;
   color:#fff;display:flex;flex-direction:column;">
 
-    <h3>Detail WO</h3>
+    <h3 style="margin:0;">Detail WO</h3>
 
-    <!-- 🔥 SCROLL AREA -->
+    <!-- SCROLL AREA -->
     <div style="overflow:auto;flex:1;margin-top:10px;">
       
-      <table width="100%" id="tblDetail">
+      <table width="100%" id="tblDetail" style="border-collapse:collapse;">
         <thead>
           <tr>
-            <th>Wonumber</th>
-            <th>Reference</th>
+            <th>WO</th>
+            <th>Ref</th>
             <th>Quotation</th>
             <th>Status</th>
           </tr>
@@ -112,11 +112,20 @@ background:rgba(0,0,0,0.8);z-index:9999;">
 
     </div>
 
-    <br>
+    <!-- BUTTON SIMPLE (kecil & rapi) -->
+    <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end;">
 
-    <button onclick="downloadDetail()">⬇ Download</button>
-    <button onclick="editDetail()">✏️ Edit</button>
-    <button onclick="closePopup()">❌ Cancel</button>
+      <button onclick="downloadDetail()" 
+      style="padding:6px 10px;font-size:12px;">Download</button>
+
+      <button onclick="editDetail()" 
+      style="padding:6px 10px;font-size:12px;">Edit</button>
+
+      <button onclick="closePopup()" 
+      style="padding:6px 10px;font-size:12px;background:#333;color:#fff;">
+      Cancel</button>
+
+    </div>
 
   </div>
 </div>
