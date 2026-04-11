@@ -1,6 +1,8 @@
 let dataIKR = [];
 let chart = null;
 
+const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
+
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("file").addEventListener("change", importExcel);
@@ -8,6 +10,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("checkAll").addEventListener("change", e=>{
     document.querySelectorAll(".chk").forEach(c=>c.checked=e.target.checked);
   });
+
+  loadServer();
 });
 
 // ================= TAB =================
@@ -21,7 +25,7 @@ function showTab(id,btn){
   if(id==="pivot") generatePivot();
 }
 
-// ================= UPLOAD =================
+// ================= UPLOAD EXCEL =================
 function triggerUpload(){
   document.getElementById("file").click();
 }
@@ -90,8 +94,9 @@ function render(){
       <td contenteditable oninput="edit(${i},'remark',this.innerText)">${d.remark}</td>
       <td contenteditable oninput="edit(${i},'invoice',this.innerText)">${d.invoice}</td>
       <td contenteditable oninput="edit(${i},'note',this.innerText)">${d.note}</td>
-      <td><input type="checkbox" ${d.done=="YES"?"checked":""}
-          onchange="toggleDone(${i},this.checked)">
+      <td>
+        <input type="checkbox" ${d.done=="YES"?"checked":""}
+        onchange="toggleDone(${i},this.checked)">
       </td>
     </tr>`;
   });
@@ -109,7 +114,6 @@ function toggleDone(i,val){
 // ================= DELETE =================
 function hapusData(){
   let checks = document.querySelectorAll(".chk");
-
   dataIKR = dataIKR.filter((_,i)=>!checks[i].checked);
   render();
 }
@@ -153,4 +157,42 @@ function generatePivot(){
       }]
     }
   });
+}
+
+// ================= SERVER =================
+async function uploadServer(){
+  if(dataIKR.length===0){
+    alert("Data kosong!");
+    return;
+  }
+
+  try{
+    let res = await fetch(SERVER_URL + "/upload",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify(dataIKR)
+    });
+
+    await res.json();
+    alert("Upload berhasil ✅");
+
+  }catch(err){
+    alert("Gagal upload ❌");
+    console.error(err);
+  }
+}
+
+async function loadServer(){
+  try{
+    let res = await fetch(SERVER_URL + "/data");
+    let json = await res.json();
+
+    dataIKR = json;
+    render();
+
+  }catch(err){
+    console.log("Belum ada data server");
+  }
 }
