@@ -3,75 +3,139 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IKCR LOCK</title>
+<title>ALL TREKING FS</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{font-family:Arial;background:#111;color:#fff;padding:20px;}
-h2{text-align:center;}
-
-button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
-.blue{background:#3498db;color:white;}
-.orange{background:#f39c12;color:white;}
-.red{background:#e74c3c;color:white;}
-
-.table-wrap{overflow:auto;background:#222;border-radius:10px;}
-table{width:100%;border-collapse:collapse;}
-th,td{padding:6px;font-size:12px;text-align:center;border-bottom:1px solid #444;}
-thead th{background:#8e44ad;}
-
-input,select{
-  background:#111;color:white;border:1px solid #555;padding:6px;border-radius:6px;
+body{
+  font-family:Arial;
+  background:#111;
+  color:#fff;
+  padding:20px;
 }
+
+/* MENU */
+.menu{
+  margin-bottom:20px;
+}
+.menu button{
+  padding:10px;
+  margin-right:5px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+/* TAB */
+.tab{display:none;}
+.tab.active{display:block;}
+
+.table-wrap{
+  overflow:auto;
+  background:#222;
+  border-radius:10px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th,td{
+  padding:6px;
+  font-size:12px;
+  text-align:center;
+  border-bottom:1px solid #444;
+}
+
+thead{
+  background:#8e44ad;
+}
+
+button.blue{background:#3498db;color:#fff;}
+button.orange{background:#f39c12;color:#fff;}
+button.red{background:#e74c3c;color:#fff;}
 </style>
 </head>
 
 <body>
 
-<h2>🔒 IKCR LOCK</h2>
+<h2>📊 ALL TREKING FS</h2>
 
-<div>
-  <button class="blue" onclick="exportExcel()">⬇ Download</button>
-  <button class="orange" onclick="triggerUpload()">⬆ Upload</button>
-  <button class="red" onclick="hapusTerpilih()">🗑 Hapus</button>
+<div class="menu">
+  <button onclick="showTab('data')">📋 MyRep</button>
+  <button onclick="showTab('pivot')">📈 Pivot</button>
+  <button onclick="showTab('ikr')">🔒 IKCR LOCK</button>
 </div>
 
-<input type="file" id="upload" hidden>
+<!-- ================= MY REP ================= -->
+<div id="data" class="tab active">
+  <h3>Data MyRep</h3>
+
+  <button class="orange" onclick="triggerUpload()">Upload</button>
+  <input type="file" id="upload" hidden>
+
+  <div class="table-wrap">
+    <table id="tableData">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>WO</th>
+          <th>Area</th>
+          <th>Bulan</th>
+          <th>STB</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ================= PIVOT ================= -->
+<div id="pivot" class="tab">
+  <h3>Pivot</h3>
+  <button onclick="buatPivot()">Generate</button>
+
+  <div class="table-wrap">
+    <table id="pivotTable">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ================= IKCR ================= -->
+<div id="ikr" class="tab">
+<h3>🔒 IKCR LOCK</h3>
+
+<button class="blue" onclick="exportIKR()">Download</button>
+<button class="orange" onclick="triggerUploadIKR()">Upload</button>
+
+<input type="file" id="uploadIKR" hidden>
 
 <div class="table-wrap">
-<table id="tableData">
+<table id="tableIKR">
 <thead>
 <tr>
   <th>No</th>
-  <th><input type="checkbox" id="checkAll"></th>
-
   <th>Region</th>
   <th>Tahun</th>
   <th>WO Type</th>
   <th>Bulan</th>
-
   <th>Jumlah WO</th>
   <th>WO Approved</th>
-
   <th>Amount</th>
   <th>FS Amount</th>
   <th>Selisih</th>
-
-  <th>Remarks</th>
-  <th>No Invoice</th>
-  <th>Note</th>
-  <th>Done Summary</th>
-
-  <th>Aksi</th>
 </tr>
 </thead>
-
 <tbody></tbody>
 </table>
 </div>
 
-<script src="../js/ikrlock.js"></script>
+</div>
+
+<script src="js/ikrlock.js"></script>
 </body>
 </html>
