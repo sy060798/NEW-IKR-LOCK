@@ -10,22 +10,58 @@
 <style>
 body{
   font-family:Arial;
-  background:#111;
+  background:#0f0f0f;
   color:#fff;
   padding:20px;
 }
 
+/* HEADER */
+h2{
+  margin-bottom:10px;
+}
+
 /* MENU */
 .menu{
-  margin-bottom:20px;
+  margin-bottom:15px;
 }
 .menu button{
-  padding:10px;
+  padding:10px 15px;
+  border:none;
+  border-radius:10px;
+  margin-right:5px;
+  cursor:pointer;
+  background:#2c2c2c;
+  color:#fff;
+  transition:0.2s;
+}
+.menu button.active{
+  background:#8e44ad;
+}
+
+/* TOOLBAR */
+.toolbar{
+  margin-bottom:15px;
+}
+.toolbar button{
+  padding:8px 12px;
   margin-right:5px;
   border:none;
   border-radius:8px;
   cursor:pointer;
+  transition:0.2s;
 }
+.toolbar button:hover{
+  opacity:0.8;
+}
+.toolbar button.active{
+  transform:scale(0.95);
+}
+
+/* COLORS */
+.blue{background:#3498db;color:#fff;}
+.orange{background:#f39c12;color:#fff;}
+.red{background:#e74c3c;color:#fff;}
+.green{background:#2ecc71;color:#fff;}
 
 /* TAB */
 .tab{display:none;}
@@ -33,29 +69,37 @@ body{
 
 .table-wrap{
   overflow:auto;
-  background:#222;
+  background:#1c1c1c;
   border-radius:10px;
 }
 
+/* TABLE */
 table{
   width:100%;
   border-collapse:collapse;
 }
-
 th,td{
   padding:6px;
   font-size:12px;
   text-align:center;
-  border-bottom:1px solid #444;
+  border-bottom:1px solid #333;
 }
-
 thead{
   background:#8e44ad;
 }
+tr:hover{
+  background:#2c2c2c;
+}
 
-button.blue{background:#3498db;color:#fff;}
-button.orange{background:#f39c12;color:#fff;}
-button.red{background:#e74c3c;color:#fff;}
+/* INPUT */
+input{
+  padding:6px;
+  margin-right:5px;
+  border-radius:6px;
+  border:none;
+  background:#222;
+  color:#fff;
+}
 </style>
 </head>
 
@@ -64,53 +108,62 @@ button.red{background:#e74c3c;color:#fff;}
 <h2>📊 ALL TREKING FS</h2>
 
 <div class="menu">
-  <button onclick="showTab('data')">📋 MyRep</button>
-  <button onclick="showTab('pivot')">📈 Pivot</button>
-  <button onclick="showTab('ikr')">🔒 IKCR LOCK</button>
+  <button onclick="showTab('data',this)" class="active">📋 Data</button>
+  <button onclick="showTab('pivot',this)">📈 Pivot</button>
+  <button onclick="showTab('ikr',this)">🔒 IKCR LOCK</button>
 </div>
 
-<!-- ================= MY REP ================= -->
+<!-- ================= DATA ================= -->
 <div id="data" class="tab active">
-  <h3>Data MyRep</h3>
 
-  <button class="orange" onclick="triggerUpload()">Upload</button>
-  <input type="file" id="upload" hidden>
+<div class="toolbar">
+  <button class="blue" onclick="triggerUpload()">⬇ Upload</button>
+</div>
 
-  <div class="table-wrap">
-    <table id="tableData">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>WO</th>
-          <th>Area</th>
-          <th>Bulan</th>
-          <th>STB</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<input type="file" id="upload" hidden>
+
+<div class="table-wrap">
+<table id="tableData">
+<thead>
+<tr>
+  <th>No</th>
+  <th>WO</th>
+  <th>Area</th>
+  <th>Bulan</th>
+  <th>STB</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+
 </div>
 
 <!-- ================= PIVOT ================= -->
 <div id="pivot" class="tab">
-  <h3>Pivot</h3>
-  <button onclick="buatPivot()">Generate</button>
 
-  <div class="table-wrap">
-    <table id="pivotTable">
-      <thead></thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<div class="toolbar">
+  <button class="green pivotBtn active" onclick="setPivot('area',this)">By Area</button>
+  <button class="green pivotBtn" onclick="setPivot('bulan',this)">By Bulan</button>
+  <button class="green pivotBtn" onclick="setPivot('wotype',this)">By WO Type</button>
+</div>
+
+<div class="table-wrap">
+<table id="pivotTable">
+<thead></thead>
+<tbody></tbody>
+</table>
+</div>
+
 </div>
 
 <!-- ================= IKCR ================= -->
 <div id="ikr" class="tab">
-<h3>🔒 IKCR LOCK</h3>
 
-<button class="blue" onclick="exportIKR()">Download</button>
-<button class="orange" onclick="triggerUploadIKR()">Upload</button>
+<div class="toolbar">
+  <button class="blue" onclick="exportIKR()">⬇ Download</button>
+  <button class="orange" onclick="triggerUploadIKR()">⬆ Upload</button>
+</div>
 
 <input type="file" id="uploadIKR" hidden>
 
@@ -128,6 +181,11 @@ button.red{background:#e74c3c;color:#fff;}
   <th>Amount</th>
   <th>FS Amount</th>
   <th>Selisih</th>
+  <th>Remarks</th>
+  <th>No Invoice</th>
+  <th>Note</th>
+  <th>Done</th>
+  <th>Summary</th>
 </tr>
 </thead>
 <tbody></tbody>
