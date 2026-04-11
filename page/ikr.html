@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IKRLOCK Tracking</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #111;
+    color: #fff;
+    padding: 20px;
+}
+
+h2 {
+    text-align: center;
+}
+
+input, button {
+    padding: 8px;
+    margin: 5px;
+}
+
+table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+    background: #222;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #444;
+    text-align: center;
+}
+
+button {
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🔒 IKRLOCK TRACKING</h2>
+
+<!-- FORM -->
+<input id="wo" placeholder="WO">
+<input id="area" placeholder="Area">
+<input id="tanggal" type="date">
+<input id="status" placeholder="Status">
+
+<button onclick="simpanData()">Simpan</button>
+
+<br>
+
+<input id="search" placeholder="Search..." oninput="searchData()">
+
+<!-- TABLE -->
+<table>
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>WO</th>
+            <th>Area</th>
+            <th>Tanggal</th>
+            <th>Status</th>
+            <th>Aksi</th>
+        </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+</table>
+
+<script src="ikrlock.js"></script>
+</body>
+</html>
