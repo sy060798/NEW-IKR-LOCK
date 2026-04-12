@@ -194,6 +194,7 @@ tbody tr:hover{
 <div class="menu">
   <button class="active" onclick="showTab('data',this)">Data</button>
   <button onclick="showTab('pivot',this)">Pivot</button>
+  <button onclick="showTab('status',this);generateStatus()">Status</button>
 </div>
 
 <!-- BUTTON -->
@@ -237,10 +238,32 @@ tbody tr:hover{
 </div>
 
 <!-- PIVOT -->
-<div id="pivot" class="tab">
-  <canvas id="chart"></canvas>
+<div id="status" class="tab">
+
+  <div class="table-wrap">
+    <table id="tblStatus">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Jenis</th>
+          <th>Tahun</th>
+          <th>Total WO Approved</th>
+          <th>Total Invoice</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <br>
+
+  <button class="green" onclick="downloadStatus()">
+    Download Status
+  </button>
+
 </div>
 
 <script src="../js/ikrlock.js"></script>
+<script src="../js/status.js"></script>
 </body>
 </html>
