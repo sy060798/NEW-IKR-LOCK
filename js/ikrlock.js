@@ -2,22 +2,21 @@
 let dataIKR = [];
 let chart = null;
 const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
-
-// DETAIL POPUP
 let currentDetail = [];
+let imsDuplicate = new Set();
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
   const file = document.getElementById("file");
+  const fileIMS = document.getElementById("fileIMS");
   const checkAll = document.getElementById("checkAll");
 
   if (file) file.addEventListener("change", importExcel);
+  if (fileIMS) fileIMS.addEventListener("change", importIMS);
 
   if (checkAll) {
     checkAll.addEventListener("change", e => {
-      document.querySelectorAll(".chk").forEach(c => {
-        c.checked = e.target.checked;
-      });
+      document.querySelectorAll(".chk").forEach(c => c.checked = e.target.checked);
     });
   }
 
@@ -27,17 +26,27 @@ document.addEventListener("DOMContentLoaded", () => {
 // ================= TAB =================
 function showTab(id, btn) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-
   const el = document.getElementById(id);
   if (el) el.classList.add("active");
 
-  document.querySelectorAll(".menu button").forEach(b => {
-    b.classList.remove("active");
-  });
-
+  document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
   if (btn) btn.classList.add("active");
 
   if (id === "pivot") generatePivot();
+}
+
+// ================= LOADING =================
+function showLoading(txt = "Loading...") {
+  const box = document.getElementById("loadingBox");
+  if (!box) return;
+  box.style.display = "flex";
+  const t = box.querySelector(".loadingText");
+  if (t) t.innerText = txt;
+}
+
+function hideLoading() {
+  const box = document.getElementById("loadingBox");
+  if (box) box.style.display = "none";
 }
 
 // ================= UPLOAD =================
@@ -45,136 +54,34 @@ function triggerUpload() {
   document.getElementById("file").click();
 }
 
-// ================= IMPORT =================
+function triggerUploadIMS() {
+  document.getElementById("fileIMS").click();
+}
+
+// ================= IMPORT DATA UTAMA =================
 function importExcel(e) {
   const file = e.target.files[0];
   if (!file) return;
 
+  showLoading("Upload Data...");
+
   const reader = new FileReader();
 
   reader.onload = function (evt) {
-    const wb = XLSX.read(evt.target.result, { type: "binary" });
+    try {
+      const wb = XLSX.read(evt.target.result, { type: "binary" });
+      let raw = [];
 
-    let raw = [];
-    let isIMS = false;
-
-    wb.SheetNames.forEach(s => {
-      const json = XLSX.utils.sheet_to_json(wb.Sheets[s], {
-        defval: "",
-        raw: false
-      });
-
-      if (json.length) {
-        const first = json[0];
-
-        if (
-          first["Wo End"] ||
-          first["WO END"] ||
-          first["woEnd"] ||
-          first["City"] ||
-          first["city"] ||
-          first["Job Name"] ||
-          first["jobName"]
-        ) {
-          isIMS = true;
-        }
-
+      wb.SheetNames.forEach(s => {
+        const json = XLSX.utils.sheet_to_json(wb.Sheets[s], {
+          defval: "",
+          raw: false
+        });
         json.forEach(r => raw.push(r));
-      }
-    });
-
-    let newData = [];
-
-    // ================= IMS =================
-    if (isIMS) {
-      let map = {};
-
-      raw.forEach(r => {
-        let city = r.City || r.CITY || r.city || "";
-        let woEnd = r["Wo End"] || r["WO END"] || r["woEnd"] || "";
-        let job = r["Job Name"] || r["JOB NAME"] || r["jobName"] || "";
-
-        if (!city || !woEnd) return;
-
-        let woRaw =
-          r["Wo Total"] ??
-          r["WO TOTAL"] ??
-          r["WoTotal"] ??
-          r["WO_TOTAL"] ??
-          r["woTotal"] ??
-          0;
-
-        let wo = parseAngka(woRaw);
-
-        let date;
-
-        if (typeof woEnd === "number") {
-          date = new Date((woEnd - 25569) * 86400 * 1000);
-        } else if (typeof woEnd === "string" && woEnd.includes("/")) {
-          let [d, m, y] = woEnd.split(" ")[0].split("/");
-          date = new Date(`${y}-${m}-${d}`);
-        } else if (typeof woEnd === "string" && woEnd.includes("-")) {
-          date = new Date(woEnd.replace(" ", "T"));
-        } else {
-          date = new Date(woEnd);
-        }
-
-        if (isNaN(date)) return;
-
-        let tahun = date.getFullYear();
-        let bulan = date.toLocaleString("id-ID", { month: "short" });
-
-        let key = city + "_" + tahun + "_" + bulan + "_" + job;
-
-        if (!map[key]) {
-          map[key] = {
-            city,
-            tahun,
-            bulan,
-            job,
-            total: 0,
-            woTotal: 0,
-            listWO: []
-          };
-        }
-
-        map[key].total++;
-        map[key].woTotal += wo;
-
-        map[key].listWO.push({
-          wo: r["Wonumber"] || r["WONUMBER"] || r["wonumber"] || "-",
-          ref: r["Reference Code"] || r["referenceCode"] || "-",
-          quo: r["Quotation Id"] || r["quotationId"] || "-",
-          status: r["Status"] || r["status"] || "-"
-        });
       });
 
-      Object.values(map).forEach(g => {
-        let amount = Math.round(g.woTotal * 1.11);
+      let newData = [];
 
-        newData.push({
-          id: Date.now() + Math.random(),
-          type: "IKR",
-          region: g.city,
-          tahun: g.tahun,
-          wotype: g.job,
-          bulan: g.bulan,
-          jumlah: g.total,
-          approved: 0,
-          amount: amount,
-          fs: 0,
-          selisih: amount,
-          remark: "",
-          invoice: "",
-          note: "",
-          done: "NO",
-          listWO: g.listWO || []
-        });
-      });
-    }
-
-    // ================= FORMAT LAMA =================
-    else {
       raw.forEach(r => {
         let region = r.REGION || r.Region || "";
         if (!region) return;
@@ -189,8 +96,8 @@ function importExcel(e) {
           tahun: r.TAHUN || r.Tahun || "",
           wotype: r["WO TYPE"] || r["Wo Type"] || "",
           bulan: r.BULAN || r.Bulan || "",
-          jumlah: r["JUMLAH WO"] || 0,
-          approved: r["WO APPROVED"] || 0,
+          jumlah: Number(r["JUMLAH WO"] || 0),
+          approved: Number(r["WO APPROVED"] || 0),
           amount: amount,
           fs: fs,
           selisih: amount - fs,
@@ -201,16 +108,82 @@ function importExcel(e) {
           listWO: []
         });
       });
+
+      dataIKR = [...dataIKR, ...newData];
+
+      sortData();
+      render();
+
+      alert("Upload sukses : " + newData.length + " data");
+    } catch (err) {
+      alert("Gagal upload file utama");
     }
 
-    // ================= GABUNG DATA =================
-    dataIKR = [...dataIKR, ...newData];
+    hideLoading();
+    e.target.value = "";
+  };
 
-    sortData();
-    render();
+  reader.readAsBinaryString(file);
+}
 
-    alert("Upload sukses : " + newData.length + " data baru");
+// ================= IMPORT IMS =================
+function importIMS(e) {
+  const file = e.target.files[0];
+  if (!file) return;
 
+  showLoading("Processing IMS...");
+
+  const reader = new FileReader();
+
+  reader.onload = function (evt) {
+    try {
+      const wb = XLSX.read(evt.target.result, { type: "binary" });
+      let raw = [];
+
+      wb.SheetNames.forEach(s => {
+        const json = XLSX.utils.sheet_to_json(wb.Sheets[s], {
+          defval: "",
+          raw: false
+        });
+        json.forEach(r => raw.push(r));
+      });
+
+      let updateCount = 0;
+
+      raw.forEach(r => {
+        let pra = r["Pra Invoice Number"] || "";
+        let inv = r["Invoice Number"] || "";
+        let wo = r["Wonumber"] || r["WONUMBER"] || "";
+        let fsVal = parseAngka(r["Invoice Total"]);
+
+        if (!wo) return;
+
+        let dupKey = pra + "_" + inv;
+        if (imsDuplicate.has(dupKey)) return;
+        imsDuplicate.add(dupKey);
+
+        dataIKR.forEach(d => {
+          let cocok = (d.listWO || []).some(x => String(x.wo).trim() === String(wo).trim());
+
+          if (cocok) {
+            d.approved = Number(d.approved || 0) + 1;
+            d.fs = Number(d.fs || 0) + fsVal;
+            d.selisih = Number(d.amount || 0) - Number(d.fs || 0);
+            d.note = "APPROVED";
+            updateCount++;
+          }
+        });
+      });
+
+      sortData();
+      render();
+
+      alert("IMS sukses update " + updateCount + " WO");
+    } catch (err) {
+      alert("Gagal upload IMS");
+    }
+
+    hideLoading();
     e.target.value = "";
   };
 
@@ -220,18 +193,8 @@ function importExcel(e) {
 // ================= SORT =================
 function sortData() {
   const urutBulan = {
-    Jan: 1,
-    Feb: 2,
-    Mar: 3,
-    Apr: 4,
-    Mei: 5,
-    Jun: 6,
-    Jul: 7,
-    Agu: 8,
-    Sep: 9,
-    Okt: 10,
-    Nov: 11,
-    Des: 12
+    Jan: 1, Feb: 2, Mar: 3, Apr: 4, Mei: 5, Jun: 6,
+    Jul: 7, Agu: 8, Sep: 9, Okt: 10, Nov: 11, Des: 12
   };
 
   dataIKR.sort((a, b) => {
@@ -239,7 +202,6 @@ function sortData() {
     if (Number(a.tahun) !== Number(b.tahun)) return Number(a.tahun) - Number(b.tahun);
     if ((urutBulan[a.bulan] || 0) !== (urutBulan[b.bulan] || 0))
       return (urutBulan[a.bulan] || 0) - (urutBulan[b.bulan] || 0);
-
     return a.wotype.localeCompare(b.wotype);
   });
 }
@@ -316,7 +278,6 @@ function closePopup() {
 function downloadDetail() {
   let ws = XLSX.utils.json_to_sheet(currentDetail);
   let wb = XLSX.utils.book_new();
-
   XLSX.utils.book_append_sheet(wb, ws, "DETAIL_WO");
   XLSX.writeFile(wb, "DETAIL_WO.xlsx");
 }
@@ -348,9 +309,7 @@ async function hapusData() {
   try {
     await fetch(SERVER_URL + "/api/delete", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: "IKR",
         ids: ids
@@ -363,7 +322,6 @@ async function hapusData() {
 function download() {
   let ws = XLSX.utils.json_to_sheet(dataIKR);
   let wb = XLSX.utils.book_new();
-
   XLSX.utils.book_append_sheet(wb, ws, "IKCR");
   XLSX.writeFile(wb, "IKCR_LOCK.xlsx");
 }
@@ -372,10 +330,7 @@ function download() {
 function format(n) {
   let num = Number(n) || 0;
 
-  if (num < 0) {
-    return `Rp (${Math.abs(num).toLocaleString("id-ID")})`;
-  }
-
+  if (num < 0) return `Rp (${Math.abs(num).toLocaleString("id-ID")})`;
   return `Rp ${num.toLocaleString("id-ID")}`;
 }
 
@@ -402,12 +357,10 @@ function generatePivot() {
     type: "bar",
     data: {
       labels: Object.keys(map),
-      datasets: [
-        {
-          label: "Total Amount",
-          data: Object.values(map)
-        }
-      ]
+      datasets: [{
+        label: "Total Amount",
+        data: Object.values(map)
+      }]
     }
   });
 }
@@ -427,16 +380,12 @@ async function uploadServer() {
 
       await fetch(SERVER_URL + "/api/save", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "IKR",
           data: chunk
         })
       });
-
-      console.log("Upload batch", (i / chunkSize) + 1);
     }
 
     alert("Upload berhasil");
@@ -448,7 +397,6 @@ async function uploadServer() {
 async function loadServer() {
   try {
     let r = await fetch(SERVER_URL + "/api/get?type=IKR");
-
     dataIKR = await r.json();
 
     if (!Array.isArray(dataIKR)) dataIKR = [];
@@ -462,6 +410,7 @@ async function loadServer() {
 
 // ================= GLOBAL =================
 window.triggerUpload = triggerUpload;
+window.triggerUploadIMS = triggerUploadIMS;
 window.download = download;
 window.hapusData = hapusData;
 window.generatePivot = generatePivot;
