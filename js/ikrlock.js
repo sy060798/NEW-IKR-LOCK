@@ -6,7 +6,7 @@ let currentDetail = [];
 
 const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
 
-// anti duplicate payment
+// anti duplicate IMS
 let paymentUsed = new Set();
 
 // ================= INIT =================
@@ -47,6 +47,7 @@ function showTab(id,btn){
   if(btn) btn.classList.add("active");
 
   if(id==="pivot") generatePivot();
+
   if(id==="status" && typeof generateStatus==="function"){
     generateStatus();
   }
@@ -101,7 +102,7 @@ function importExcel(e){
 
     let newData = [];
 
-    // ================= IMS RAW =================
+    // ================= RAW IMS =================
     if(isIMSRaw){
 
       let map = {};
@@ -123,19 +124,17 @@ function importExcel(e){
 
         if(!city || !woEnd) return;
 
-        let woTotal =
-          parseAngka(
-            r["Wo Total"] ||
-            r["WO TOTAL"] ||
-            r["WoTotal"] || 0
-          );
+        let woTotal = parseAngka(
+          r["Wo Total"] ||
+          r["WO TOTAL"] ||
+          r["WoTotal"] || 0
+        );
 
         let dt = new Date(woEnd);
-        if(isNaN(dt)){
 
+        if(isNaN(dt)){
           if(String(woEnd).includes("/")){
             let p = String(woEnd).split("/");
-
             if(p.length===3){
               dt = new Date(`${p[2]}-${p[1]}-${p[0]}`);
             }
@@ -145,13 +144,9 @@ function importExcel(e){
         if(isNaN(dt)) return;
 
         const tahun = dt.getFullYear();
-        const bulan = dt.toLocaleString(
-          "id-ID",
-          {month:"short"}
-        );
+        const bulan = dt.toLocaleString("id-ID",{month:"short"});
 
-        const key =
-          city+"_"+tahun+"_"+bulan+"_"+job;
+        const key = city+"_"+tahun+"_"+bulan+"_"+job;
 
         if(!map[key]){
           map[key]={
@@ -204,22 +199,11 @@ function importExcel(e){
       // ================= FORMAT LAMA =================
       rows.forEach(r=>{
 
-        let region =
-          r.REGION ||
-          r.Region || "";
-
+        let region = r.REGION || r.Region || "";
         if(!region) return;
 
-        let amount =
-          parseAngka(
-            r.AMOUNT || r.Amount
-          );
-
-        let fs =
-          parseAngka(
-            r["FS AMOUNT"] ||
-            r["FS Amount"]
-          );
+        let amount = parseAngka(r.AMOUNT || r.Amount);
+        let fs = parseAngka(r["FS AMOUNT"] || r["FS Amount"]);
 
         newData.push({
           id:Date.now()+Math.random(),
@@ -249,7 +233,7 @@ function importExcel(e){
     sortData();
     render();
 
-    alert("Upload sukses : "+newData.length);
+    alert("Upload sukses : " + newData.length);
 
     e.target.value="";
   };
@@ -268,8 +252,10 @@ function importIMS(e){
   reader.onload = function(evt){
 
     const wb = XLSX.read(evt.target.result,{type:'binary'});
+
     let totalUpdate = 0;
     let duplicate = 0;
+    let tidakMasuk = 0;
 
     wb.SheetNames.forEach(name=>{
 
@@ -280,22 +266,27 @@ function importIMS(e){
 
       json.forEach(r=>{
 
-        const pra =
-          String(r["Pra Invoice Number"] || "").trim();
+        const pra = String(
+          r["Pra Invoice Number"] || ""
+        ).trim();
 
-        const inv =
-          String(r["Invoice Number"] || "").trim();
+        const inv = String(
+          r["Invoice Number"] || ""
+        ).trim();
 
-        const status =
-          String(r["Status"] || "").toUpperCase();
+        const status = String(
+          r["Status"] || ""
+        ).trim().toUpperCase();
 
-        const amount =
-          parseAngka(r["Invoice Total"]);
+        const amount = parseAngka(
+          r["Invoice Total"]
+        );
 
         if(!pra && !inv) return;
         if(status!=="APPROVED") return;
 
-        const key = pra+"_"+inv;
+        // KEY DUPLIKAT SESUAI PERMINTAAN
+        const key = pra + "|" + inv;
 
         if(paymentUsed.has(key)){
           duplicate++;
@@ -304,27 +295,30 @@ function importIMS(e){
 
         paymentUsed.add(key);
 
+        // cari row yang approved masih kurang
         let row = dataIKR.find(x=>
           Number(x.approved) < Number(x.jumlah)
         );
 
-        if(row){
-
-          row.approved =
-            Number(row.approved)+1;
-
-          row.fs =
-            Number(row.fs)+amount;
-
-          row.invoice = inv;
-          row.remark = "APPROVED";
-          row.note = "AUTO IMS";
-
-          row.selisih =
-            Number(row.amount)-Number(row.fs);
-
-          totalUpdate++;
+        if(!row){
+          tidakMasuk++;
+          return;
         }
+
+        row.approved =
+          Number(row.approved) + 1;
+
+        row.fs =
+          Number(row.fs) + amount;
+
+        row.invoice = inv;
+        row.remark = "APPROVED";
+        row.note = "AUTO IMS";
+
+        row.selisih =
+          Number(row.amount) - Number(row.fs);
+
+        totalUpdate++;
 
       });
 
@@ -334,9 +328,10 @@ function importIMS(e){
     render();
 
     alert(
-      "IMS selesai\n"+
-      "Update : "+totalUpdate+
-      "\nDuplikat : "+duplicate
+      "IMS selesai\n" +
+      "Update : " + totalUpdate +
+      "\nDuplikat : " + duplicate +
+      "\nTidak Masuk : " + tidakMasuk
     );
 
     e.target.value="";
@@ -361,12 +356,8 @@ function sortData(){
     if(Number(a.tahun)!==Number(b.tahun))
       return Number(a.tahun)-Number(b.tahun);
 
-    if(
-      (bulanMap[a.bulan]||0)!==
-      (bulanMap[b.bulan]||0)
-    ){
-      return (bulanMap[a.bulan]||0)-
-             (bulanMap[b.bulan]||0);
+    if((bulanMap[a.bulan]||0)!==(bulanMap[b.bulan]||0)){
+      return (bulanMap[a.bulan]||0) - (bulanMap[b.bulan]||0);
     }
 
     return a.wotype.localeCompare(b.wotype);
@@ -376,12 +367,10 @@ function sortData(){
 // ================= RENDER =================
 function render(){
 
-  const tb =
-    document.querySelector("#tbl tbody");
-
+  const tb = document.querySelector("#tbl tbody");
   if(!tb) return;
 
-  tb.innerHTML="";
+  tb.innerHTML = "";
 
   dataIKR.forEach((d,i)=>{
 
@@ -399,13 +388,8 @@ function render(){
       <td>${d.bulan}</td>
 
       <td>
-        <span
-        onclick="showDetail(${i})"
-        style="
-          color:cyan;
-          cursor:pointer;
-          text-decoration:underline;
-        ">
+        <span onclick="showDetail(${i})"
+        style="color:cyan;cursor:pointer;text-decoration:underline">
         ${d.jumlah}
         </span>
       </td>
@@ -414,9 +398,8 @@ function render(){
       <td>${format(d.amount)}</td>
       <td>${format(d.fs)}</td>
 
-      <td style="
-      color:${d.selisih>0?'red':'lime'}">
-      ${format(d.selisih)}
+      <td style="color:${d.selisih>0?'red':'lime'}">
+        ${format(d.selisih)}
       </td>
 
       <td contenteditable
@@ -442,7 +425,6 @@ function render(){
     </tr>
     `;
   });
-
 }
 
 // ================= DETAIL =================
@@ -450,12 +432,11 @@ function showDetail(i){
 
   currentDetail = dataIKR[i].listWO || [];
 
-  const tb =
-    document.querySelector("#tblDetail tbody");
+  const tb = document.querySelector("#tblDetail tbody");
 
   if(tb){
 
-    tb.innerHTML="";
+    tb.innerHTML = "";
 
     currentDetail.forEach(x=>{
 
@@ -479,36 +460,27 @@ function closePopup(){
 
 function downloadDetail(){
 
-  const ws =
-    XLSX.utils.json_to_sheet(currentDetail);
-
+  const ws = XLSX.utils.json_to_sheet(currentDetail);
   const wb = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(
-    wb,ws,"DETAIL"
-  );
-
-  XLSX.writeFile(
-    wb,"DETAIL_WO.xlsx"
-  );
+  XLSX.utils.book_append_sheet(wb,ws,"DETAIL");
+  XLSX.writeFile(wb,"DETAIL_WO.xlsx");
 }
 
 // ================= EDIT =================
 function edit(i,f,v){
-  dataIKR[i][f]=v;
+  dataIKR[i][f] = v;
 }
 
 function toggleDone(i,v){
-  dataIKR[i].done = v?"YES":"NO";
+  dataIKR[i].done = v ? "YES" : "NO";
 }
 
 // ================= DELETE =================
 async function hapusData(){
 
-  const c =
-    document.querySelectorAll(".chk");
-
-  let ids=[];
+  const c = document.querySelectorAll(".chk");
+  let ids = [];
 
   dataIKR = dataIKR.filter((d,i)=>{
 
@@ -523,38 +495,27 @@ async function hapusData(){
   render();
 
   try{
-    await fetch(
-      SERVER_URL+"/api/delete",
-      {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-          type:"IKR",
-          ids:ids
-        })
-      }
-    );
+    await fetch(SERVER_URL+"/api/delete",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        type:"IKR",
+        ids:ids
+      })
+    });
   }catch(e){}
 }
 
 // ================= DOWNLOAD =================
 function download(){
 
-  const ws =
-    XLSX.utils.json_to_sheet(dataIKR);
+  const ws = XLSX.utils.json_to_sheet(dataIKR);
+  const wb = XLSX.utils.book_new();
 
-  const wb =
-    XLSX.utils.book_new();
-
-  XLSX.utils.book_append_sheet(
-    wb,ws,"IKCR"
-  );
-
-  XLSX.writeFile(
-    wb,"IKCR_LOCK.xlsx"
-  );
+  XLSX.utils.book_append_sheet(wb,ws,"IKCR");
+  XLSX.writeFile(wb,"IKCR_LOCK.xlsx");
 }
 
 // ================= PIVOT =================
@@ -567,9 +528,7 @@ function generatePivot(){
     map[d.bulan]+=Number(d.amount)||0;
   });
 
-  const ctx =
-    document.getElementById("chart");
-
+  const ctx = document.getElementById("chart");
   if(!ctx) return;
 
   if(chart) chart.destroy();
@@ -583,9 +542,7 @@ function generatePivot(){
         data:Object.values(map)
       }]
     },
-    options:{
-      responsive:true
-    }
+    options:{responsive:true}
   });
 }
 
@@ -603,19 +560,16 @@ async function uploadServer(){
 
     for(let i=0;i<dataIKR.length;i+=chunk){
 
-      await fetch(
-        SERVER_URL+"/api/save",
-        {
-          method:"POST",
-          headers:{
-            "Content-Type":"application/json"
-          },
-          body:JSON.stringify({
-            type:"IKR",
-            data:dataIKR.slice(i,i+chunk)
-          })
-        }
-      );
+      await fetch(SERVER_URL+"/api/save",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          type:"IKR",
+          data:dataIKR.slice(i,i+chunk)
+        })
+      });
     }
 
     alert("Upload berhasil");
@@ -649,20 +603,18 @@ async function loadServer(){
   }
 }
 
-// ================= FORMAT =================
+// ================= UTIL =================
 function parseAngka(v){
 
   return parseInt(
-    String(v||0)
-    .replace(/[^0-9]/g,"")
+    String(v||0).replace(/[^0-9]/g,"")
   ) || 0;
 }
 
 function format(v){
 
   return "Rp " +
-  Number(v||0)
-  .toLocaleString("id-ID");
+  Number(v||0).toLocaleString("id-ID");
 }
 
 // ================= GLOBAL =================
