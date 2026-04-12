@@ -10,7 +10,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
 
 body{
   margin:0;
@@ -23,9 +25,12 @@ body{
 h2{
   margin:0 0 15px;
   text-align:center;
+  font-size:26px;
 }
 
-.menu,.btn-group{
+/* MENU + BUTTON */
+.menu,
+.btn-group{
   display:flex;
   gap:10px;
   flex-wrap:wrap;
@@ -38,6 +43,13 @@ button{
   border-radius:6px;
   cursor:pointer;
   color:#fff;
+  font-weight:bold;
+  transition:.2s;
+}
+
+button:hover{
+  opacity:.9;
+  transform:translateY(-1px);
 }
 
 .menu button{
@@ -49,16 +61,27 @@ button{
   background:#8e44ad;
 }
 
-.blue{background:#3498db}
-.orange{background:#f39c12}
-.red{background:#e74c3c}
-.green{background:#2ecc71}
+.blue{background:#3498db;}
+.orange{background:#f39c12;}
+.red{background:#e74c3c;}
+.green{background:#2ecc71;}
 
+/* INFO TEXT */
+.info-upload{
+  width:100%;
+  font-size:12px;
+  opacity:.75;
+  margin-top:-8px;
+  margin-bottom:5px;
+}
+
+/* TABLE */
 .table-wrap{
   overflow:auto;
   max-height:520px;
   background:#1b1b1b;
   border:1px solid #444;
+  border-radius:8px;
 }
 
 table{
@@ -86,21 +109,36 @@ tbody tr:hover{
   background:#252525;
 }
 
-.tab{display:none}
-.tab.active{display:block}
+td[contenteditable="true"]{
+  background:#181818;
+}
+
+td[contenteditable="true"]:focus{
+  outline:none;
+  background:#262626;
+}
+
+/* TAB */
+.tab{
+  display:none;
+}
+
+.tab.active{
+  display:block;
+}
 
 /* POPUP */
 #popupWO{
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.8);
+  background:rgba(0,0,0,.82);
   z-index:9999;
 }
 
 .popup-box{
   width:90%;
-  max-width:800px;
+  max-width:850px;
   height:500px;
   margin:30px auto;
   background:#111;
@@ -150,14 +188,38 @@ tbody tr:hover{
 }
 
 @keyframes spin{
-  to{transform:rotate(360deg)}
+  to{transform:rotate(360deg);}
 }
 
+/* MOBILE */
 @media(max-width:768px){
-  body{padding:10px}
-  button{font-size:12px;padding:7px 10px}
-  th,td{font-size:11px;padding:5px}
-  .popup-box{width:95%;height:90vh}
+
+  body{
+    padding:10px;
+  }
+
+  h2{
+    font-size:22px;
+  }
+
+  button{
+    font-size:12px;
+    padding:7px 10px;
+  }
+
+  th,td{
+    font-size:11px;
+    padding:5px;
+  }
+
+  .popup-box{
+    width:95%;
+    height:90vh;
+  }
+
+  .info-upload{
+    font-size:11px;
+  }
 }
 </style>
 </head>
@@ -167,10 +229,10 @@ tbody tr:hover{
 <!-- LOADING -->
 <div id="loadingBox">
   <div class="loader"></div>
-  <div class="loadingText">Loading...</div>
+  <div class="loadingText" id="loadingText">Loading...</div>
 </div>
 
-<!-- POPUP -->
+<!-- POPUP DETAIL -->
 <div id="popupWO">
   <div class="popup-box">
 
@@ -180,7 +242,7 @@ tbody tr:hover{
       <table id="tblDetail">
         <thead>
           <tr>
-            <th>WO</th>
+            <th>WO Number</th>
             <th>Reference</th>
             <th>Quotation</th>
             <th>Status</th>
@@ -210,13 +272,17 @@ tbody tr:hover{
 <!-- BUTTON -->
 <div class="btn-group">
   <button class="blue" onclick="download()">Download</button>
-  <button class="orange" onclick="triggerUpload()">Upload</button>
-  <button class="red" onclick="hapusData()">Hapus</button>
+  <button class="orange" onclick="triggerUpload()">Upload Data</button>
   <button class="purple" onclick="triggerUploadIMS()">Upload IMS</button>
   <button class="green" onclick="uploadServer()">Upload Server</button>
+  <button class="red" onclick="hapusData()">Hapus</button>
 
   <input type="file" id="file" hidden accept=".xlsx,.xls">
   <input type="file" id="fileIMS" hidden accept=".xlsx,.xls">
+</div>
+
+<div class="info-upload">
+  Upload Data = file utama | Upload IMS = update approved / invoice
 </div>
 
 <!-- DATA -->
@@ -249,7 +315,9 @@ tbody tr:hover{
 
 <!-- PIVOT -->
 <div id="pivot" class="tab">
-  <canvas id="chart"></canvas>
+  <div class="table-wrap" style="padding:15px;max-height:none">
+    <canvas id="chart"></canvas>
+  </div>
 </div>
 
 <!-- STATUS -->
