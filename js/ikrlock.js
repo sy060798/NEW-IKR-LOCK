@@ -1,7 +1,7 @@
-// ================================
-// ikrlock.js FULL FINAL COMPLETE
-// sistem lama + IMS fix + server
-// ================================
+// =======================================
+// ikrlock.js FULL FINAL
+// upload orange + upload IMS dipisah
+// =======================================
 
 // ---------- GLOBAL ----------
 let dataIKR = [];
@@ -12,7 +12,6 @@ const SERVER_URL =
 
 let currentDetail = [];
 let currentApproved = [];
-
 let paymentUsed = new Set();
 
 // ---------- INIT ----------
@@ -22,8 +21,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   const fileIMS = document.getElementById("fileIMS");
   const checkAll = document.getElementById("checkAll");
 
-  if(file) file.addEventListener("change",importExcel);
-  if(fileIMS) fileIMS.addEventListener("change",importIMS);
+  if(file) file.addEventListener("change", importExcel);
+  if(fileIMS) fileIMS.addEventListener("change", importIMS);
 
   if(checkAll){
     checkAll.addEventListener("change",e=>{
@@ -64,9 +63,9 @@ function triggerUploadIMS(){
   document.getElementById("fileIMS").click();
 }
 
-// ========================================
-// IMPORT DATA
-// ========================================
+// =======================================
+// UPLOAD ORANGE
+// =======================================
 function importExcel(e){
 
   let file = e.target.files[0];
@@ -106,9 +105,7 @@ function importExcel(e){
 
     let newData = [];
 
-    // ====================================
-    // IMS RAW
-    // ====================================
+    // ================= IMS RAW =================
     if(isIMSRaw){
 
       let map = {};
@@ -155,15 +152,22 @@ function importExcel(e){
 
         if(isNaN(dt)){
           if(String(woEnd).includes("/")){
-            let p = String(woEnd).split(" ")[0].split("/");
-            dt = new Date(`${p[2]}-${p[1]}-${p[0]}`);
+            let p = String(woEnd)
+              .split(" ")[0]
+              .split("/");
+            dt = new Date(
+              `${p[2]}-${p[1]}-${p[0]}`
+            );
           }
         }
 
         if(isNaN(dt)) return;
 
         let tahun = dt.getFullYear();
-        let bulan = dt.toLocaleString("id-ID",{month:"short"});
+        let bulan = dt.toLocaleString(
+          "id-ID",
+          {month:"short"}
+        );
 
         let key =
           city+"_"+tahun+"_"+bulan+"_"+job;
@@ -191,7 +195,8 @@ function importExcel(e){
 
       Object.values(map).forEach(g=>{
 
-        let amount = Math.round(g.amount*1.11);
+        let amount =
+          Math.round(g.amount * 1.11);
 
         newData.push({
           id:Date.now()+Math.random(),
@@ -215,12 +220,13 @@ function importExcel(e){
 
       });
 
-      alert("Upload selesai\nDuplikat WO : "+duplikat);
+      alert(
+        "Upload selesai\nDuplikat WO : "+
+        duplikat
+      );
     }
 
-    // ====================================
-    // FORMAT LAMA
-    // ====================================
+    // ================= FORMAT LAMA =================
     else{
 
       raw.forEach(r=>{
@@ -249,7 +255,9 @@ function importExcel(e){
           wotype:r["WO TYPE"]||"",
           bulan:r["BULAN"]||"",
           jumlah:Number(r["JUMLAH WO"])||0,
-          approved:Number(r["WO APPROVED"])||0,
+          approved:Number(
+            r["WO APPROVED"]
+          )||0,
           amount:amount,
           fs:fs,
           selisih:amount-fs,
@@ -269,7 +277,10 @@ function importExcel(e){
     sortData();
     render();
 
-    alert("Upload sukses : "+newData.length);
+    alert(
+      "Upload sukses : "+
+      newData.length
+    );
 
     e.target.value = "";
   };
@@ -277,9 +288,9 @@ function importExcel(e){
   reader.readAsBinaryString(file);
 }
 
-// ========================================
-// IMPORT IMS PAYMENT
-// ========================================
+// =======================================
+// UPLOAD IMS (TERPISAH)
+// =======================================
 function importIMS(e){
 
   let file = e.target.files[0];
@@ -289,7 +300,10 @@ function importIMS(e){
 
   reader.onload = function(evt){
 
-    let wb = XLSX.read(evt.target.result,{type:"binary"});
+    let wb = XLSX.read(
+      evt.target.result,
+      {type:"binary"}
+    );
 
     let totalUpdate = 0;
     let duplicate = 0;
@@ -303,10 +317,8 @@ function importIMS(e){
 
       json.forEach(r=>{
 
-        // 🔥 FLEXIBLE HEADER
         let pra = String(
           r["Pra Invoice Number"] ||
-          r["PraInvoiceNumber"] ||
           r["PRA INVOICE NUMBER"] ||
           ""
         ).trim();
@@ -314,37 +326,30 @@ function importIMS(e){
         let inv = String(
           r["Invoice Number"] ||
           r["Invoice Name"] ||
-          r["INVOICE NUMBER"] ||
-          r["INVOICE NAME"] ||
+          ""
+        ).trim();
+
+        let wo = String(
+          r["Wonumber"] ||
+          r["WO Number"] ||
           ""
         ).trim();
 
         let status = String(
           r["Status"] ||
-          r["STATUS"] ||
           "APPROVED"
         ).trim().toUpperCase();
-
-        let wo = String(
-          r["Wonumber"] ||
-          r["WO Number"] ||
-          r["WONUMBER"] ||
-          r["WO NUMBER"] ||
-          "-"
-        ).trim();
 
         let amount = parseAngka(
           r["Invoice Total"] ||
           r["Amount"] ||
-          r["INVOICE TOTAL"] ||
-          r["AMOUNT"] ||
           0
         );
 
         if(!pra && !inv) return;
-        if(status !== "APPROVED") return;
+        if(status!=="APPROVED") return;
 
-        let key = pra + "_" + inv;
+        let key = pra+"_"+inv;
 
         if(paymentUsed.has(key)){
           duplicate++;
@@ -353,28 +358,40 @@ function importIMS(e){
 
         paymentUsed.add(key);
 
-        // 🔥 CARI ROW BERDASARKAN WO
-        let row = dataIKR.find(x =>
-          (x.listWO || []).some(a => String(a.wo).trim() === wo)
+        let woFix =
+          wo.replace(/\D/g,'');
+
+        let row = dataIKR.find(x=>
+          (x.listWO||[]).some(a=>
+            String(a.wo)
+            .replace(/\D/g,'')===woFix
+          )
         );
 
-        // kalau tidak ketemu, pakai row kosong lama
         if(!row){
-          row = dataIKR.find(x =>
-            Number(x.approved) < Number(x.jumlah)
+          row = dataIKR.find(x=>
+            Number(x.approved) <
+            Number(x.jumlah)
           );
         }
 
         if(row){
 
-          row.approved = Number(row.approved||0) + 1;
-          row.fs = Number(row.fs||0) + amount;
+          row.approved =
+            Number(row.approved||0)+1;
+
+          row.fs =
+            Number(row.fs||0)+amount;
+
           row.invoice = inv;
           row.remark = "APPROVED";
           row.note = "AUTO IMS";
-          row.selisih = row.amount - row.fs;
 
-          if(!row.approvedList) row.approvedList = [];
+          row.selisih =
+            row.amount-row.fs;
+
+          if(!row.approvedList)
+            row.approvedList=[];
 
           row.approvedList.push({
             pra:pra,
@@ -393,12 +410,12 @@ function importIMS(e){
     render();
 
     alert(
-      "IMS selesai\n" +
-      "Update : " + totalUpdate +
-      "\nDuplikat : " + duplicate
+      "IMS selesai\n"+
+      "Update : "+totalUpdate+
+      "\nDuplikat : "+duplicate
     );
 
-    e.target.value="";
+    e.target.value = "";
   };
 
   reader.readAsBinaryString(file);
@@ -416,17 +433,23 @@ function sortData(){
   dataIKR.sort((a,b)=>{
 
     if(a.region!==b.region)
-      return a.region.localeCompare(b.region);
+      return a.region.localeCompare(
+        b.region
+      );
 
-    if(Number(a.tahun)!==Number(b.tahun))
-      return Number(a.tahun)-Number(b.tahun);
+    if(Number(a.tahun)!==
+       Number(b.tahun))
+      return Number(a.tahun)-
+             Number(b.tahun);
 
     if((bulanMap[a.bulan]||0)!==
        (bulanMap[b.bulan]||0))
       return (bulanMap[a.bulan]||0)-
              (bulanMap[b.bulan]||0);
 
-    return a.wotype.localeCompare(b.wotype);
+    return a.wotype.localeCompare(
+      b.wotype
+    );
   });
 }
 
@@ -434,7 +457,10 @@ function sortData(){
 function render(){
 
   let tb =
-    document.querySelector("#tbl tbody");
+    document.querySelector(
+      "#tbl tbody"
+    );
+
   if(!tb) return;
 
   tb.innerHTML = "";
@@ -468,7 +494,7 @@ function render(){
       <td>${format(d.fs)}</td>
 
       <td style="color:${d.selisih>0?'red':'lime'}">
-      ${format(d.selisih)}
+        ${format(d.selisih)}
       </td>
 
       <td contenteditable
@@ -498,16 +524,18 @@ function render(){
 // ---------- DETAIL ----------
 function showDetail(i){
 
-  currentDetail = dataIKR[i].listWO || [];
+  currentDetail =
+    dataIKR[i].listWO || [];
 
   let tb =
-    document.querySelector("#tblDetail tbody");
-
-  if(!tb) return;
+    document.querySelector(
+      "#tblDetail tbody"
+    );
 
   tb.innerHTML = "";
 
   currentDetail.forEach(x=>{
+
     tb.innerHTML += `
     <tr>
       <td>${x.wo}</td>
@@ -517,7 +545,9 @@ function showDetail(i){
     </tr>`;
   });
 
-  document.getElementById("popupWO").style.display="block";
+  document.getElementById(
+    "popupWO"
+  ).style.display="block";
 }
 
 function showApproved(i){
@@ -526,11 +556,14 @@ function showApproved(i){
     dataIKR[i].approvedList || [];
 
   let tb =
-    document.querySelector("#tblDetail tbody");
+    document.querySelector(
+      "#tblDetail tbody"
+    );
 
-  tb.innerHTML="";
+  tb.innerHTML = "";
 
   currentApproved.forEach(x=>{
+
     tb.innerHTML += `
     <tr>
       <td>${x.pra}</td>
@@ -540,24 +573,34 @@ function showApproved(i){
     </tr>`;
   });
 
-  document.getElementById("popupWO").style.display="block";
+  document.getElementById(
+    "popupWO"
+  ).style.display="block";
 }
 
 function closePopup(){
-  document.getElementById("popupWO").style.display="none";
+  document.getElementById(
+    "popupWO"
+  ).style.display="none";
 }
 
 function downloadDetail(){
 
   let ws = XLSX.utils.json_to_sheet(
-    currentApproved.length ?
-    currentApproved :
-    currentDetail
+    currentApproved.length
+    ? currentApproved
+    : currentDetail
   );
 
   let wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,"DETAIL");
-  XLSX.writeFile(wb,"DETAIL.xlsx");
+
+  XLSX.utils.book_append_sheet(
+    wb,ws,"DETAIL"
+  );
+
+  XLSX.writeFile(
+    wb,"DETAIL.xlsx"
+  );
 }
 
 // ---------- EDIT ----------
@@ -566,18 +609,22 @@ function edit(i,f,v){
 }
 
 function toggleDone(i,v){
-  dataIKR[i].done = v ? "YES":"NO";
+  dataIKR[i].done =
+    v ? "YES":"NO";
 }
 
 // ---------- DELETE ----------
 async function hapusData(){
 
   let c =
-    document.querySelectorAll(".chk");
+    document.querySelectorAll(
+      ".chk"
+    );
 
   let ids = [];
 
-  dataIKR = dataIKR.filter((d,i)=>{
+  dataIKR = dataIKR.filter(
+    (d,i)=>{
 
     if(c[i].checked){
       ids.push(String(d.id));
@@ -590,16 +637,20 @@ async function hapusData(){
   render();
 
   try{
-    await fetch(SERVER_URL+"/api/delete",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        type:"IKR",
-        ids:ids
-      })
-    });
+    await fetch(
+      SERVER_URL+"/api/delete",
+      {
+        method:"POST",
+        headers:{
+          "Content-Type":
+          "application/json"
+        },
+        body:JSON.stringify({
+          type:"IKR",
+          ids:ids
+        })
+      }
+    );
   }catch(e){}
 }
 
@@ -607,12 +658,20 @@ async function hapusData(){
 function download(){
 
   let ws =
-    XLSX.utils.json_to_sheet(dataIKR);
+    XLSX.utils.json_to_sheet(
+      dataIKR
+    );
 
-  let wb = XLSX.utils.book_new();
+  let wb =
+    XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(wb,ws,"IKR");
-  XLSX.writeFile(wb,"IKR_LOCK.xlsx");
+  XLSX.utils.book_append_sheet(
+    wb,ws,"IKR"
+  );
+
+  XLSX.writeFile(
+    wb,"IKR_LOCK.xlsx"
+  );
 }
 
 // ---------- PIVOT ----------
@@ -621,11 +680,18 @@ function generatePivot(){
   let map = {};
 
   dataIKR.forEach(d=>{
-    if(!map[d.bulan]) map[d.bulan]=0;
-    map[d.bulan]+=Number(d.amount)||0;
+    if(!map[d.bulan])
+      map[d.bulan]=0;
+
+    map[d.bulan]+=
+      Number(d.amount)||0;
   });
 
-  let ctx = document.getElementById("chart");
+  let ctx =
+    document.getElementById(
+      "chart"
+    );
+
   if(!ctx) return;
 
   if(chart) chart.destroy();
@@ -652,16 +718,20 @@ async function uploadServer(){
 
   try{
 
-    await fetch(SERVER_URL+"/api/save",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        type:"IKR",
-        data:dataIKR
-      })
-    });
+    await fetch(
+      SERVER_URL+"/api/save",
+      {
+        method:"POST",
+        headers:{
+          "Content-Type":
+          "application/json"
+        },
+        body:JSON.stringify({
+          type:"IKR",
+          data:dataIKR
+        })
+      }
+    );
 
     alert("Upload berhasil");
 
@@ -675,7 +745,8 @@ async function loadServer(){
   try{
 
     let r = await fetch(
-      SERVER_URL+"/api/get?type=IKR"
+      SERVER_URL+
+      "/api/get?type=IKR"
     );
 
     let j = await r.json();
@@ -685,11 +756,22 @@ async function loadServer(){
     else
       dataIKR = [];
 
+    dataIKR.forEach(x=>{
+      (x.approvedList||[])
+      .forEach(a=>{
+        paymentUsed.add(
+          a.pra+"_"+a.invoice
+        );
+      });
+    });
+
     sortData();
     render();
 
   }catch(e){
-    console.log("Load gagal");
+    console.log(
+      "Load gagal"
+    );
   }
 }
 
@@ -697,25 +779,48 @@ async function loadServer(){
 function parseAngka(v){
 
   return parseInt(
-    String(v||0).replace(/[^0-9]/g,"")
+    String(v||0)
+    .replace(/[^0-9]/g,"")
   ) || 0;
 }
 
 function format(v){
 
   return "Rp "+
-  Number(v||0).toLocaleString("id-ID");
+  Number(v||0)
+  .toLocaleString("id-ID");
 }
 
 // ---------- GLOBAL ----------
-window.triggerUpload = triggerUpload;
-window.triggerUploadIMS = triggerUploadIMS;
-window.download = download;
-window.hapusData = hapusData;
-window.uploadServer = uploadServer;
-window.showTab = showTab;
-window.generatePivot = generatePivot;
-window.showDetail = showDetail;
-window.showApproved = showApproved;
-window.closePopup = closePopup;
-window.downloadDetail = downloadDetail;
+window.triggerUpload =
+triggerUpload;
+
+window.triggerUploadIMS =
+triggerUploadIMS;
+
+window.download =
+download;
+
+window.hapusData =
+hapusData;
+
+window.uploadServer =
+uploadServer;
+
+window.showTab =
+showTab;
+
+window.generatePivot =
+generatePivot;
+
+window.showDetail =
+showDetail;
+
+window.showApproved =
+showApproved;
+
+window.closePopup =
+closePopup;
+
+window.downloadDetail =
+downloadDetail;
