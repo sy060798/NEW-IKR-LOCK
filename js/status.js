@@ -22,7 +22,6 @@ function generateStatus(){
 
     let jenis = d.wotype || "-";
     let tahun = d.tahun || "-";
-
     let key = jenis + "_" + tahun;
 
     if(!map[key]){
@@ -30,15 +29,30 @@ function generateStatus(){
         jenis: jenis,
         tahun: tahun,
         approved: 0,
-        invoice: 0
+        invoice: 0,
+        woList: []
       };
     }
 
     let woApproved = Number(d.approved) || 0;
-    let fsAmount = Number(d.fs) || 0;
+    let fsAmount   = Number(d.fs) || 0;
 
     map[key].approved += woApproved;
     map[key].invoice += fsAmount;
+
+    // ambil daftar WO approved
+    if(Array.isArray(d.approvedList)){
+      d.approvedList.forEach(x=>{
+        if(x.wo){
+          map[key].woList.push({
+            wo: x.wo,
+            invoice: x.invoice || "",
+            pra: x.pra || "",
+            status: x.status || "APPROVED"
+          });
+        }
+      });
+    }
 
   });
 
@@ -51,11 +65,32 @@ function generateStatus(){
         <td>${no++}</td>
         <td>${r.jenis}</td>
         <td>${r.tahun}</td>
-        <td>${r.approved}</td>
-        <td>${format(r.invoice)}</td>
+
         <td>
-          <button 
-            style="background:#e74c3c;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer"
+          <span
+            onclick="showStatusWO('${r.jenis}','${r.tahun}')"
+            style="
+              color:#00ff90;
+              cursor:pointer;
+              text-decoration:underline;
+              font-weight:bold;
+            ">
+            ${r.approved}
+          </span>
+        </td>
+
+        <td>${format(r.invoice)}</td>
+
+        <td>
+          <button
+            style="
+              background:#e74c3c;
+              color:#fff;
+              border:none;
+              padding:5px 10px;
+              border-radius:5px;
+              cursor:pointer
+            "
             onclick="hapusStatus('${r.jenis}','${r.tahun}')">
             Hapus
           </button>
@@ -65,6 +100,76 @@ function generateStatus(){
 
   });
 
+}
+
+// ================= POPUP DETAIL WO APPROVED =================
+function showStatusWO(jenis,tahun){
+
+  let list = [];
+
+  dataIKR.forEach(d=>{
+
+    if(
+      String(d.wotype) === String(jenis) &&
+      String(d.tahun) === String(tahun)
+    ){
+
+      if(Array.isArray(d.approvedList)){
+        d.approvedList.forEach(x=>{
+          list.push({
+            pra: x.pra || "",
+            invoice: x.invoice || "",
+            status: x.status || "",
+            wo: x.wo || ""
+          });
+        });
+      }
+
+    }
+
+  });
+
+  currentApproved = list;
+  currentDetail = [];
+
+  let head = document.querySelector("#tblDetail thead");
+  let tb   = document.querySelector("#tblDetail tbody");
+
+  head.innerHTML = `
+    <tr>
+      <th>Pra Invoice</th>
+      <th>Invoice Number</th>
+      <th>Status</th>
+      <th>Wonumber</th>
+    </tr>
+  `;
+
+  tb.innerHTML = "";
+
+  if(list.length===0){
+    tb.innerHTML = `
+      <tr>
+        <td colspan="4">Tidak ada WO Approved</td>
+      </tr>
+    `;
+  }else{
+
+    list.forEach(x=>{
+
+      tb.innerHTML += `
+        <tr>
+          <td>${x.pra}</td>
+          <td>${x.invoice}</td>
+          <td>${x.status}</td>
+          <td>${x.wo}</td>
+        </tr>
+      `;
+
+    });
+
+  }
+
+  document.getElementById("popupWO").style.display="block";
 }
 
 // ================= HAPUS STATUS =================
@@ -95,14 +200,12 @@ function hapusStatus(jenis,tahun){
 function downloadStatus(){
 
   let rows = [];
-
   let map = {};
 
   dataIKR.forEach(d=>{
 
     let jenis = d.wotype || "-";
     let tahun = d.tahun || "-";
-
     let key = jenis + "_" + tahun;
 
     if(!map[key]){
@@ -134,3 +237,4 @@ function downloadStatus(){
 window.generateStatus = generateStatus;
 window.downloadStatus = downloadStatus;
 window.hapusStatus = hapusStatus;
+window.showStatusWO = showStatusWO;
