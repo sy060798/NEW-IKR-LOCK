@@ -1,17 +1,18 @@
-// ikrlock.js FULL FIXED FINAL
+// ikrlock.js FULL FINAL FIX
+// Semua fitur tetap ada + perbaikan duplicate
+
 // ========================================
 // GLOBAL
 // ========================================
 let dataIKR = [];
 let chart = null;
-
 let currentDetail = [];
 let currentApproved = [];
 
 const SERVER_URL =
 "https://tracking-server-production-6a12.up.railway.app";
 
-// anti duplicate IMS
+// duplicate IMS
 let paymentUsed = new Set();
 
 // ========================================
@@ -23,8 +24,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   const fileIMS  = document.getElementById("fileIMS");
   const checkAll = document.getElementById("checkAll");
 
-  if(file) file.addEventListener("change",importExcel);
-  if(fileIMS) fileIMS.addEventListener("change",importIMS);
+  if(file) file.addEventListener("change", importExcel);
+  if(fileIMS) fileIMS.addEventListener("change", importIMS);
 
   if(checkAll){
     checkAll.addEventListener("change",e=>{
@@ -74,7 +75,8 @@ function triggerUploadIMS(){
 }
 
 // ========================================
-// IMPORT DATA
+// IMPORT DATA ORANGE
+// duplicate Wonumber
 // ========================================
 function importExcel(e){
 
@@ -142,24 +144,23 @@ function importExcel(e){
         woUsed.add(wonumber);
 
         const city =
-          r.City || r.CITY || r.city || "";
+          r["City"] ||
+          r["CITY"] ||
+          r["city"] || "";
 
         const woEnd =
           r["Wo End"] ||
-          r["WO END"] ||
-          r["woEnd"] || "";
+          r["WO END"] || "";
 
         const job =
           r["Job Name"] ||
-          r["JOB NAME"] ||
-          r["jobName"] || "";
+          r["JOB NAME"] || "";
 
         if(!city || !woEnd) return;
 
         let woTotal = parseAngka(
           r["Wo Total"] ||
-          r["WO TOTAL"] ||
-          r["WoTotal"] || 0
+          r["WO TOTAL"] || 0
         );
 
         let dt = new Date(woEnd);
@@ -174,9 +175,13 @@ function importExcel(e){
         if(isNaN(dt)) return;
 
         const tahun = dt.getFullYear();
-        const bulan = dt.toLocaleString("id-ID",{month:"short"});
+        const bulan = dt.toLocaleString(
+          "id-ID",
+          {month:"short"}
+        );
 
-        const key = city+"_"+tahun+"_"+bulan+"_"+job;
+        const key =
+          city+"_"+tahun+"_"+bulan+"_"+job;
 
         if(!map[key]){
           map[key]={
@@ -201,7 +206,7 @@ function importExcel(e){
 
       Object.values(map).forEach(g=>{
 
-        let amount = Math.round(g.amount * 1.11);
+        const amount = Math.round(g.amount*1.11);
 
         newData.push({
           id:Date.now()+Math.random(),
@@ -229,45 +234,41 @@ function importExcel(e){
 
     }else{
 
-      // ====================================
-      // FORMAT LAMA
-      // ====================================
+      // format lama
       rows.forEach(r=>{
 
         const region =
-          r.REGION ||
-          r.Region || "";
+          r["REGION"] ||
+          r["Region"] || "";
 
         if(!region) return;
 
-        const amount =
-          parseAngka(
-            r.AMOUNT ||
-            r.Amount
-          );
+        const amount = parseAngka(
+          r["AMOUNT"] ||
+          r["Amount"]
+        );
 
-        const fs =
-          parseAngka(
-            r["FS AMOUNT"] ||
-            r["FS Amount"]
-          );
+        const fs = parseAngka(
+          r["FS AMOUNT"] ||
+          r["FS Amount"]
+        );
 
         newData.push({
           id:Date.now()+Math.random(),
           type:"IKR",
           region:region,
-          tahun:r.TAHUN || "",
+          tahun:r["TAHUN"] || "",
           wotype:r["WO TYPE"] || "",
-          bulan:r.BULAN || "",
+          bulan:r["BULAN"] || "",
           jumlah:Number(r["JUMLAH WO"]) || 0,
           approved:Number(r["WO APPROVED"]) || 0,
           amount:amount,
           fs:fs,
           selisih:amount-fs,
-          remark:r.REMARK || "",
+          remark:r["REMARK"] || "",
           invoice:r["NO INVOICE"] || "",
-          note:r.NOTE || "",
-          done:r.DONE || "NO",
+          note:r["NOTE"] || "",
+          done:r["DONE"] || "NO",
           listWO:[],
           approvedList:[]
         });
@@ -289,7 +290,8 @@ function importExcel(e){
 }
 
 // ========================================
-// IMPORT IMS
+// IMPORT IMS UNGU
+// duplicate Pra + Invoice
 // ========================================
 function importIMS(e){
 
@@ -314,12 +316,25 @@ function importIMS(e){
 
       json.forEach(r=>{
 
-        const pra = String(r["Pra Invoice Number"]||"").trim();
-        const inv = String(r["Invoice Number"]||"").trim();
-        const status = String(r["Status"]||"").trim().toUpperCase();
-        const wo = String(r["Wonumber"]||"-").trim();
+        const pra = String(
+          r["Pra Invoice Number"] || ""
+        ).trim();
 
-        const amount = parseAngka(r["Invoice Total"]);
+        const inv = String(
+          r["Invoice Number"] || ""
+        ).trim();
+
+        const status = String(
+          r["Status"] || "APPROVED"
+        ).trim().toUpperCase();
+
+        const wo = String(
+          r["Wonumber"] || "-"
+        ).trim();
+
+        const amount = parseAngka(
+          r["Invoice Total"] || 0
+        );
 
         if(!pra && !inv) return;
         if(status!=="APPROVED") return;
@@ -334,7 +349,8 @@ function importIMS(e){
         paymentUsed.add(key);
 
         let row = dataIKR.find(x=>
-          Number(x.approved) < Number(x.jumlah)
+          Number(x.approved) <
+          Number(x.jumlah)
         );
 
         if(row){
@@ -344,10 +360,7 @@ function importIMS(e){
           row.invoice = inv;
           row.remark = "APPROVED";
           row.note = "AUTO IMS";
-          row.selisih = row.amount - row.fs;
-
-          if(!row.approvedList)
-            row.approvedList = [];
+          row.selisih = row.amount-row.fs;
 
           row.approvedList.push({
             pra:pra,
@@ -425,41 +438,16 @@ function render(){
       <td>${d.wotype}</td>
       <td>${d.bulan}</td>
 
-      <td>
-        <span onclick="showDetail(${i})"
-        style="color:cyan;cursor:pointer;text-decoration:underline">
-        ${d.jumlah}
-        </span>
-      </td>
-
-      <td>
-        <span onclick="showApproved(${i})"
-        style="color:lime;cursor:pointer;text-decoration:underline">
-        ${d.approved}
-        </span>
-      </td>
+      <td><span onclick="showDetail(${i})" style="color:cyan;cursor:pointer">${d.jumlah}</span></td>
+      <td><span onclick="showApproved(${i})" style="color:lime;cursor:pointer">${d.approved}</span></td>
 
       <td>${format(d.amount)}</td>
       <td>${format(d.fs)}</td>
+      <td style="color:${d.selisih>0?'red':'lime'}">${format(d.selisih)}</td>
 
-      <td style="color:${d.selisih>0?'red':'lime'}">
-      ${format(d.selisih)}
-      </td>
-
-      <td contenteditable
-      oninput="edit(${i},'remark',this.innerText)">
-      ${d.remark}
-      </td>
-
-      <td contenteditable
-      oninput="edit(${i},'invoice',this.innerText)">
-      ${d.invoice}
-      </td>
-
-      <td contenteditable
-      oninput="edit(${i},'note',this.innerText)">
-      ${d.note}
-      </td>
+      <td contenteditable oninput="edit(${i},'remark',this.innerText)">${d.remark}</td>
+      <td contenteditable oninput="edit(${i},'invoice',this.innerText)">${d.invoice}</td>
+      <td contenteditable oninput="edit(${i},'note',this.innerText)">${d.note}</td>
 
       <td>
         <input type="checkbox"
@@ -471,13 +459,15 @@ function render(){
 }
 
 // ========================================
-// POPUP
+// DETAIL
 // ========================================
 function showDetail(i){
 
   currentDetail = dataIKR[i].listWO || [];
 
   const tb = document.querySelector("#tblDetail tbody");
+  if(!tb) return;
+
   tb.innerHTML = "";
 
   currentDetail.forEach(x=>{
@@ -498,6 +488,8 @@ function showApproved(i){
   currentApproved = dataIKR[i].approvedList || [];
 
   const tb = document.querySelector("#tblDetail tbody");
+  if(!tb) return;
+
   tb.innerHTML = "";
 
   currentApproved.forEach(x=>{
@@ -519,11 +511,14 @@ function closePopup(){
 
 function downloadDetail(){
 
-  const ws = XLSX.utils.json_to_sheet(
-    currentApproved.length ? currentApproved : currentDetail
-  );
+  const data =
+    currentApproved.length
+    ? currentApproved
+    : currentDetail;
 
+  const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
+
   XLSX.utils.book_append_sheet(wb,ws,"DETAIL");
   XLSX.writeFile(wb,"DETAIL.xlsx");
 }
@@ -568,7 +563,31 @@ function download(){
 // ========================================
 // PIVOT
 // ========================================
-function generatePivot(){}
+function generatePivot(){
+
+  const ctx = document.getElementById("chart");
+  if(!ctx) return;
+
+  let map = {};
+
+  dataIKR.forEach(d=>{
+    if(!map[d.bulan]) map[d.bulan]=0;
+    map[d.bulan]+=Number(d.amount)||0;
+  });
+
+  if(chart) chart.destroy();
+
+  chart = new Chart(ctx,{
+    type:"bar",
+    data:{
+      labels:Object.keys(map),
+      datasets:[{
+        label:"Amount",
+        data:Object.values(map)
+      }]
+    }
+  });
+}
 
 // ========================================
 // SERVER
@@ -580,7 +599,7 @@ function uploadServer(){
 function loadServer(){}
 
 // ========================================
-// FORMAT
+// UTIL
 // ========================================
 function parseAngka(v){
   return parseInt(
@@ -589,7 +608,8 @@ function parseAngka(v){
 }
 
 function format(v){
-  return "Rp " + Number(v||0).toLocaleString("id-ID");
+  return "Rp " +
+  Number(v||0).toLocaleString("id-ID");
 }
 
 // ========================================
