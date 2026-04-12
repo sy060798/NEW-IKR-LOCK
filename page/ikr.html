@@ -45,7 +45,9 @@ button{
 }
 
 .menu button.active,
-.purple{background:#8e44ad}
+.purple{
+  background:#8e44ad;
+}
 
 .blue{background:#3498db}
 .orange{background:#f39c12}
@@ -77,6 +79,7 @@ thead th{
   background:#8e44ad;
   position:sticky;
   top:0;
+  z-index:5;
 }
 
 tbody tr:hover{
@@ -201,284 +204,6 @@ tbody tr:hover{
 <div class="menu">
   <button class="active" onclick="showTab('data',this)">Data</button>
   <button onclick="showTab('pivot',this)">Pivot</button>
-  <button onclick="showTab('status',this)">Status</button>
-</div>
-
-<!-- BUTTON -->
-<div class="btn-group">
-  <button class="blue" onclick="download()">Download</button>
-  <button class="orange" onclick="triggerUpload()">Upload</button>
-  <button class="red" onclick="hapusData()">Hapus</button>
-  <button class="purple" onclick="triggerUploadIMS()">Upload IMS</button>
-  <button class="green" onclick="uploadServer()">Upload Server</button>
-
-  <input type="file" id="file" hidden accept=".xlsx,.xls">
-  <input type="file" id="fileIMS" hidden accept=".xlsx,.xls">
-</div>
-
-<!-- DATA -->
-<div id="data" class="tab active">
-  <div class="table-wrap">
-    <table id="tbl">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th><input type="checkbox" id="checkAll"></th>
-          <th>Region</th>
-          <th>Tahun</th>
-          <th>WO Type</th>
-          <th>Bulan</th>
-          <th>Jumlah WO</th>
-          <th>WO Approved</th>
-          <th>Amount</th>
-          <th>FS Amount</th>
-          <th>Selisih</th>
-          <th>Remark</th>
-          <th>No Invoice</th>
-          <th>Note</th>
-          <th>Done</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- PIVOT -->
-<div id="pivot" class="tab">
-  <canvas id="chart"></canvas>
-</div>
-
-<!-- STATUS -->
-<div id="status" class="tab">
-  <div class="table-wrap">
-    <table id="tblStatus">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>Jenis</th>
-          <th>Tahun</th>
-          <th>Total WO Approved</th>
-          <th>Total Invoice</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- SCRIPT -->
-<script src="../js/ikrlock.js"></script>
-<script src="../js/status.js"></script>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>IKCR LOCK</title>
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-*{box-sizing:border-box}
-
-body{
-  margin:0;
-  padding:20px;
-  font-family:Arial;
-  background:#0f0f0f;
-  color:#fff;
-}
-
-h2{
-  margin:0 0 15px;
-  text-align:center;
-}
-
-/* MENU */
-.menu{
-  display:flex;
-  gap:10px;
-  margin-bottom:15px;
-  flex-wrap:wrap;
-}
-
-.menu button{
-  border:none;
-  padding:8px 14px;
-  border-radius:6px;
-  cursor:pointer;
-  background:#2a2a2a;
-  color:#fff;
-}
-
-.menu button.active{
-  background:#8e44ad;
-}
-
-/* BUTTON */
-.btn-group{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-bottom:15px;
-}
-
-button{
-  border:none;
-  padding:8px 12px;
-  border-radius:6px;
-  cursor:pointer;
-  color:#fff;
-}
-
-.blue{background:#3498db}
-.orange{background:#f39c12}
-.red{background:#e74c3c}
-.green{background:#2ecc71}
-.purple{background:#8e44ad}
-
-/* TABLE */
-.table-wrap{
-  overflow:auto;
-  max-height:520px;
-  background:#1b1b1b;
-  border:1px solid #444;
-}
-
-table{
-  width:100%;
-  min-width:1300px;
-  border-collapse:collapse;
-}
-
-th,td{
-  border:1px solid #3a3a3a;
-  padding:6px;
-  font-size:12px;
-  text-align:center;
-  white-space:nowrap;
-}
-
-thead th{
-  background:#8e44ad;
-  position:sticky;
-  top:0;
-  z-index:5;
-}
-
-tbody tr:hover{
-  background:#262626;
-}
-
-/* TAB */
-.tab{display:none}
-.tab.active{display:block}
-
-/* POPUP */
-#popupWO{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.8);
-  z-index:9999;
-}
-
-.popup-box{
-  width:90%;
-  max-width:800px;
-  height:500px;
-  background:#111;
-  margin:30px auto;
-  border-radius:10px;
-  padding:15px;
-  display:flex;
-  flex-direction:column;
-}
-
-.popup-body{
-  flex:1;
-  overflow:auto;
-  margin-top:10px;
-}
-
-.popup-action{
-  margin-top:10px;
-  display:flex;
-  gap:8px;
-  justify-content:flex-end;
-}
-
-/* LOADING */
-#loadingBox{
-  display:none;
-}
-
-/* MOBILE */
-@media(max-width:768px){
-  body{padding:10px}
-
-  .btn-group button,
-  .menu button{
-    font-size:12px;
-    padding:7px 10px;
-  }
-
-  th,td{
-    font-size:11px;
-    padding:5px;
-  }
-
-  .popup-box{
-    width:95%;
-    height:90vh;
-  }
-}
-</style>
-</head>
-
-<body>
-
-<div id="loadingBox"></div>
-
-<!-- POPUP -->
-<div id="popupWO">
-  <div class="popup-box">
-
-    <h3 style="margin:0">Detail WO</h3>
-
-    <div class="popup-body">
-      <table id="tblDetail">
-        <thead>
-          <tr>
-            <th>Pra Invoice Number</th>
-            <th>Invoice Number</th>
-            <th>Status</th>
-            <th>Wonumber</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <div class="popup-action">
-      <button class="blue" onclick="downloadDetail()">Download</button>
-      <button style="background:#444" onclick="closePopup()">Cancel</button>
-    </div>
-
-  </div>
-</div>
-
-<h2>🔒 IKCR LOCK</h2>
-
-<!-- MENU -->
-<div class="menu">
-  <button class="active" onclick="showTab('data',this)">Data</button>
-  <button onclick="showTab('pivot',this)">Pivot</button>
   <button onclick="showTab('status',this);generateStatus()">Status</button>
 </div>
 
@@ -551,7 +276,7 @@ tbody tr:hover{
   </button>
 </div>
 
-<!-- JS -->
+<!-- SCRIPT -->
 <script src="../js/ikrlock.js"></script>
 <script src="../js/status.js"></script>
 
