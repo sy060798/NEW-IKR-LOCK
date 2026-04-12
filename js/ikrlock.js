@@ -596,8 +596,62 @@ function generatePivot(){
 }
 
 // ---------- SERVER ----------
-async function uploadServer(){}
-async function loadServer(){}
+async function uploadServer(){
+
+  if(dataIKR.length===0){
+    alert("Data kosong");
+    return;
+  }
+
+  showLoading("Upload ke Server...");
+
+  try{
+
+    await fetch(SERVER_URL+"/api/save",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        type:"IKR",
+        data:dataIKR
+      })
+    });
+
+    hideLoading();
+    alert("Upload berhasil");
+
+  }catch(e){
+    hideLoading();
+    alert("Upload gagal");
+  }
+}
+async function loadServer(){
+
+  showLoading("Ambil data server...");
+
+  try{
+
+    let r = await fetch(
+      SERVER_URL+"/api/get?type=IKR"
+    );
+
+    let j = await r.json();
+
+    if(Array.isArray(j))
+      dataIKR = j;
+    else
+      dataIKR = [];
+
+    sortData();
+    render();
+    hideLoading();
+
+  }catch(e){
+    hideLoading();
+    console.log("Load gagal");
+  }
+}
 
 // ---------- FORMAT ----------
 function parseAngka(v){
