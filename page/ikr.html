@@ -115,7 +115,7 @@ tbody tr:hover{
 
 .popup-box{
   width:90%;
-  max-width:800px;
+  max-width:900px;
   height:500px;
   background:#111;
   margin:30px auto;
@@ -143,7 +143,7 @@ tbody tr:hover{
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.65);
+  background:rgba(0,0,0,.7);
   z-index:99999;
   justify-content:center;
   align-items:center;
@@ -163,7 +163,6 @@ tbody tr:hover{
   margin-top:12px;
   font-size:14px;
   font-weight:bold;
-  color:#fff;
 }
 
 @keyframes spin{
@@ -196,7 +195,6 @@ tbody tr:hover{
 </head>
 <body>
 
-<!-- LOADING -->
 <div id="loadingBox"></div>
 
 <!-- POPUP -->
@@ -233,7 +231,6 @@ tbody tr:hover{
 <div class="menu">
   <button class="active" onclick="showTab('data',this)">Data</button>
   <button onclick="showTab('pivot',this)">Pivot</button>
-  <button onclick="showTab('status',this);generateStatus()">Status</button>
 </div>
 
 <!-- BUTTON -->
@@ -281,33 +278,7 @@ tbody tr:hover{
   <canvas id="chart"></canvas>
 </div>
 
-<!-- STATUS -->
-<div id="status" class="tab">
-  <div class="table-wrap">
-    <table id="tblStatus">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>Jenis</th>
-          <th>Tahun</th>
-          <th>Total WO Approved</th>
-          <th>Total Invoice</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <br>
-
-  <button class="green" onclick="downloadStatus()">
-    Download Status
-  </button>
-</div>
-
-<!-- JS -->
 <script src="../js/ikrlock.js"></script>
-<script src="../js/status.js"></script>
 
 </body>
 </html>
