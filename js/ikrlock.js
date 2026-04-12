@@ -1,54 +1,60 @@
-// ================= GLOBAL =================
+// =======================================
+// ikrlock.js FULL FINAL
+// basis sistem lama + tambahan loading + upload IMS + server
+// =======================================
+
+// ---------- GLOBAL ----------
 let dataIKR = [];
 let chart = null;
-let currentDetail = [];
-const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
 
-// ================= INIT =================
+const SERVER_URL =
+"https://tracking-server-production-6a12.up.railway.app";
+
+let currentDetail = [];
+let currentApproved = [];
+
+// ---------- INIT ----------
 document.addEventListener("DOMContentLoaded", () => {
+
   const file = document.getElementById("file");
   const fileIMS = document.getElementById("fileIMS");
   const checkAll = document.getElementById("checkAll");
 
-  if (file) file.addEventListener("change", importDataUtama);
+  if (file) file.addEventListener("change", importExcel);
   if (fileIMS) fileIMS.addEventListener("change", importIMS);
 
   if (checkAll) {
     checkAll.addEventListener("change", e => {
-      document.querySelectorAll(".chk").forEach(c => c.checked = e.target.checked);
+      document.querySelectorAll(".chk").forEach(x => {
+        x.checked = e.target.checked;
+      });
     });
   }
 
   loadServer();
+
 });
 
-// ================= LOADING =================
-function showLoading(txt = "Loading...") {
-  const box = document.getElementById("loadingBox");
-  if (!box) return;
-  box.style.display = "flex";
-  const t = box.querySelector(".loadingText");
-  if (t) t.innerText = txt;
-}
-
-function hideLoading() {
-  const box = document.getElementById("loadingBox");
-  if (box) box.style.display = "none";
-}
-
-// ================= TAB =================
+// ---------- TAB ----------
 function showTab(id, btn) {
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  document.getElementById(id)?.classList.add("active");
 
-  document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t => {
+    t.classList.remove("active");
+  });
+
+  let el = document.getElementById(id);
+  if (el) el.classList.add("active");
+
+  document.querySelectorAll(".menu button").forEach(b => {
+    b.classList.remove("active");
+  });
+
   if (btn) btn.classList.add("active");
 
   if (id === "pivot") generatePivot();
-  if (id === "status" && typeof generateStatus === "function") generateStatus();
 }
 
-// ================= BUTTON =================
+// ---------- BUTTON ----------
 function triggerUpload() {
   document.getElementById("file").click();
 }
@@ -57,405 +63,671 @@ function triggerUploadIMS() {
   document.getElementById("fileIMS").click();
 }
 
-// ================= HELPER =================
-function getVal(obj, keys = []) {
-  for (let k of keys) {
-    if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== "") {
-      return String(obj[k]).trim();
-    }
-  }
-  return "";
-}
+// =======================================
+// IMPORT DATA UTAMA
+// =======================================
+function importExcel(e) {
 
-function parseAngka(v) {
-  if (v === null || v === undefined || v === "") return 0;
-  return Number(String(v).replace(/[^0-9.-]/g, "")) || 0;
-}
-
-function format(n) {
-  let num = Number(n) || 0;
-  if (num < 0) return `Rp (${Math.abs(num).toLocaleString("id-ID")})`;
-  return `Rp ${num.toLocaleString("id-ID")}`;
-}
-
-function getMonthName(date) {
-  const arr = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
-  return arr[date.getMonth()] || "";
-}
-
-function parseDateExcel(val) {
-  if (!val) return null;
-
-  if (typeof val === "number") {
-    return new Date((val - 25569) * 86400 * 1000);
-  }
-
-  let s = String(val).trim();
-
-  if (s.includes("/")) {
-    let x = s.split(" ")[0].split("/");
-    if (x.length === 3) return new Date(`${x[2]}-${x[1]}-${x[0]}`);
-  }
-
-  if (s.includes("-")) return new Date(s.replace(" ", "T"));
-
-  let d = new Date(s);
-  if (!isNaN(d)) return d;
-
-  return null;
-}
-
-// ================= IMPORT DATA UTAMA =================
-function importDataUtama(e) {
-  const file = e.target.files[0];
+  let file = e.target.files[0];
   if (!file) return;
 
   showLoading("Upload Data...");
 
-  const reader = new FileReader();
+  let reader = new FileReader();
 
-  reader.onload = function(evt) {
-    try {
-      const wb = XLSX.read(evt.target.result, { type: "binary" });
-      let raw = [];
+  reader.onload = function (evt) {
 
-      wb.SheetNames.forEach(s => {
-        const json = XLSX.utils.sheet_to_json(wb.Sheets[s], { defval: "", raw: false });
-        raw.push(...json);
-      });
+    let wb = XLSX.read(evt.target.result, { type: "binary" });
+    let raw = [];
+    let isIMS = false;
 
-      let count = 0;
+    wb.SheetNames.forEach(s => {
 
-      raw.forEach(r => {
-        let region = getVal(r, ["REGION","Region","region"," REGION","REGION "]);
-        if (!region) return;
+      let json = XLSX.utils.sheet_to_json(
+        wb.Sheets[s],
+        { defval: "", raw: false }
+      );
 
-        let tahun = getVal(r, ["TAHUN","Tahun","tahun"]);
-        let wotype = getVal(r, ["WO TYPE","Wo Type","wo type"]);
-        let bulan = getVal(r, ["BULAN","Bulan","bulan"]);
+      if (json.length) {
 
-        let jumlah = parseAngka(getVal(r, ["JUMLAH WO","Jumlah WO"]));
-        let approved = parseAngka(getVal(r, ["WO APPROVED","Wo Approved"]));
-        let amount = parseAngka(getVal(r, ["AMOUNT","Amount"]));
-        let fs = parseAngka(getVal(r, ["FS AMOUNT","FS Amount"]));
+        let first = json[0];
 
-        let exist = dataIKR.find(x =>
-          x.region === region &&
-          String(x.tahun) === String(tahun) &&
-          x.wotype === wotype &&
-          x.bulan === bulan
-        );
-
-        if (exist) {
-          exist.jumlah = jumlah;
-          exist.approved = approved;
-          exist.amount = amount;
-          exist.fs = fs;
-          exist.selisih = amount - fs;
-        } else {
-          dataIKR.push({
-            id: Date.now() + Math.random(),
-            type: "IKR",
-            region,
-            tahun,
-            wotype,
-            bulan,
-            jumlah,
-            approved,
-            amount,
-            fs,
-            selisih: amount - fs,
-            remark: getVal(r, ["REMARK","Remark"]),
-            invoice: getVal(r, ["NO INVOICE","No Invoice"]),
-            note: getVal(r, ["NOTE","Note"]),
-            done: getVal(r, ["DONE","Done"]) || "NO",
-            listWO: []
-          });
+        if (
+          first["Wo End"] ||
+          first["WO END"] ||
+          first["City"] ||
+          first["Job Name"]
+        ) {
+          isIMS = true;
         }
 
-        count++;
+        json.forEach(r => raw.push(r));
+      }
+
+    });
+
+    let newData = [];
+
+    // ==================================
+    // FORMAT IMS RAW
+    // ==================================
+    if (isIMS) {
+
+      let map = {};
+
+      raw.forEach(r => {
+
+        let city =
+          r["City"] ||
+          r["CITY"] || "";
+
+        let woEnd =
+          r["Wo End"] ||
+          r["WO END"] || "";
+
+        let job =
+          r["Job Name"] ||
+          r["JOB NAME"] || "";
+
+        if (!city || !woEnd) return;
+
+        let total = parseAngka(
+          r["Wo Total"] ||
+          r["WO TOTAL"] || 0
+        );
+
+        let dt = new Date(woEnd);
+
+        if (isNaN(dt)) {
+
+          let p = String(woEnd)
+            .split(" ")[0]
+            .split("/");
+
+          if (p.length === 3) {
+            dt = new Date(
+              `${p[2]}-${p[1]}-${p[0]}`
+            );
+          }
+        }
+
+        if (isNaN(dt)) return;
+
+        let tahun = dt.getFullYear();
+
+        let bulan = dt.toLocaleString(
+          "id-ID",
+          { month: "short" }
+        );
+
+        let key =
+          city + "|" +
+          tahun + "|" +
+          bulan + "|" +
+          job;
+
+        if (!map[key]) {
+          map[key] = {
+            city,
+            tahun,
+            bulan,
+            job,
+            jumlah: 0,
+            amount: 0,
+            listWO: []
+          };
+        }
+
+        map[key].jumlah++;
+        map[key].amount += total;
+
+        map[key].listWO.push({
+          wo: r["Wonumber"] || "",
+          ref: r["Reference Code"] || "",
+          quo: r["Quotation Id"] || "",
+          status: r["Status"] || ""
+        });
+
       });
 
-      sortData();
-      render();
-      alert("Upload Data sukses : " + count);
+      Object.values(map).forEach(g => {
 
-    } catch (err) {
-      alert("Gagal upload data");
+        let amount =
+          Math.round(g.amount * 1.11);
+
+        newData.push({
+          id: Date.now() + Math.random(),
+          type: "IKR",
+          region: g.city,
+          tahun: g.tahun,
+          wotype: g.job,
+          bulan: g.bulan,
+          jumlah: g.jumlah,
+          approved: 0,
+          amount: amount,
+          fs: 0,
+          selisih: amount,
+          remark: "",
+          invoice: "",
+          note: "",
+          done: "NO",
+          listWO: g.listWO,
+          approvedList: []
+        });
+
+      });
+
+    } else {
+
+      // ==================================
+      // FORMAT LAMA
+      // ==================================
+      raw.forEach(r => {
+
+        let region =
+          r["REGION"] ||
+          r["Region"] || "";
+
+        if (!region) return;
+
+        let amount = parseAngka(
+          r["AMOUNT"] ||
+          r["Amount"]
+        );
+
+        let fs = parseAngka(
+          r["FS AMOUNT"] ||
+          r["FS Amount"]
+        );
+
+        newData.push({
+          id: Date.now() + Math.random(),
+          type: "IKR",
+          region: region,
+          tahun: r["TAHUN"] || "",
+          wotype: r["WO TYPE"] || "",
+          bulan: r["BULAN"] || "",
+          jumlah: Number(r["JUMLAH WO"]) || 0,
+          approved: Number(r["WO APPROVED"]) || 0,
+          amount: amount,
+          fs: fs,
+          selisih: amount - fs,
+          remark: r["REMARK"] || "",
+          invoice: r["NO INVOICE"] || "",
+          note: r["NOTE"] || "",
+          done: r["DONE"] || "NO",
+          listWO: [],
+          approvedList: []
+        });
+
+      });
+
     }
 
+    dataIKR = [...dataIKR, ...newData];
+
+    sortData();
+    render();
+
     hideLoading();
+
+    alert(
+      "Upload sukses : " +
+      newData.length + " data"
+    );
+
     e.target.value = "";
+
   };
 
   reader.readAsBinaryString(file);
 }
 
-// ================= IMPORT IMS =================
+// =======================================
+// IMPORT IMS APPROVED
+// =======================================
 function importIMS(e) {
-  const file = e.target.files[0];
+
+  let file = e.target.files[0];
   if (!file) return;
 
   showLoading("Upload IMS...");
 
-  const reader = new FileReader();
+  let reader = new FileReader();
 
-  reader.onload = function(evt) {
-    try {
-      const wb = XLSX.read(evt.target.result, { type: "binary" });
-      let raw = [];
+  reader.onload = function (evt) {
 
-      wb.SheetNames.forEach(s => {
-        const json = XLSX.utils.sheet_to_json(wb.Sheets[s], { defval: "", raw: false });
-        raw.push(...json);
-      });
+    let wb = XLSX.read(
+      evt.target.result,
+      { type: "binary" }
+    );
 
-      let dup = {};
-      let hit = 0;
+    let total = 0;
 
-      raw.forEach(r => {
-        let pra = getVal(r, ["Pra Invoice Number"]);
-        let inv = getVal(r, ["Invoice Number"]);
-        let key = pra + "_" + inv;
+    wb.SheetNames.forEach(s => {
 
-        if (dup[key]) return;
-        dup[key] = true;
+      let json = XLSX.utils.sheet_to_json(
+        wb.Sheets[s],
+        { defval: "", raw: false }
+      );
 
-        let wo = getVal(r, ["Wonumber","WONUMBER","wonumber"]);
+      json.forEach(r => {
+
+        let wo = String(
+          r["Wonumber"] ||
+          r["WONUMBER"] ||
+          ""
+        ).trim();
+
         if (!wo) return;
 
-        let invoiceTotal = parseAngka(getVal(r, ["Invoice Total"]));
-        let status = getVal(r, ["Status"]) || "Approved";
-
         dataIKR.forEach(row => {
-          let found = false;
 
-          row.listWO.forEach(x => {
-            if (String(x.wo) === String(wo)) {
-              x.status = status;
-              found = true;
-            }
+          let ketemu =
+            (row.listWO || []).some(x =>
+              String(x.wo).trim() === wo
+            );
+
+          if (!ketemu) return;
+
+          let sudah =
+            (row.approvedList || []).some(x =>
+              String(x.wo).trim() === wo
+            );
+
+          if (sudah) return;
+
+          row.approved =
+            Number(row.approved || 0) + 1;
+
+          row.remark = "APPROVED";
+
+          row.approvedList.push({
+            wo: wo,
+            status: "APPROVED"
           });
 
-          if (found) {
-            row.approved = (Number(row.approved) || 0) + 1;
-            row.fs = (Number(row.fs) || 0) + invoiceTotal;
-            row.selisih = (Number(row.amount) || 0) - (Number(row.fs) || 0);
-            hit++;
-          }
+          total++;
+
         });
+
       });
 
-      sortData();
-      render();
+    });
 
-      alert("Upload IMS sukses : " + hit + " WO match");
-
-    } catch (err) {
-      alert("Gagal upload IMS");
-    }
+    render();
 
     hideLoading();
+
+    alert("IMS update : " + total);
+
     e.target.value = "";
+
   };
 
   reader.readAsBinaryString(file);
 }
 
-// ================= SORT =================
+// ---------- SORT ----------
 function sortData() {
-  const urut = {
-    Jan:1, Feb:2, Mar:3, Apr:4, Mei:5, Jun:6,
-    Jul:7, Agu:8, Sep:9, Okt:10, Nov:11, Des:12
+
+  const bulanMap = {
+    Jan: 1, Feb: 2, Mar: 3,
+    Apr: 4, Mei: 5, Jun: 6,
+    Jul: 7, Agu: 8, Sep: 9,
+    Okt: 10, Nov: 11, Des: 12
   };
 
-  dataIKR.sort((a,b)=>{
-    if(a.region !== b.region) return a.region.localeCompare(b.region);
-    if(Number(a.tahun)!==Number(b.tahun)) return Number(a.tahun)-Number(b.tahun);
-    if((urut[a.bulan]||0)!==(urut[b.bulan]||0)) return (urut[a.bulan]||0)-(urut[b.bulan]||0);
-    return a.wotype.localeCompare(b.wotype);
+  dataIKR.sort((a, b) => {
+
+    if (a.region !== b.region)
+      return a.region.localeCompare(b.region);
+
+    if (Number(a.tahun) !== Number(b.tahun))
+      return Number(a.tahun) - Number(b.tahun);
+
+    if ((bulanMap[a.bulan] || 0) !==
+      (bulanMap[b.bulan] || 0))
+      return (bulanMap[a.bulan] || 0) -
+        (bulanMap[b.bulan] || 0);
+
+    return a.wotype.localeCompare(
+      b.wotype
+    );
+
   });
 }
 
-// ================= RENDER =================
+// ---------- RENDER ----------
 function render() {
-  let tb = document.querySelector("#tbl tbody");
+
+  let tb =
+    document.querySelector("#tbl tbody");
+
   if (!tb) return;
 
   tb.innerHTML = "";
 
-  dataIKR.forEach((d,i)=>{
+  dataIKR.forEach((d, i) => {
+
     tb.innerHTML += `
 <tr>
-<td>${i+1}</td>
+<td>${i + 1}</td>
 <td><input type="checkbox" class="chk"></td>
 <td>${d.region}</td>
 <td>${d.tahun}</td>
 <td>${d.wotype}</td>
 <td>${d.bulan}</td>
+
 <td>
-<span onclick="showDetail(${i})" style="cursor:pointer;color:cyan;text-decoration:underline">
-${d.jumlah || 0}
+<span onclick="showDetail(${i})"
+style="color:cyan;cursor:pointer">
+${d.jumlah}
 </span>
 </td>
-<td>${d.approved || 0}</td>
-<td style="text-align:right">${format(d.amount)}</td>
-<td style="text-align:right">${format(d.fs)}</td>
-<td style="text-align:right;color:${d.selisih<0?"orange":d.selisih>0?"red":"lime"}">
+
+<td>
+<span onclick="showApproved(${i})"
+style="color:lime;cursor:pointer">
+${d.approved}
+</span>
+</td>
+
+<td>${format(d.amount)}</td>
+<td>${format(d.fs)}</td>
+
+<td style="color:${d.selisih > 0 ? 'red' : 'lime'}">
 ${format(d.selisih)}
 </td>
-<td contenteditable oninput="edit(${i},'remark',this.innerText)">${d.remark||""}</td>
-<td contenteditable oninput="edit(${i},'invoice',this.innerText)">${d.invoice||""}</td>
-<td contenteditable oninput="edit(${i},'note',this.innerText)">${d.note||""}</td>
+
+<td contenteditable
+oninput="edit(${i},'remark',this.innerText)">
+${d.remark}
+</td>
+
+<td contenteditable
+oninput="edit(${i},'invoice',this.innerText)">
+${d.invoice}
+</td>
+
+<td contenteditable
+oninput="edit(${i},'note',this.innerText)">
+${d.note}
+</td>
+
 <td>
-<input type="checkbox" ${d.done==="YES"?"checked":""}
+<input type="checkbox"
+${d.done === "YES" ? "checked" : ""}
 onchange="toggleDone(${i},this.checked)">
 </td>
-</tr>`;
+
+</tr>
+`;
+
   });
+
 }
 
-// ================= DETAIL =================
+// ---------- DETAIL ----------
 function showDetail(i) {
-  currentDetail = dataIKR[i].listWO || [];
-  let tb = document.querySelector("#tblDetail tbody");
+
+  currentDetail =
+    dataIKR[i].listWO || [];
+
+  popupData(currentDetail);
+}
+
+function showApproved(i) {
+
+  currentApproved =
+    dataIKR[i].approvedList || [];
+
+  popupData(currentApproved);
+}
+
+function popupData(arr) {
+
+  let tb =
+    document.querySelector("#tblDetail tbody");
+
   tb.innerHTML = "";
 
-  currentDetail.forEach(d=>{
-    tb.innerHTML += `
-<tr>
-<td>${d.wo}</td>
-<td>${d.ref||""}</td>
-<td>${d.quo||""}</td>
-<td>${d.status||""}</td>
-</tr>`;
+  arr.forEach(x => {
+
+    tb.innerHTML +=
+      "<tr>" +
+      Object.values(x)
+        .map(v => `<td>${v}</td>`)
+        .join("") +
+      "</tr>";
+
   });
 
-  document.getElementById("popupWO").style.display = "block";
+  document.getElementById(
+    "popupWO"
+  ).style.display = "block";
 }
 
 function closePopup() {
-  document.getElementById("popupWO").style.display = "none";
+  document.getElementById(
+    "popupWO"
+  ).style.display = "none";
 }
 
 function downloadDetail() {
-  let ws = XLSX.utils.json_to_sheet(currentDetail);
-  let wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "DETAIL_WO");
-  XLSX.writeFile(wb, "DETAIL_WO.xlsx");
+
+  let data =
+    currentApproved.length
+      ? currentApproved
+      : currentDetail;
+
+  let ws =
+    XLSX.utils.json_to_sheet(data);
+
+  let wb =
+    XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    wb, ws, "DETAIL"
+  );
+
+  XLSX.writeFile(
+    wb, "DETAIL.xlsx"
+  );
 }
 
-// ================= EDIT =================
-function edit(i,f,v){ dataIKR[i][f] = v; }
-function toggleDone(i,v){ dataIKR[i].done = v ? "YES" : "NO"; }
+// ---------- EDIT ----------
+function edit(i, f, v) {
+  dataIKR[i][f] = v;
+}
 
-// ================= DELETE =================
-async function hapusData() {
-  let c = document.querySelectorAll(".chk");
-  let ids = [];
+function toggleDone(i, v) {
+  dataIKR[i].done =
+    v ? "YES" : "NO";
+}
 
-  dataIKR = dataIKR.filter((d,i)=>{
-    if(c[i].checked){
-      ids.push(String(d.id));
-      return false;
-    }
-    return true;
-  });
+// ---------- DELETE ----------
+function hapusData() {
+
+  let c =
+    document.querySelectorAll(".chk");
+
+  dataIKR =
+    dataIKR.filter((d, i) =>
+      !c[i].checked
+    );
 
   render();
-
-  try{
-    await fetch(SERVER_URL + "/api/delete",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ type:"IKR", ids })
-    });
-  }catch(e){}
 }
 
-// ================= DOWNLOAD =================
+// ---------- DOWNLOAD ----------
 function download() {
-  let ws = XLSX.utils.json_to_sheet(dataIKR);
-  let wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "IKCR");
-  XLSX.writeFile(wb, "IKCR_LOCK.xlsx");
+
+  let ws =
+    XLSX.utils.json_to_sheet(dataIKR);
+
+  let wb =
+    XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    wb, ws, "IKR"
+  );
+
+  XLSX.writeFile(
+    wb, "IKR_LOCK.xlsx"
+  );
 }
 
-// ================= PIVOT =================
+// ---------- PIVOT ----------
 function generatePivot() {
+
   let map = {};
 
-  dataIKR.forEach(d=>{
-    if(!map[d.bulan]) map[d.bulan]=0;
-    map[d.bulan]+=Number(d.amount)||0;
+  dataIKR.forEach(d => {
+
+    if (!map[d.bulan])
+      map[d.bulan] = 0;
+
+    map[d.bulan] +=
+      Number(d.amount) || 0;
+
   });
 
-  let ctx = document.getElementById("chart");
-  if (!ctx) return;
+  let ctx =
+    document.getElementById("chart");
 
-  if(chart) chart.destroy();
+  if (chart) chart.destroy();
 
-  chart = new Chart(ctx,{
-    type:"bar",
-    data:{
-      labels:Object.keys(map),
-      datasets:[{
-        label:"Total Amount",
-        data:Object.values(map)
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: Object.keys(map),
+      datasets: [{
+        label: "Total Amount",
+        data: Object.values(map)
       }]
     }
   });
 }
 
-// ================= SERVER =================
+// ---------- SERVER ----------
 async function uploadServer() {
-  if (dataIKR.length === 0) return alert("Data kosong");
+
+  if (dataIKR.length === 0) {
+    alert("Data kosong");
+    return;
+  }
 
   showLoading("Upload Server...");
 
-  try{
-    for(let i=0;i<dataIKR.length;i+=100){
-      let chunk = dataIKR.slice(i,i+100);
+  try {
 
-      await fetch(SERVER_URL + "/api/save",{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({ type:"IKR", data:chunk })
-      });
-    }
+    await fetch(
+      SERVER_URL + "/api/save",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json"
+        },
+        body: JSON.stringify({
+          type: "IKR",
+          data: dataIKR
+        })
+      }
+    );
 
+    hideLoading();
     alert("Upload berhasil");
 
-  }catch(e){
-    alert("Upload gagal");
-  }
+  } catch (e) {
 
-  hideLoading();
+    hideLoading();
+    alert("Upload gagal");
+
+  }
 }
 
 async function loadServer() {
-  try{
-    let r = await fetch(SERVER_URL + "/api/get?type=IKR");
-    dataIKR = await r.json();
 
-    if(!Array.isArray(dataIKR)) dataIKR=[];
+  showLoading("Load Server...");
+
+  try {
+
+    let r = await fetch(
+      SERVER_URL +
+      "/api/get?type=IKR"
+    );
+
+    let j = await r.json();
+
+    if (Array.isArray(j))
+      dataIKR = j;
+    else
+      dataIKR = [];
 
     sortData();
     render();
 
-  }catch(e){
-    console.log("Gagal load");
+    hideLoading();
+
+  } catch (e) {
+
+    hideLoading();
+
   }
 }
 
-// ================= GLOBAL =================
+// ---------- FORMAT ----------
+function parseAngka(v) {
+
+  return parseInt(
+    String(v || 0)
+      .replace(/[^0-9]/g, "")
+  ) || 0;
+}
+
+function format(v) {
+
+  return "Rp " +
+    Number(v || 0)
+      .toLocaleString("id-ID");
+}
+
+// ---------- LOADING ----------
+function showLoading(text = "Loading...") {
+
+  let box =
+    document.getElementById("loadingBox");
+
+  if (!box) return;
+
+  box.style.display = "flex";
+
+  box.innerHTML = `
+<div class="loader"></div>
+<div class="loadingText">${text}</div>
+`;
+}
+
+function hideLoading() {
+
+  let box =
+    document.getElementById("loadingBox");
+
+  if (box)
+    box.style.display = "none";
+}
+
+// ---------- GLOBAL ----------
 window.triggerUpload = triggerUpload;
 window.triggerUploadIMS = triggerUploadIMS;
 window.download = download;
 window.hapusData = hapusData;
-window.generatePivot = generatePivot;
 window.uploadServer = uploadServer;
 window.showTab = showTab;
+window.generatePivot = generatePivot;
 window.showDetail = showDetail;
+window.showApproved = showApproved;
 window.closePopup = closePopup;
 window.downloadDetail = downloadDetail;
