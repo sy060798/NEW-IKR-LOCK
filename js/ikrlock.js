@@ -76,6 +76,9 @@ function triggerUploadIMS(){
 // ========================================
 // IMPORT DATA AWAL / IMS RAW
 // ========================================
+// ========================================
+// IMPORT DATA AWAL / IMS RAW
+// ========================================
 function importExcel(e){
 
   const file = e.target.files[0];
@@ -115,6 +118,195 @@ function importExcel(e){
 
     let newData = [];
 
+    // ====================================
+    // IMS RAW
+    // ====================================
+    if(isIMSRaw){
+
+      let map = {};
+      let woUsed = new Set();
+      let duplikat = 0;
+
+      rows.forEach(r=>{
+
+        const wonumber = String(
+          r["Wonumber"] ||
+          r["WONUMBER"] ||
+          r["wonumber"] || ""
+        ).trim();
+
+        if(!wonumber) return;
+
+        // anti duplicate WO
+        if(woUsed.has(wonumber)){
+          duplikat++;
+          return;
+        }
+
+        woUsed.add(wonumber);
+
+        const city =
+          r.City || r.CITY || r.city || "";
+
+        const woEnd =
+          r["Wo End"] ||
+          r["WO END"] ||
+          r["woEnd"] || "";
+
+        const job =
+          r["Job Name"] ||
+          r["JOB NAME"] ||
+          r["jobName"] || "";
+
+        if(!city || !woEnd) return;
+
+        const woTotal = parseAngka(
+          r["Wo Total"] ||
+          r["WO TOTAL"] ||
+          r["WoTotal"] || 0
+        );
+
+        let dt = new Date(woEnd);
+
+        if(isNaN(dt)){
+          if(String(woEnd).includes("/")){
+            const p = String(woEnd).split("/");
+            if(p.length===3){
+              dt = new Date(`${p[2]}-${p[1]}-${p[0]}`);
+            }
+          }
+        }
+
+        if(isNaN(dt)) return;
+
+        const tahun = dt.getFullYear();
+        const bulan = dt.toLocaleString(
+          "id-ID",
+          {month:"short"}
+        );
+
+        const key =
+          city+"_"+tahun+"_"+bulan+"_"+job;
+
+        if(!map[key]){
+          map[key]={
+            city,tahun,bulan,job,
+            total:0,
+            amount:0,
+            listWO:[]
+          };
+        }
+
+        map[key].total++;
+        map[key].amount += woTotal;
+
+        map[key].listWO.push({
+          wo:wonumber,
+          ref:r["Reference Code"] || "-",
+          quo:r["Quotation Id"] || "-",
+          status:r["Status"] || "-"
+        });
+
+      });
+
+      // masuk ke data baru
+      Object.values(map).forEach(g=>{
+
+        const amount =
+          Math.round(Number(g.amount) * 1.11);
+
+        newData.push({
+          id:Date.now()+Math.random(),
+          type:"IKR",
+          region:g.city,
+          tahun:g.tahun,
+          wotype:g.job,
+          bulan:g.bulan,
+          jumlah:g.total,
+          approved:0,
+          amount:amount,
+          fs:0,
+          selisih:amount,
+          remark:"",
+          invoice:"",
+          note:"",
+          done:"NO",
+          listWO:g.listWO,
+          approvedList:[]
+        });
+
+      });
+
+      alert(
+        "Upload selesai\n"+
+        "Data Baru : "+newData.length+
+        "\nDuplikat WO : "+duplikat
+      );
+
+    }else{
+
+      // ====================================
+      // FORMAT LAMA
+      // ====================================
+      rows.forEach(r=>{
+
+        const region =
+          r.REGION ||
+          r.Region || "";
+
+        if(!region) return;
+
+        const amount =
+          parseAngka(
+            r.AMOUNT ||
+            r.Amount
+          );
+
+        const fs =
+          parseAngka(
+            r["FS AMOUNT"] ||
+            r["FS Amount"]
+          );
+
+        newData.push({
+          id:Date.now()+Math.random(),
+          type:"IKR",
+          region:region,
+          tahun:r.TAHUN || "",
+          wotype:r["WO TYPE"] || "",
+          bulan:r.BULAN || "",
+          jumlah:Number(r["JUMLAH WO"]) || 0,
+          approved:Number(r["WO APPROVED"]) || 0,
+          amount:amount,
+          fs:fs,
+          selisih:amount-fs,
+          remark:r.REMARK || "",
+          invoice:r["NO INVOICE"] || "",
+          note:r.NOTE || "",
+          done:r.DONE || "NO",
+          listWO:[],
+          approvedList:[]
+        });
+
+      });
+
+      alert(
+        "Upload sukses : "+newData.length
+      );
+    }
+
+    // gabung data
+    dataIKR = [...dataIKR,...newData];
+
+    sortData();
+    render();
+
+    e.target.value = "";
+
+  };
+
+  reader.readAsBinaryString(file);
+}
     // ====================================
     // IMS RAW
     // ====================================
