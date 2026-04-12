@@ -118,118 +118,90 @@ function importExcel(e){
     // ====================================
     // IMS RAW
     // ====================================
-    if(isIMSRaw){
+   if(isIMSRaw){
 
-      let map = {};
+  let map = {};
+  let woUsed = new Set();   // anti duplicate Wonumber
+  let duplikat = 0;
 
-      rows.forEach(r=>{
+  rows.forEach(r=>{
 
-        const city =
-          r.City || r.CITY || r.city || "";
+    const wonumber = String(
+      r["Wonumber"] ||
+      r["WONUMBER"] ||
+      r["wonumber"] || ""
+    ).trim();
 
-        const woEnd =
-          r["Wo End"] ||
-          r["WO END"] ||
-          r["woEnd"] || "";
+    if(!wonumber) return;
 
-        const job =
-          r["Job Name"] ||
-          r["JOB NAME"] ||
-          r["jobName"] || "";
+    // jika sama skip
+    if(woUsed.has(wonumber)){
+      duplikat++;
+      return;
+    }
 
-        if(!city || !woEnd) return;
+    woUsed.add(wonumber);
 
-        let woTotal = parseAngka(
-          r["Wo Total"] ||
-          r["WO TOTAL"] ||
-          r["WoTotal"] || 0
-        );
+    const city =
+      r.City || r.CITY || r.city || "";
 
-        let dt = new Date(woEnd);
+    const woEnd =
+      r["Wo End"] ||
+      r["WO END"] ||
+      r["woEnd"] || "";
 
-        if(isNaN(dt)){
+    const job =
+      r["Job Name"] ||
+      r["JOB NAME"] ||
+      r["jobName"] || "";
 
-          if(String(woEnd).includes("/")){
-            const p = String(woEnd).split("/");
-            if(p.length===3){
-              dt = new Date(`${p[2]}-${p[1]}-${p[0]}`);
-            }
-          }
-        }
+    if(!city || !woEnd) return;
 
-        if(isNaN(dt)) return;
+    let woTotal = parseAngka(
+      r["Wo Total"] ||
+      r["WO TOTAL"] ||
+      r["WoTotal"] || 0
+    );
 
-        const tahun = dt.getFullYear();
+    let dt = new Date(woEnd);
 
-        const bulan = dt.toLocaleString(
-          "id-ID",
-          {month:"short"}
-        );
+    if(isNaN(dt)){
+      if(String(woEnd).includes("/")){
+        let p = String(woEnd).split("/");
+        dt = new Date(`${p[2]}-${p[1]}-${p[0]}`);
+      }
+    }
 
-        const key =
-          city+"_"+tahun+"_"+bulan+"_"+job;
+    if(isNaN(dt)) return;
 
-        if(!map[key]){
-          map[key]={
-            city,tahun,bulan,job,
-            total:0,
-            amount:0,
-            listWO:[]
-          };
-        }
+    const tahun = dt.getFullYear();
+    const bulan = dt.toLocaleString("id-ID",{month:"short"});
 
-        map[key].total++;
-        map[key].amount += woTotal;
+    const key = city+"_"+tahun+"_"+bulan+"_"+job;
 
-        map[key].listWO.push({
-          wo:
-            r["Wonumber"] ||
-            r["WO Number"] ||
-            "-",
+    if(!map[key]){
+      map[key]={
+        city,tahun,bulan,job,
+        total:0,
+        amount:0,
+        listWO:[]
+      };
+    }
 
-          ref:
-            r["Reference Code"] ||
-            "-",
+    map[key].total++;
+    map[key].amount += woTotal;
 
-          quo:
-            r["Quotation Id"] ||
-            "-",
+    map[key].listWO.push({
+      wo: wonumber,
+      ref:r["Reference Code"] || "-",
+      quo:r["Quotation Id"] || "-",
+      status:r["Status"] || "-"
+    });
 
-          status:
-            r["Status"] ||
-            "-"
-        });
+  });
 
-      });
-
-      Object.values(map).forEach(g=>{
-
-        const amount =
-          Math.round(g.amount * 1.11);
-
-        newData.push({
-          id:Date.now()+Math.random(),
-          type:"IKR",
-          region:g.city,
-          tahun:g.tahun,
-          wotype:g.job,
-          bulan:g.bulan,
-          jumlah:g.total,
-          approved:0,
-          amount:amount,
-          fs:0,
-          selisih:amount,
-          remark:"",
-          invoice:"",
-          note:"",
-          done:"NO",
-          listWO:g.listWO,
-          approvedList:[]
-        });
-
-      });
-
-    }else{
+  alert("Upload selesai\nDuplikat WO : " + duplikat);
+}
 
       // ====================================
       // FORMAT LAMA
