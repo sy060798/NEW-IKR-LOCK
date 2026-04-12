@@ -303,35 +303,48 @@ function importIMS(e){
 
       json.forEach(r=>{
 
+        // 🔥 FLEXIBLE HEADER
         let pra = String(
-          r["Pra Invoice Number"] || ""
+          r["Pra Invoice Number"] ||
+          r["PraInvoiceNumber"] ||
+          r["PRA INVOICE NUMBER"] ||
+          ""
         ).trim();
 
         let inv = String(
           r["Invoice Number"] ||
           r["Invoice Name"] ||
+          r["INVOICE NUMBER"] ||
+          r["INVOICE NAME"] ||
           ""
         ).trim();
 
         let status = String(
-          r["Status"] || "APPROVED"
+          r["Status"] ||
+          r["STATUS"] ||
+          "APPROVED"
         ).trim().toUpperCase();
 
         let wo = String(
           r["Wonumber"] ||
+          r["WO Number"] ||
+          r["WONUMBER"] ||
+          r["WO NUMBER"] ||
           "-"
         ).trim();
 
         let amount = parseAngka(
           r["Invoice Total"] ||
           r["Amount"] ||
+          r["INVOICE TOTAL"] ||
+          r["AMOUNT"] ||
           0
         );
 
         if(!pra && !inv) return;
-        if(status!=="APPROVED") return;
+        if(status !== "APPROVED") return;
 
-        let key = pra+"_"+inv;
+        let key = pra + "_" + inv;
 
         if(paymentUsed.has(key)){
           duplicate++;
@@ -340,20 +353,28 @@ function importIMS(e){
 
         paymentUsed.add(key);
 
-        let row = dataIKR.find(x=>
-          Number(x.approved) <
-          Number(x.jumlah)
+        // 🔥 CARI ROW BERDASARKAN WO
+        let row = dataIKR.find(x =>
+          (x.listWO || []).some(a => String(a.wo).trim() === wo)
         );
+
+        // kalau tidak ketemu, pakai row kosong lama
+        if(!row){
+          row = dataIKR.find(x =>
+            Number(x.approved) < Number(x.jumlah)
+          );
+        }
 
         if(row){
 
-          row.approved++;
-          row.fs += amount;
+          row.approved = Number(row.approved||0) + 1;
+          row.fs = Number(row.fs||0) + amount;
           row.invoice = inv;
           row.remark = "APPROVED";
           row.note = "AUTO IMS";
-          row.selisih =
-            row.amount - row.fs;
+          row.selisih = row.amount - row.fs;
+
+          if(!row.approvedList) row.approvedList = [];
 
           row.approvedList.push({
             pra:pra,
@@ -372,9 +393,9 @@ function importIMS(e){
     render();
 
     alert(
-      "IMS selesai\n"+
-      "Update : "+totalUpdate+
-      "\nDuplikat : "+duplicate
+      "IMS selesai\n" +
+      "Update : " + totalUpdate +
+      "\nDuplikat : " + duplicate
     );
 
     e.target.value="";
