@@ -344,13 +344,12 @@ function importIMS(e){
 
   reader.onload = function(evt){
 
-    let wb = XLSX.read(
-      evt.target.result,
-      {type:"binary"}
-    );
+    let wb = XLSX.read(evt.target.result,{type:"binary"});
 
     let totalUpdate = 0;
     let duplicate = 0;
+
+    let woUsed = new Set();
 
     wb.SheetNames.forEach(s=>{
 
@@ -361,66 +360,44 @@ function importIMS(e){
 
       json.forEach(r=>{
 
-        let pra = String(
-          r["Pra Invoice Number"] || ""
-        ).trim();
-
-        let inv = String(
-          r["Invoice Number"] ||
-          r["Invoice Name"] || ""
-        ).trim();
-
         let wo = String(
-          r["Wonumber"] || ""
+          r["Wonumber"] ||
+          r["WONUMBER"] ||
+          ""
         ).trim();
 
-        let status = String(
-          r["Status"] ||
-          "APPROVED"
-        ).trim().toUpperCase();
+        if(!wo) return;
 
-        let amount = parseAngka(
-          r["Invoice Total"] ||
-          r["Amount"] || 0
-        );
-
-        if(!pra && !inv) return;
-        if(status!=="APPROVED") return;
-
-        let key = pra+"_"+inv;
-
-        if(paymentUsed.has(key)){
+        if(woUsed.has(wo)){
           duplicate++;
           return;
         }
 
-        paymentUsed.add(key);
+        woUsed.add(wo);
 
-        let woFix =
-          wo.replace(/\D/g,'');
+        let woFix = wo.replace(/\D/g,'');
 
         let row = dataIKR.find(x=>
           (x.listWO||[]).some(a=>
             String(a.wo)
-            .replace(/\D/g,'')===woFix
+            .replace(/\D/g,'') === woFix
           )
         );
 
         if(row){
 
-          row.approved++;
-          row.fs += amount;
-          row.invoice = inv;
+          row.approved =
+            Number(row.approved||0)+1;
+
           row.remark = "APPROVED";
           row.note = "AUTO IMS";
-          row.selisih =
-            row.amount-row.fs;
+
+          if(!row.approvedList)
+            row.approvedList=[];
 
           row.approvedList.push({
-            pra:pra,
-            invoice:inv,
-            status:status,
-            wo:wo
+            wo:wo,
+            status:"APPROVED"
           });
 
           totalUpdate++;
@@ -443,7 +420,6 @@ function importIMS(e){
 
   reader.readAsBinaryString(file);
 }
-
 // ---------- SORT ----------
 function sortData(){
 
