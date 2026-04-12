@@ -625,3 +625,25 @@ window.showDetail=showDetail;
 window.showApproved=showApproved;
 window.closePopup=closePopup;
 window.downloadDetail=downloadDetail;
+
+// ================= LOADING =================
+function showLoading(text="Loading..."){
+
+  let box = document.getElementById("loadingBox");
+  if(!box) return;
+
+  box.style.display = "flex";
+
+  box.innerHTML = `
+    <div class="loader"></div>
+    <div class="loadingText">${text}</div>
+  `;
+}
+
+function hideLoading(){
+
+  let box = document.getElementById("loadingBox");
+  if(!box) return;
+
+  box.style.display = "none";
+}
