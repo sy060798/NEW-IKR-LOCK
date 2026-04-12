@@ -28,6 +28,7 @@ h2{
   display:flex;
   gap:10px;
   margin-bottom:15px;
+  flex-wrap:wrap;
 }
 
 .menu button{
@@ -113,10 +114,10 @@ tbody tr:hover{
 
 .popup-box{
   width:90%;
-  max-width:700px;
-  height:450px;
+  max-width:800px;
+  height:500px;
   background:#111;
-  margin:40px auto;
+  margin:30px auto;
   border-radius:10px;
   padding:15px;
   display:flex;
@@ -144,13 +145,20 @@ tbody tr:hover{
 /* MOBILE */
 @media(max-width:768px){
   body{padding:10px}
+
   .btn-group button,.menu button{
     font-size:12px;
     padding:7px 10px;
   }
+
   th,td{
     font-size:11px;
     padding:5px;
+  }
+
+  .popup-box{
+    width:95%;
+    height:90vh;
   }
 }
 </style>
@@ -169,10 +177,10 @@ tbody tr:hover{
       <table id="tblDetail">
         <thead>
           <tr>
-            <th>WO</th>
-            <th>Ref</th>
-            <th>Quotation</th>
+            <th>Pra Invoice Number</th>
+            <th>Invoice Number</th>
             <th>Status</th>
+            <th>Wonumber</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -181,7 +189,6 @@ tbody tr:hover{
 
     <div class="popup-action">
       <button class="blue" onclick="downloadDetail()">Download</button>
-      <button class="purple" onclick="editDetail()">Edit</button>
       <button style="background:#444" onclick="closePopup()">Cancel</button>
     </div>
 
@@ -244,7 +251,6 @@ tbody tr:hover{
 
 <!-- STATUS -->
 <div id="status" class="tab">
-
   <div class="table-wrap">
     <table id="tblStatus">
       <thead>
@@ -265,11 +271,11 @@ tbody tr:hover{
   <button class="green" onclick="downloadStatus()">
     Download Status
   </button>
-
 </div>
 
 <!-- JS -->
 <script src="../js/ikrlock.js"></script>
 <script src="../js/status.js"></script>
+
 </body>
 </html>
