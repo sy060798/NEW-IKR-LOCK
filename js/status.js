@@ -1,104 +1,31 @@
-// ======================================================
-// STATUS.JS
-// KHUSUS MENU STATUS (pisah dari ikrlock.js)
-// Ambil data dari global dataIKR
-// ======================================================
+// ================= STATUS MENU =================
 
-// ================= INIT =================
-document.addEventListener("DOMContentLoaded", () => {
-  buatMenuStatus();
-});
-
-// ================= BUAT MENU =================
-function buatMenuStatus() {
-
-  // tombol menu
-  let menu = document.querySelector(".menu");
-
-  if (menu && !document.getElementById("btnStatus")) {
-    let btn = document.createElement("button");
-    btn.id = "btnStatus";
-    btn.innerText = "Status";
-    btn.onclick = function () {
-      showTab("status", this);
-      generateStatus();
-    };
-    menu.appendChild(btn);
-  }
-
-  // tab status
-  if (!document.getElementById("status")) {
-
-    let div = document.createElement("div");
-    div.id = "status";
-    div.className = "tab";
-
-    div.innerHTML = `
-      <div style="padding:15px">
-
-        <h2 style="margin-bottom:10px;color:#fff">
-          STATUS INVOICE
-        </h2>
-
-        <button onclick="downloadStatus()"
-        style="
-          background:#00c853;
-          border:none;
-          padding:8px 15px;
-          color:#fff;
-          border-radius:6px;
-          margin-bottom:10px;
-          cursor:pointer;
-        ">
-          Download Excel
-        </button>
-
-        <table id="tblStatus"
-        style="
-          width:100%;
-          border-collapse:collapse;
-          background:#111;
-          color:#fff;
-        ">
-          <thead>
-            <tr style="background:#8e24aa">
-              <th>No</th>
-              <th>Jenis</th>
-              <th>Tahun</th>
-              <th>Total WO Approved</th>
-              <th>Total Invoice</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-
-      </div>
-    `;
-
-    document.body.appendChild(div);
-  }
-}
-
-// ================= GENERATE STATUS =================
-function generateStatus() {
-
-  if (typeof dataIKR === "undefined") return;
+function generateStatus(){
 
   let tbody = document.querySelector("#tblStatus tbody");
-  if (!tbody) return;
+  if(!tbody) return;
 
   tbody.innerHTML = "";
 
+  if(!Array.isArray(dataIKR) || dataIKR.length === 0){
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6">Tidak ada data</td>
+      </tr>
+    `;
+    return;
+  }
+
   let map = {};
 
-  dataIKR.forEach(d => {
+  dataIKR.forEach(d=>{
 
     let jenis = d.wotype || "-";
     let tahun = d.tahun || "-";
 
     let key = jenis + "_" + tahun;
 
-    if (!map[key]) {
+    if(!map[key]){
       map[key] = {
         jenis: jenis,
         tahun: tahun,
@@ -107,79 +34,103 @@ function generateStatus() {
       };
     }
 
-    map[key].approved += Number(d.approved) || 0;
-    map[key].invoice += Number(d.fs) || 0;
+    let woApproved = Number(d.approved) || 0;
+    let fsAmount = Number(d.fs) || 0;
+
+    map[key].approved += woApproved;
+    map[key].invoice += fsAmount;
 
   });
 
-  let arr = Object.values(map);
+  let no = 1;
 
-  if (arr.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="5">Tidak ada data</td>
-      </tr>
-    `;
-    return;
-  }
-
-  let totalApproved = 0;
-  let totalInvoice = 0;
-
-  arr.forEach((d, i) => {
-
-    totalApproved += d.approved;
-    totalInvoice += d.invoice;
+  Object.values(map).forEach(r=>{
 
     tbody.innerHTML += `
       <tr>
-        <td>${i + 1}</td>
-        <td>${d.jenis}</td>
-        <td>${d.tahun}</td>
-        <td>${d.approved}</td>
-        <td>${formatRupiahStatus(d.invoice)}</td>
+        <td>${no++}</td>
+        <td>${r.jenis}</td>
+        <td>${r.tahun}</td>
+        <td>${r.approved}</td>
+        <td>${format(r.invoice)}</td>
+        <td>
+          <button 
+            style="background:#e74c3c;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer"
+            onclick="hapusStatus('${r.jenis}','${r.tahun}')">
+            Hapus
+          </button>
+        </td>
       </tr>
     `;
+
   });
 
-  tbody.innerHTML += `
-    <tr style="background:#222;font-weight:bold">
-      <td colspan="3">TOTAL</td>
-      <td>${totalApproved}</td>
-      <td>${formatRupiahStatus(totalInvoice)}</td>
-    </tr>
-  `;
 }
 
-// ================= FORMAT =================
-function formatRupiahStatus(n) {
-  return "Rp " + Number(n || 0).toLocaleString("id-ID");
+// ================= HAPUS STATUS =================
+function hapusStatus(jenis,tahun){
+
+  let ok = confirm(
+    "Hapus semua data:\n" + jenis + " - " + tahun + " ?"
+  );
+
+  if(!ok) return;
+
+  dataIKR = dataIKR.filter(d => {
+
+    return !(
+      String(d.wotype) === String(jenis) &&
+      String(d.tahun) === String(tahun)
+    );
+
+  });
+
+  render();
+  generateStatus();
+  generatePivot();
+
 }
 
-// ================= DOWNLOAD =================
-function downloadStatus() {
+// ================= DOWNLOAD STATUS =================
+function downloadStatus(){
 
   let rows = [];
 
-  document.querySelectorAll("#tblStatus tbody tr").forEach(tr => {
+  let map = {};
 
-    let td = tr.querySelectorAll("td");
+  dataIKR.forEach(d=>{
 
-    if (td.length >= 5) {
-      rows.push({
-        No: td[0].innerText,
-        Jenis: td[1].innerText,
-        Tahun: td[2].innerText,
-        Total_WO_Approved: td[3].innerText,
-        Total_Invoice: td[4].innerText
-      });
+    let jenis = d.wotype || "-";
+    let tahun = d.tahun || "-";
+
+    let key = jenis + "_" + tahun;
+
+    if(!map[key]){
+      map[key] = {
+        Jenis: jenis,
+        Tahun: tahun,
+        "Total WO Approved": 0,
+        "Total Invoice": 0
+      };
     }
 
+    map[key]["Total WO Approved"] += Number(d.approved) || 0;
+    map[key]["Total Invoice"] += Number(d.fs) || 0;
+
   });
+
+  rows = Object.values(map);
 
   let ws = XLSX.utils.json_to_sheet(rows);
   let wb = XLSX.utils.book_new();
 
   XLSX.utils.book_append_sheet(wb, ws, "STATUS");
-  XLSX.writeFile(wb, "STATUS_INVOICE.xlsx");
+
+  XLSX.writeFile(wb, "STATUS_IKCR.xlsx");
+
 }
+
+// ================= AUTO GLOBAL =================
+window.generateStatus = generateStatus;
+window.downloadStatus = downloadStatus;
+window.hapusStatus = hapusStatus;
