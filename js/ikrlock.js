@@ -340,6 +340,8 @@ function importIMS(e){
   let file = e.target.files[0];
   if(!file) return;
 
+  showLoading("Proses Upload IMS...");
+
   let reader = new FileReader();
 
   reader.onload = function(evt){
@@ -363,11 +365,13 @@ function importIMS(e){
         let wo = String(
           r["Wonumber"] ||
           r["WONUMBER"] ||
+          r["WO Number"] ||
           ""
         ).trim();
 
         if(!wo) return;
 
+        // anti double hanya di file IMS yg sama
         if(woUsed.has(wo)){
           duplicate++;
           return;
@@ -377,27 +381,26 @@ function importIMS(e){
 
         let woFix = wo.replace(/\D/g,'');
 
-        let row = dataIKR.find(x=>
-          (x.listWO||[]).some(a=>
-            String(a.wo)
-            .replace(/\D/g,'') === woFix
+        let row = dataIKR.find(x =>
+          (x.listWO || []).some(a =>
+            String(a.wo).replace(/\D/g,'') === woFix
           )
         );
 
         if(row){
 
           row.approved =
-            Number(row.approved||0)+1;
+            Number(row.approved || 0) + 1;
 
           row.remark = "APPROVED";
           row.note = "AUTO IMS";
 
           if(!row.approvedList)
-            row.approvedList=[];
+            row.approvedList = [];
 
           row.approvedList.push({
-            wo:wo,
-            status:"APPROVED"
+            wo: wo,
+            status: "APPROVED"
           });
 
           totalUpdate++;
@@ -408,14 +411,16 @@ function importIMS(e){
     });
 
     render();
+    hideLoading();
 
     alert(
-      "IMS selesai\n"+
-      "Update : "+totalUpdate+
-      "\nDuplikat : "+duplicate
+      "IMS selesai\n" +
+      "Update : " + totalUpdate +
+      "\nDuplikat File : " + duplicate
     );
 
-    e.target.value="";
+    e.target.value = "";
+
   };
 
   reader.readAsBinaryString(file);
