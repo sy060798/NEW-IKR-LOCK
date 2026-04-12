@@ -524,58 +524,66 @@ function render(){
 // ---------- DETAIL ----------
 function showDetail(i){
 
-  currentDetail =
-    dataIKR[i].listWO || [];
+  currentDetail = dataIKR[i].listWO || [];
 
-  let tb =
-    document.querySelector(
-      "#tblDetail tbody"
-    );
+  let head = document.querySelector("#tblDetail thead");
+  let tb = document.querySelector("#tblDetail tbody");
+
+  head.innerHTML = `
+    <tr>
+      <th>Wonumber</th>
+      <th>Reference Code</th>
+      <th>Quotation Id</th>
+      <th>Status</th>
+    </tr>
+  `;
 
   tb.innerHTML = "";
 
   currentDetail.forEach(x=>{
-
     tb.innerHTML += `
-    <tr>
-      <td>${x.wo}</td>
-      <td>${x.ref}</td>
-      <td>${x.quo}</td>
-      <td>${x.status}</td>
-    </tr>`;
+      <tr>
+        <td>${x.wo||""}</td>
+        <td>${x.ref||""}</td>
+        <td>${x.quo||""}</td>
+        <td>${x.status||""}</td>
+      </tr>
+    `;
   });
 
-  document.getElementById(
-    "popupWO"
-  ).style.display="block";
+  document.getElementById("popupWO").style.display="block";
 }
 
 function showApproved(i){
 
-  currentApproved =
-    dataIKR[i].approvedList || [];
+  currentApproved = dataIKR[i].approvedList || [];
 
-  let tb =
-    document.querySelector(
-      "#tblDetail tbody"
-    );
+  let head = document.querySelector("#tblDetail thead");
+  let tb = document.querySelector("#tblDetail tbody");
+
+  head.innerHTML = `
+    <tr>
+      <th>Pra Invoice</th>
+      <th>Invoice Number</th>
+      <th>Status</th>
+      <th>Wonumber</th>
+    </tr>
+  `;
 
   tb.innerHTML = "";
 
   currentApproved.forEach(x=>{
-
     tb.innerHTML += `
-    <tr>
-      <td>${x.pra}</td>
-      <td>${x.invoice}</td>
-      <td>${x.status}</td>
-      <td>${x.wo}</td>
-    </tr>`;
+      <tr>
+        <td>${x.pra||""}</td>
+        <td>${x.invoice||""}</td>
+        <td>${x.status||""}</td>
+        <td>${x.wo||""}</td>
+      </tr>
+    `;
   });
 
-  document.getElementById(
-    "popupWO"
-  ).style.display="block";
+  document.getElementById("popupWO").style.display="block";
 }
 
 function closePopup(){
