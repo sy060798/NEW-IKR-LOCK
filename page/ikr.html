@@ -9,36 +9,40 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-*{box-sizing:border-box}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
 
 body{
-  margin:0;
-  padding:20px;
-  font-family:Arial;
   background:#0f0f0f;
   color:#fff;
+  font-family:Arial,Helvetica,sans-serif;
+  padding:15px;
 }
 
 h2{
-  margin:0 0 15px;
   text-align:center;
+  margin-bottom:15px;
+  color:#f1c40f;
 }
 
 /* MENU */
 .menu{
   display:flex;
-  gap:10px;
-  margin-bottom:15px;
+  gap:8px;
+  margin-bottom:12px;
   flex-wrap:wrap;
 }
 
 .menu button{
-  border:none;
-  padding:8px 14px;
-  border-radius:6px;
-  cursor:pointer;
-  background:#2a2a2a;
+  background:#222;
   color:#fff;
+  border:none;
+  padding:7px 14px;
+  border-radius:5px;
+  cursor:pointer;
 }
 
 .menu button.active{
@@ -50,39 +54,37 @@ h2{
   display:flex;
   gap:8px;
   flex-wrap:wrap;
-  margin-bottom:15px;
+  margin-bottom:12px;
 }
 
 button{
   border:none;
-  padding:8px 12px;
-  border-radius:6px;
-  cursor:pointer;
+  padding:7px 12px;
+  border-radius:5px;
   color:#fff;
+  cursor:pointer;
 }
 
-.blue{background:#3498db}
-.orange{background:#f39c12}
-.red{background:#e74c3c}
-.green{background:#2ecc71}
-.purple{background:#8e44ad}
+.blue{background:#3498db;}
+.orange{background:#f39c12;}
+.red{background:#e74c3c;}
+.green{background:#2ecc71;}
+.purple{background:#8e44ad;}
 
 /* TABLE */
 .table-wrap{
   overflow:auto;
-  max-height:520px;
-  background:#1b1b1b;
   border:1px solid #444;
 }
 
 table{
   width:100%;
-  min-width:1300px;
+  min-width:1400px;
   border-collapse:collapse;
 }
 
 th,td{
-  border:1px solid #3a3a3a;
+  border:1px solid #333;
   padding:6px;
   font-size:12px;
   text-align:center;
@@ -93,16 +95,24 @@ thead th{
   background:#8e44ad;
   position:sticky;
   top:0;
-  z-index:5;
+}
+
+tbody tr:nth-child(even){
+  background:#161616;
 }
 
 tbody tr:hover{
-  background:#262626;
+  background:#222;
 }
 
 /* TAB */
-.tab{display:none}
-.tab.active{display:block}
+.tab{
+  display:none;
+}
+
+.tab.active{
+  display:block;
+}
 
 /* POPUP */
 #popupWO{
@@ -116,11 +126,11 @@ tbody tr:hover{
 .popup-box{
   width:90%;
   max-width:900px;
-  height:500px;
+  height:520px;
   background:#111;
   margin:30px auto;
-  border-radius:10px;
   padding:15px;
+  border-radius:10px;
   display:flex;
   flex-direction:column;
 }
@@ -134,8 +144,8 @@ tbody tr:hover{
 .popup-action{
   margin-top:10px;
   display:flex;
-  gap:8px;
   justify-content:flex-end;
+  gap:10px;
 }
 
 /* LOADING */
@@ -143,7 +153,7 @@ tbody tr:hover{
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.7);
+  background:rgba(0,0,0,.75);
   z-index:99999;
   justify-content:center;
   align-items:center;
@@ -151,34 +161,28 @@ tbody tr:hover{
 }
 
 .loader{
-  width:55px;
-  height:55px;
-  border:6px solid #333;
-  border-top:6px solid #3498db;
+  width:50px;
+  height:50px;
+  border:5px solid #333;
+  border-top:5px solid #8e44ad;
   border-radius:50%;
-  animation:spin 1s linear infinite;
+  animation:putar 1s linear infinite;
 }
 
 .loadingText{
   margin-top:12px;
   font-size:14px;
-  font-weight:bold;
 }
 
-@keyframes spin{
-  from{transform:rotate(0deg)}
-  to{transform:rotate(360deg)}
+@keyframes putar{
+  100%{transform:rotate(360deg);}
 }
 
 /* MOBILE */
 @media(max-width:768px){
 
-  body{padding:10px}
-
-  .btn-group button,
-  .menu button{
-    font-size:12px;
-    padding:7px 10px;
+  body{
+    padding:10px;
   }
 
   th,td{
@@ -187,43 +191,16 @@ tbody tr:hover{
   }
 
   .popup-box{
-    width:95%;
+    width:96%;
     height:90vh;
   }
+
 }
 </style>
 </head>
 <body>
 
 <div id="loadingBox"></div>
-
-<!-- POPUP -->
-<div id="popupWO">
-  <div class="popup-box">
-
-    <h3 style="margin:0">Detail WO</h3>
-
-    <div class="popup-body">
-      <table id="tblDetail">
-        <thead>
-          <tr>
-            <th>Pra Invoice Number</th>
-            <th>Invoice Number</th>
-            <th>Status</th>
-            <th>Wonumber</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <div class="popup-action">
-      <button class="blue" onclick="downloadDetail()">Download</button>
-      <button style="background:#444" onclick="closePopup()">Cancel</button>
-    </div>
-
-  </div>
-</div>
 
 <h2>🔒 IKCR LOCK</h2>
 
@@ -247,38 +224,66 @@ tbody tr:hover{
 
 <!-- DATA -->
 <div id="data" class="tab active">
-  <div class="table-wrap">
-    <table id="tbl">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th><input type="checkbox" id="checkAll"></th>
-          <th>Region</th>
-          <th>Tahun</th>
-          <th>WO Type</th>
-          <th>Bulan</th>
-          <th>Jumlah WO</th>
-          <th>WO Approved</th>
-          <th>Amount</th>
-          <th>FS Amount</th>
-          <th>Selisih</th>
-          <th>Remark</th>
-          <th>No Invoice</th>
-          <th>Note</th>
-          <th>Done</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<div class="table-wrap">
+<table id="tbl">
+<thead>
+<tr>
+<th>No</th>
+<th><input type="checkbox" id="checkAll"></th>
+<th>Region</th>
+<th>Tahun</th>
+<th>WO Type</th>
+<th>Bulan</th>
+<th>Jumlah WO</th>
+<th>WO Approved</th>
+<th>Amount</th>
+<th>FS Amount</th>
+<th>Selisih</th>
+<th>Remark</th>
+<th>No Invoice</th>
+<th>Note</th>
+<th>Done</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 </div>
 
 <!-- PIVOT -->
 <div id="pivot" class="tab">
-  <canvas id="chart"></canvas>
+<canvas id="chart"></canvas>
 </div>
 
-<script src="../js/ikrlock.js"></script>
+<!-- POPUP -->
+<div id="popupWO">
+<div class="popup-box">
+
+<h3>Detail WO</h3>
+
+<div class="popup-body">
+<table id="tblDetail">
+<thead>
+<tr>
+<th>WO</th>
+<th>REF</th>
+<th>QUO</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+
+<div class="popup-action">
+<button class="blue" onclick="downloadDetail()">Download</button>
+<button style="background:#555" onclick="closePopup()">Close</button>
+</div>
+
+</div>
+</div>
+
+<script src="ikrlock.js"></script>
 
 </body>
 </html>
