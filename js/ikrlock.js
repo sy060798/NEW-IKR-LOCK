@@ -319,9 +319,9 @@ raw.forEach(r => {
   // 🔥 UPDATE STATUS DI DETAIL WO
   if (d.listWO && d.listWO.length) {
     d.listWO.forEach(x => {
-      if (statusMap[x.wo]) {
-        x.status = statusMap[x.wo]; // overwrite status lama
-      }
+      if (statusMap[x.wo] !== undefined) {
+  x.status = statusMap[x.wo];
+}
     });
   }
 });
