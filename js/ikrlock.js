@@ -158,17 +158,18 @@ function showDetail(i) {
 
   tb.innerHTML = "";
 
-  // ================= FIX DUPLICATE WO =================
+  // ================= UNIQUE WO =================
   const uniqueMap = new Map();
 
   (d.detail || []).forEach(x => {
-    if (!uniqueMap.has(x.wo)) {
+    if (x.wo && !uniqueMap.has(x.wo)) {
       uniqueMap.set(x.wo, x);
     }
   });
 
   const uniqueData = [...uniqueMap.values()];
 
+  // update export juga
   popupExportData = uniqueData.map(x => ({
     WO: x.wo,
     Status: x.status,
