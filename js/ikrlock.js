@@ -154,28 +154,36 @@ function showDetail(i) {
   const tb = document.getElementById("popupBody");
   const popup = document.getElementById("popup");
 
-  if (!tb || !popup) {
-    alert("Popup belum ada di HTML");
-    return;
-  }
+  if (!tb || !popup) return;
 
   tb.innerHTML = "";
 
-  popupExportData = (d.detail || []).map(x => ({
+  // ================= FIX DUPLICATE WO =================
+  const uniqueMap = new Map();
+
+  (d.detail || []).forEach(x => {
+    if (!uniqueMap.has(x.wo)) {
+      uniqueMap.set(x.wo, x);
+    }
+  });
+
+  const uniqueData = [...uniqueMap.values()];
+
+  popupExportData = uniqueData.map(x => ({
     WO: x.wo,
     Status: x.status,
     Amount: x.amount
   }));
 
-  if (popupExportData.length === 0) {
+  if (uniqueData.length === 0) {
     tb.innerHTML = `<tr><td colspan="3">Tidak ada data</td></tr>`;
   } else {
-    popupExportData.forEach(x => {
+    uniqueData.forEach(x => {
       tb.innerHTML += `
         <tr>
-          <td>${x.WO}</td>
-          <td>${x.Status}</td>
-          <td>${formatRp(x.Amount)}</td>
+          <td>${x.wo}</td>
+          <td>${x.status}</td>
+          <td>${formatRp(x.amount)}</td>
         </tr>
       `;
     });
@@ -183,9 +191,6 @@ function showDetail(i) {
 
   popup.style.display = "block";
 }
-
-window.showDetail = showDetail;
-
 
 // ================= excel woditail =================
 
