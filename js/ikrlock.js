@@ -51,7 +51,7 @@ function triggerUploadIMS() {
 window.triggerUpload = triggerUpload;
 window.triggerUploadIMS = triggerUploadIMS;
 
-// ================= HAPUS DATA (FIX STABLE + SYNC) =================
+// ================= HAPUS DATA =================
 function hapusData() {
   const checkboxes = document.querySelectorAll(".chk");
   let deletedIds = [];
@@ -85,14 +85,8 @@ function hapusData() {
       body: JSON.stringify({ ids: deletedIds })
     })
       .then(r => r.json())
-      .then(() => {
-        console.log("Server delete sukses");
-        alert("Hapus sync server OK");
-      })
-      .catch(err => {
-        console.error("Server delete gagal:", err);
-        alert("Local sudah hapus, server gagal sync");
-      });
+      .then(() => console.log("Server delete sukses"))
+      .catch(err => console.error("Server delete gagal:", err));
   }
 }
 
@@ -189,8 +183,7 @@ function importExcel(e) {
       });
 
       Object.values(map).forEach(g => {
-        // ================= FIX PPN (HILANGKAN 11%) =================
-        let amount = Math.round(g.woTotal / 1.11);
+        let amount = Math.round(g.woTotal / 1.11); // FIX PPN
 
         newData.push({
           id: Date.now() + Math.random(),
@@ -211,35 +204,6 @@ function importExcel(e) {
           listWO: g.listWO
         });
       });
-
-    } else {
-      // ================= FORMAT LAMA =================
-      raw.forEach(r => {
-        let region = r.REGION || r.Region || "";
-        if (!region) return;
-
-        let amount = parseAngka(r.AMOUNT || r.Amount);
-        let fs = parseAngka(r["FS AMOUNT"] || r["FS Amount"]);
-
-        newData.push({
-          id: Date.now() + Math.random(),
-          type: "IKR",
-          region,
-          tahun: r.TAHUN || r.Tahun || "",
-          wotype: r["WO TYPE"] || r["Wo Type"] || "",
-          bulan: r.BULAN || r.Bulan || "",
-          jumlah: r["JUMLAH WO"] || 0,
-          approved: r["WO APPROVED"] || 0,
-          amount,
-          fs,
-          selisih: amount - fs,
-          remark: "",
-          invoice: "",
-          note: "",
-          done: "NO",
-          listWO: []
-        });
-      });
     }
 
     dataIKR = [...dataIKR, ...newData];
@@ -253,151 +217,34 @@ function importExcel(e) {
   reader.readAsBinaryString(file);
 }
 
-// ================= IMPORT IMS UPDATE =================
-function importExcelIMS(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+// ================= EXPORT EXCEL (NEW) =================
+function downloadExcel() {
+  if (!dataIKR.length) return alert("Tidak ada data");
 
-  const reader = new FileReader();
+  const exportData = dataIKR.map(d => ({
+    Region: d.region,
+    Tahun: d.tahun,
+    Bulan: d.bulan,
+    WO_Type: d.wotype,
+    Jumlah: d.jumlah,
+    Approved: d.approved,
+    Amount: d.amount,
+    FS: d.fs,
+    Selisih: d.selisih,
+    Remark: d.remark,
+    Invoice: d.invoice,
+    Note: d.note,
+    Done: d.done
+  }));
 
-  reader.onload = function (evt) {
-    const wb = XLSX.read(evt.target.result, { type: "binary" });
+  const ws = XLSX.utils.json_to_sheet(exportData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "DATA");
 
-    let raw = [];
-
-    wb.SheetNames.forEach(s => {
-      const json = XLSX.utils.sheet_to_json(wb.Sheets[s], {
-        defval: "",
-        raw: false
-      });
-      json.forEach(r => raw.push(r));
-    });
-
-    let map = {};
-    let statusMap = {};
-
-    raw.forEach(r => {
-      let city = r.City || r.city || "";
-      let woEnd = r["Wo End"] || r["woEnd"] || "";
-      let job = r["Job Name"] || r["jobName"] || "";
-      let wo = r["Wonumber"] || "-";
-      let status = r["Status"] || "-";
-
-      if (!city || !woEnd) return;
-
-      let date = new Date(woEnd);
-      if (isNaN(date)) return;
-
-      let tahun = date.getFullYear();
-      let bulan = date.toLocaleString("id-ID", { month: "short" });
-
-      let key = city + "_" + tahun + "_" + bulan + "_" + job;
-
-      if (!map[key]) map[key] = 0;
-      map[key]++;
-
-      statusMap[wo] = status;
-    });
-
-    dataIKR.forEach(d => {
-      let key = d.region + "_" + d.tahun + "_" + d.bulan + "_" + d.wotype;
-
-      if (map[key]) d.approved = map[key];
-
-      if (d.listWO?.length) {
-        d.listWO.forEach(x => {
-          if (statusMap[x.wo] !== undefined) {
-            x.status = statusMap[x.wo];
-          }
-        });
-      }
-    });
-
-    render();
-    alert("IMS berhasil update");
-    e.target.value = "";
-  };
-
-  reader.readAsBinaryString(file);
+  XLSX.writeFile(wb, "data_IKR.xlsx");
 }
 
-// ================= SORT =================
-function sortData() {
-  const urutBulan = {
-    Jan:1,Feb:2,Mar:3,Apr:4,Mei:5,Jun:6,
-    Jul:7,Agu:8,Sep:9,Okt:10,Nov:11,Des:12
-  };
-
-  dataIKR.sort((a, b) => {
-    if (a.region !== b.region) return a.region.localeCompare(b.region);
-    if (a.tahun !== b.tahun) return a.tahun - b.tahun;
-    return (urutBulan[a.bulan] || 0) - (urutBulan[b.bulan] || 0);
-  });
-}
-
-// ================= RENDER =================
-function render() {
-  let tb = document.querySelector("#tbl tbody");
-  if (!tb) return;
-
-  tb.innerHTML = "";
-
-  dataIKR.forEach((d, i) => {
-    tb.innerHTML += `<tr>
-      <td>${i + 1}</td>
-      <td><input type="checkbox" class="chk"></td>
-      <td>${d.region}</td>
-      <td>${d.tahun}</td>
-      <td>${d.wotype}</td>
-      <td>${d.bulan}</td>
-      <td><span onclick="showDetail(${i})" style="cursor:pointer;color:cyan">${d.jumlah || 0}</span></td>
-      <td>${d.approved || 0}</td>
-      <td>${format(d.amount)}</td>
-      <td>${format(d.fs)}</td>
-      <td>${format(d.selisih)}</td>
-      <td contenteditable>${d.remark || ""}</td>
-      <td contenteditable>${d.invoice || ""}</td>
-      <td contenteditable>${d.note || ""}</td>
-      <td><input type="checkbox" ${d.done === "YES" ? "checked" : ""}></td>
-    </tr>`;
-  });
-}
-
-// ================= DETAIL =================
-function showDetail(index) {
-  let data = dataIKR[index];
-  if (!data) return;
-
-  currentDetail = [...new Map((data.listWO || []).map(x => [x.wo, x])).values()];
-
-  let tb = document.querySelector("#tblDetail tbody");
-  let popup = document.getElementById("popupWO");
-
-  if (!tb || !popup) return;
-
-  tb.innerHTML = "";
-
-  currentDetail.forEach(d => {
-    tb.innerHTML += `<tr>
-      <td>${d.wo}</td>
-      <td>${d.ref}</td>
-      <td>${d.quo}</td>
-      <td>${d.status}</td>
-    </tr>`;
-  });
-
-  popup.style.display = "block";
-}
-
-// ================= UTIL =================
-function format(n) {
-  return "Rp " + (Number(n) || 0).toLocaleString("id-ID");
-}
-
-function parseAngka(v) {
-  if (!v) return 0;
-  return parseInt(String(v).replace(/[^0-9]/g, "")) || 0;
-}
+window.downloadExcel = downloadExcel;
 
 // ================= SERVER =================
 function uploadServer() {
@@ -411,15 +258,25 @@ function uploadServer() {
     .catch(() => alert("Upload server gagal"));
 }
 
-// ================= GLOBAL STUBS =================
+// ================= UTIL =================
+function format(n) {
+  return "Rp " + (Number(n) || 0).toLocaleString("id-ID");
+}
+
+function parseAngka(v) {
+  if (!v) return 0;
+  return parseInt(String(v).replace(/[^0-9]/g, "")) || 0;
+}
+
+// ================= STUB =================
 function edit() {}
 function toggleDone() {}
 function generatePivot() {}
-function download() {}
 function closePopup() {
   document.getElementById("popupWO")?.style.display = "none";
 }
 
+// ================= WINDOW =================
 window.showTab = showTab;
 window.showDetail = showDetail;
 window.hapusData = hapusData;
