@@ -91,8 +91,8 @@ function importExcel(e) {
 
     let newData = [];
 
-    // ================= IMS (LOGIKA LAMA TETAP ADA) =================
-    if (isIMS) {
+   // ================= IMS =================
+if (isIMS) {
   let map = {};
 
   raw.forEach(r => {
@@ -143,6 +143,49 @@ function importExcel(e) {
         listWO: []
       };
     }
+
+    map[key].total++;
+    map[key].woTotal += wo;
+
+    let woNumber = r["Wonumber"] || r["WONUMBER"] || "-";
+
+    // ✅ ANTI DUPLIKAT WO
+    let sudahAda = map[key].listWO.find(x => x.wo === woNumber);
+
+    if (!sudahAda) {
+      map[key].listWO.push({
+        wo: woNumber,
+        ref: r["Reference Code"] || "-",
+        quo: r["Quotation Id"] || "-",
+        status: r["Status"] || "-"
+      });
+    }
+  });
+
+  // ✅ WAJIB DI LUAR LOOP
+  Object.values(map).forEach(g => {
+    let amount = Math.round(g.woTotal * 1.11);
+
+    newData.push({
+      id: Date.now() + Math.random(),
+      type: "IKR",
+      region: g.city,
+      tahun: g.tahun,
+      wotype: g.job,
+      bulan: g.bulan,
+      jumlah: g.total,
+      approved: 0,
+      amount: amount,
+      fs: 0,
+      selisih: amount,
+      remark: "",
+      invoice: "",
+      note: "",
+      done: "NO",
+      listWO: g.listWO || []
+    });
+  });
+}
 
     map[key].total++;
     map[key].woTotal += wo;
