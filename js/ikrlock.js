@@ -222,6 +222,51 @@ function importExcel(e) {
   reader.readAsBinaryString(file);
 }
 
+
+// ================= Popup =================
+function showDetail(index) {
+  let data = dataIKR[index];
+
+  if (!data) {
+    alert("Data tidak ditemukan");
+    return;
+  }
+
+  currentDetail = data.listWO || [];
+
+  let tb = document.querySelector("#tblDetail tbody");
+  let popup = document.getElementById("popupWO");
+
+  if (!tb) {
+    alert("Table detail tidak ditemukan (tblDetail)");
+    return;
+  }
+
+  if (!popup) {
+    alert("Popup tidak ditemukan (popupWO)");
+    return;
+  }
+
+  tb.innerHTML = "";
+
+  if (currentDetail.length === 0) {
+    tb.innerHTML = `<tr><td colspan="4">Tidak ada detail WO</td></tr>`;
+  } else {
+    currentDetail.forEach(d => {
+      tb.innerHTML += `
+<tr>
+<td>${d.wo}</td>
+<td>${d.ref}</td>
+<td>${d.quo}</td>
+<td>${d.status}</td>
+</tr>`;
+    });
+  }
+
+  popup.style.display = "block";
+}
+
+
 // ================= IMPORT IMS (KHUSUS UPDATE) =================
 function importExcelIMS(e) {
   const file = e.target.files[0];
@@ -346,3 +391,8 @@ window.showTab = showTab;
 window.showDetail = showDetail;
 window.closePopup = closePopup;
 window.downloadDetail = downloadDetail;
+
+function closePopup() {
+  let popup = document.getElementById("popupWO");
+  if (popup) popup.style.display = "none";
+}
