@@ -66,9 +66,9 @@ function hapusData() {
   if (!confirm("Hapus data terpilih?")) return;
 
   dataIKR = dataIKR.filter((d, i) => {
-    const isChecked = checkboxes[i]?.checked;
-    if (isChecked) deletedIds.push(d.id);
-    return !isChecked;
+    const checked = checkboxes[i]?.checked;
+    if (checked) deletedIds.push(d.id);
+    return !checked;
   });
 
   render();
@@ -78,10 +78,15 @@ function hapusData() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ids: deletedIds })
-  });
+  })
+  .then(res => res.json())
+  .then(() => console.log("Delete sync OK"))
+  .catch(err => console.error("Delete sync gagal", err));
 }
 
 window.hapusData = hapusData;
+
+
 // ================= IMPORT DATA =================
 function importExcel(e) {
   const file = e.target.files[0];
