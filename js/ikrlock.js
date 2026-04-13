@@ -3,7 +3,6 @@ let dataIKR = [];
 let chart = null;
 const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
 
-// DETAIL POPUP
 let currentDetail = [];
 
 // ================= INIT =================
@@ -39,20 +38,19 @@ function showTab(id, btn) {
   if (id === "pivot") generatePivot?.();
 }
 
-// ================= UPLOAD =================
-function triggerUpload() {
+// ================= GLOBAL BUTTON (WAJIB BIAR ONCLICK JALAN) =================
+window.triggerUpload = function () {
+  console.log("UPLOAD CLICKED");
   document.getElementById("file")?.click();
-}
+};
 
-function triggerUploadIMS() {
+window.triggerUploadIMS = function () {
+  console.log("IMS CLICKED");
   document.getElementById("fileIMS")?.click();
-}
-
-window.triggerUpload = triggerUpload;
-window.triggerUploadIMS = triggerUploadIMS;
+};
 
 // ================= HAPUS DATA =================
-function hapusData() {
+window.hapusData = function () {
   const checkboxes = document.querySelectorAll(".chk");
   let deletedIds = [];
 
@@ -83,14 +81,9 @@ function hapusData() {
     })
       .then(r => r.json())
       .then(() => console.log("Server delete sukses"))
-      .catch(err => {
-        console.error("Server delete gagal:", err);
-        alert("Local terhapus tapi server gagal sync");
-      });
+      .catch(err => console.error(err));
   }
-}
-
-window.hapusData = hapusData;
+};
 
 // ================= IMPORT EXCEL =================
 function importExcel(e) {
@@ -131,12 +124,12 @@ function importExcel(e) {
 
     let newData = [];
 
-    // ================= IMS FORMAT FIXED =================
+    // ================= IMS =================
     if (isIMS) {
       let map = {};
 
       raw.forEach(r => {
-        let city = r.City || r.CITY || r.city || "";
+        let city = r.City || r.city || "";
         let woEnd = r["Wo End"] || r["woEnd"] || "";
         let job = r["Job Name"] || r["jobName"] || "";
 
@@ -183,34 +176,33 @@ function importExcel(e) {
       });
 
       Object.values(map).forEach(g => {
-  let amount = Math.round(
-    parseAngka(g.woTotal ?? g.total ?? 0)
-  );
+        if (!g) return;
 
-  let fs = parseAngka(g.fs ?? 0);
+        // ================= NO PPN (PURE VALUE) =================
+        let amount = Math.round(Number(g.woTotal) || 0);
 
-  newData.push({
-    id: Date.now() + Math.random(),
-    type: "IKR",
-    region: g.city,
-    tahun: g.tahun,
-    wotype: g.job,
-    bulan: g.bulan,
-    jumlah: g.total,
-    approved: 0,
-    amount,
-    fs,
-    selisih: amount - fs,
-    remark: "",
-    invoice: "",
-    note: "",
-    done: "NO",
-    listWO: g.listWO
-  });
-});
-      
+        newData.push({
+          id: Date.now() + Math.random(),
+          type: "IKR",
+          region: g.city || "",
+          tahun: g.tahun || "",
+          wotype: g.job || "",
+          bulan: g.bulan || "",
+          jumlah: g.total || 0,
+          approved: 0,
+          amount,              // ✔ PURE NO PPN
+          fs: 0,
+          selisih: amount,     // ✔ NO FS = FULL
+          remark: "",
+          invoice: "",
+          note: "",
+          done: "NO",
+          listWO: g.listWO || []
+        });
+      });
+
     } else {
-      // ================= FORMAT LAMA =================
+      // ================= OLD FORMAT =================
       raw.forEach(r => {
         let region = r.REGION || r.Region || "";
         if (!region) return;
@@ -227,7 +219,7 @@ function importExcel(e) {
           bulan: r.BULAN || r.Bulan || "",
           jumlah: r["JUMLAH WO"] || 0,
           approved: r["WO APPROVED"] || 0,
-          amount,
+          amount,              // ✔ NO PPN
           fs,
           selisih: amount - fs,
           remark: "",
@@ -243,14 +235,14 @@ function importExcel(e) {
     sortData();
     render();
 
-    alert("Upload sukses: " + newData.length + " data");
+    alert("Upload sukses: " + newData.length);
     e.target.value = "";
   };
 
   reader.readAsBinaryString(file);
 }
 
-// ================= IMPORT IMS UPDATE =================
+// ================= IMS UPDATE =================
 function importExcelIMS(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -263,11 +255,10 @@ function importExcelIMS(e) {
     let raw = [];
 
     wb.SheetNames.forEach(s => {
-      const json = XLSX.utils.sheet_to_json(wb.Sheets[s], {
+      XLSX.utils.sheet_to_json(wb.Sheets[s], {
         defval: "",
         raw: false
-      });
-      json.forEach(r => raw.push(r));
+      }).forEach(r => raw.push(r));
     });
 
     let map = {};
@@ -285,10 +276,7 @@ function importExcelIMS(e) {
       let date = new Date(woEnd);
       if (isNaN(date)) return;
 
-      let tahun = date.getFullYear();
-      let bulan = date.toLocaleString("id-ID", { month: "short" });
-
-      let key = city + "_" + tahun + "_" + bulan + "_" + job;
+      let key = city + "_" + date.getFullYear() + "_" + date.toLocaleString("id-ID",{month:"short"}) + "_" + job;
 
       if (!map[key]) map[key] = 0;
       map[key]++;
@@ -298,21 +286,17 @@ function importExcelIMS(e) {
 
     dataIKR.forEach(d => {
       let key = d.region + "_" + d.tahun + "_" + d.bulan + "_" + d.wotype;
-
       if (map[key]) d.approved = map[key];
 
-      if (d.listWO?.length) {
-        d.listWO.forEach(x => {
-          if (statusMap[x.wo] !== undefined) {
-            x.status = statusMap[x.wo];
-          }
-        });
-      }
+      d.listWO?.forEach(x => {
+        if (statusMap[x.wo] !== undefined) {
+          x.status = statusMap[x.wo];
+        }
+      });
     });
 
     render();
-    alert("IMS berhasil update");
-    e.target.value = "";
+    alert("IMS update sukses");
   };
 
   reader.readAsBinaryString(file);
@@ -325,10 +309,10 @@ function sortData() {
     Jul:7,Agu:8,Sep:9,Okt:10,Nov:11,Des:12
   };
 
-  dataIKR.sort((a, b) => {
-    if (a.region !== b.region) return a.region.localeCompare(b.region);
-    if (a.tahun !== b.tahun) return a.tahun - b.tahun;
-    return (urutBulan[a.bulan] || 0) - (urutBulan[b.bulan] || 0);
+  dataIKR.sort((a,b)=>{
+    if(a.region!==b.region) return a.region.localeCompare(b.region);
+    if(a.tahun!==b.tahun) return a.tahun-b.tahun;
+    return (urutBulan[a.bulan]||0)-(urutBulan[b.bulan]||0);
   });
 }
 
@@ -339,91 +323,30 @@ function render() {
 
   tb.innerHTML = "";
 
-  dataIKR.forEach((d, i) => {
-    tb.innerHTML += `<tr>
-      <td>${i + 1}</td>
+  dataIKR.forEach((d,i)=>{
+    tb.innerHTML += `
+    <tr>
+      <td>${i+1}</td>
       <td><input type="checkbox" class="chk"></td>
       <td>${d.region}</td>
       <td>${d.tahun}</td>
       <td>${d.wotype}</td>
       <td>${d.bulan}</td>
-      <td><span onclick="showDetail(${i})" style="cursor:pointer;color:cyan">${d.jumlah || 0}</span></td>
-      <td>${d.approved || 0}</td>
+      <td>${d.jumlah}</td>
+      <td>${d.approved}</td>
       <td>${format(d.amount)}</td>
       <td>${format(d.fs)}</td>
       <td>${format(d.selisih)}</td>
-      <td contenteditable oninput="edit(${i},'remark',this.innerText)">${d.remark || ""}</td>
-      <td contenteditable oninput="edit(${i},'invoice',this.innerText)">${d.invoice || ""}</td>
-      <td contenteditable oninput="edit(${i},'note',this.innerText)">${d.note || ""}</td>
-      <td><input type="checkbox" ${d.done === "YES" ? "checked" : ""} onchange="toggleDone(${i},this.checked)"></td>
     </tr>`;
   });
 }
 
-// ================= DETAIL =================
-function showDetail(index) {
-  let data = dataIKR[index];
-  if (!data) return alert("Data tidak ditemukan");
-
-  currentDetail = [...new Map((data.listWO || []).map(x => [x.wo, x])).values()];
-
-  let tb = document.querySelector("#tblDetail tbody");
-  let popup = document.getElementById("popupWO");
-
-  if (!tb || !popup) return;
-
-  tb.innerHTML = "";
-
-  if (!currentDetail.length) {
-    tb.innerHTML = `<tr><td colspan="4">Tidak ada detail WO</td></tr>`;
-  } else {
-    currentDetail.forEach(d => {
-      tb.innerHTML += `<tr>
-        <td>${d.wo}</td>
-        <td>${d.ref}</td>
-        <td>${d.quo}</td>
-        <td>${d.status}</td>
-      </tr>`;
-    });
-  }
-
-  popup.style.display = "block";
-}
-
 // ================= UTIL =================
-function format(n) {
-  return "Rp " + (Number(n) || 0).toLocaleString("id-ID");
+function format(n){
+  return "Rp "+(Number(n)||0).toLocaleString("id-ID");
 }
 
-function parseAngka(v) {
-  if (!v) return 0;
-  return parseInt(String(v).replace(/[^0-9]/g, "")) || 0;
+function parseAngka(v){
+  if(!v) return 0;
+  return parseInt(String(v).replace(/[^0-9]/g,""))||0;
 }
-
-// ================= GLOBAL STUBS (BIAR TIDAK ERROR) =================
-function edit() {}
-function toggleDone() {}
-function generatePivot() {}
-function uploadServer() {}
-function download() {}
-function closePopup() {
-  const popup = document.getElementById("popupWO");
-  if (popup) popup.style.display = "none";
-}
-
-window.showTab = showTab;
-window.showDetail = showDetail;
-window.hapusData = hapusData;
-window.closePopup = closePopup;
-window.download = download;
-window.generatePivot = generatePivot;
-window.uploadServer = uploadServer;
-
-window.addEventListener("load", () => {
-  console.log("APP LOADED OK");
-});
-
-window.triggerUpload = function () {
-  alert("UPLOAD OK");
-  document.getElementById("file")?.click();
-};
