@@ -56,7 +56,6 @@ window.triggerUploadIMS = function () {
 
 function hapusData() {
   const checkboxes = document.querySelectorAll(".chk");
-
   let deletedIds = [];
 
   if (!Array.from(checkboxes).some(c => c.checked)) {
@@ -66,41 +65,23 @@ function hapusData() {
 
   if (!confirm("Hapus data terpilih?")) return;
 
-  // ================= FILTER LOCAL =================
   dataIKR = dataIKR.filter((d, i) => {
     const isChecked = checkboxes[i]?.checked;
-
-    if (isChecked) {
-      deletedIds.push(d.id); // kirim ke server
-      return false;
-    }
-    return true;
+    if (isChecked) deletedIds.push(d.id);
+    return !isChecked;
   });
 
   render();
 
-  // ================= PATCH KE SERVER =================
+  // kirim ke server
   fetch(SERVER_URL + "/delete", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      ids: deletedIds
-    })
-  })
-  .then(res => res.json())
-  .then(() => {
-    console.log("Server delete sukses");
-  })
-  .catch(err => {
-    console.error("Server delete gagal:", err);
-    alert("Data lokal terhapus tapi server gagal sync");
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ids: deletedIds })
   });
 }
 
 window.hapusData = hapusData;
-
 // ================= IMPORT DATA =================
 function importExcel(e) {
   const file = e.target.files[0];
