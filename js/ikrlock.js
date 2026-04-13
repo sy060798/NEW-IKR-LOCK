@@ -91,28 +91,85 @@ function importExcel(e) {
 
     let newData = [];
 
-   
-    
+    // ================= IMS FORMAT =================
+    if (isIMS) {
+      let map = {};
 
-    // ================= FINAL =================
-    dataIKR = [...dataIKR, ...newData];
+      raw.forEach(r => {
+        let city = r.City || r.CITY || r.city || "";
+        let woEnd = r["Wo End"] || r["WO END"] || r["woEnd"] || "";
+        let job = r["Job Name"] || r["JOB NAME"] || r["jobName"] || "";
 
-    sortData();
-    render();
+        if (!city || !woEnd) return;
 
-    alert("Upload sukses: " + newData.length + " data");
+        let wo = parseAngka(
+          r["Wo Total"] ??
+          r["WO TOTAL"] ??
+          r["WoTotal"] ??
+          r["woTotal"] ?? 0
+        );
 
-    e.target.value = "";
-  };
+        let date = new Date(woEnd);
+        if (isNaN(date)) return;
 
-  reader.readAsBinaryString(file);
-}
-    
+        let tahun = date.getFullYear();
+        let bulan = date.toLocaleString("id-ID", { month: "short" });
 
-   
-   
-    // ================= FORMAT LAMA =================
+        let key = city + "_" + tahun + "_" + bulan + "_" + job;
+
+        if (!map[key]) {
+          map[key] = {
+            city,
+            tahun,
+            bulan,
+            job,
+            total: 0,
+            woTotal: 0,
+            listWO: []
+          };
+        }
+
+        map[key].total++;
+        map[key].woTotal += wo;
+
+        let woNumber = String(r["Wonumber"] || "").trim();
+
+        if (woNumber && !map[key].listWO.find(x => x.wo === woNumber)) {
+          map[key].listWO.push({
+            wo: woNumber,
+            ref: r["Reference Code"] || "-",
+            quo: r["Quotation Id"] || "-",
+            status: r["Status"] || "-"
+          });
+        }
+      });
+
+      Object.values(map).forEach(g => {
+        let amount = Math.round(g.woTotal * 1.11);
+
+        newData.push({
+          id: Date.now() + Math.random(),
+          type: "IKR",
+          region: g.city,
+          tahun: g.tahun,
+          wotype: g.job,
+          bulan: g.bulan,
+          jumlah: g.total,
+          approved: 0,
+          amount,
+          fs: 0,
+          selisih: amount,
+          remark: "",
+          invoice: "",
+          note: "",
+          done: "NO",
+          listWO: g.listWO
+        });
+      });
+
     } else {
+
+      // ================= FORMAT LAMA =================
       raw.forEach(r => {
         let region = r.REGION || r.Region || "";
         if (!region) return;
@@ -123,14 +180,14 @@ function importExcel(e) {
         newData.push({
           id: Date.now() + Math.random(),
           type: "IKR",
-          region: region,
+          region,
           tahun: r.TAHUN || r.Tahun || "",
           wotype: r["WO TYPE"] || r["Wo Type"] || "",
           bulan: r.BULAN || r.Bulan || "",
           jumlah: r["JUMLAH WO"] || 0,
           approved: r["WO APPROVED"] || 0,
-          amount: amount,
-          fs: fs,
+          amount,
+          fs,
           selisih: amount - fs,
           remark: r.REMARK || "",
           invoice: r["NO INVOICE"] || "",
@@ -147,14 +204,12 @@ function importExcel(e) {
     sortData();
     render();
 
-    alert("Upload sukses : " + newData.length + " data baru");
-
+    alert("Upload sukses: " + newData.length + " data");
     e.target.value = "";
   };
 
   reader.readAsBinaryString(file);
 }
-
 // ================= Popup =================
 function showDetail(index) {
   let data = dataIKR[index];
@@ -270,6 +325,115 @@ raw.forEach(r => {
   };
 
   reader.readAsBinaryString(file);
+}
+
+let newData = [];
+
+// ================= IMS FORMAT =================
+if (isIMS) {
+  let map = {};
+
+  raw.forEach(r => {
+    let city = r.City || r.CITY || r.city || "";
+    let woEnd = r["Wo End"] || r["WO END"] || r["woEnd"] || "";
+    let job = r["Job Name"] || r["JOB NAME"] || r["jobName"] || "";
+
+    if (!city || !woEnd) return;
+
+    let wo = parseAngka(
+      r["Wo Total"] ??
+      r["WO TOTAL"] ??
+      r["WoTotal"] ??
+      r["woTotal"] ?? 0
+    );
+
+    let date = new Date(woEnd);
+    if (isNaN(date)) return;
+
+    let tahun = date.getFullYear();
+    let bulan = date.toLocaleString("id-ID", { month: "short" });
+
+    let key = city + "_" + tahun + "_" + bulan + "_" + job;
+
+    if (!map[key]) {
+      map[key] = {
+        city,
+        tahun,
+        bulan,
+        job,
+        total: 0,
+        woTotal: 0,
+        listWO: []
+      };
+    }
+
+    map[key].total++;
+    map[key].woTotal += wo;
+
+    let woNumber = String(r["Wonumber"] || "").trim();
+
+    if (woNumber && !map[key].listWO.find(x => x.wo === woNumber)) {
+      map[key].listWO.push({
+        wo: woNumber,
+        ref: r["Reference Code"] || "-",
+        quo: r["Quotation Id"] || "-",
+        status: r["Status"] || "-"
+      });
+    }
+  });
+
+  Object.values(map).forEach(g => {
+    let amount = Math.round(g.woTotal * 1.11);
+
+    newData.push({
+      id: Date.now() + Math.random(),
+      type: "IKR",
+      region: g.city,
+      tahun: g.tahun,
+      wotype: g.job,
+      bulan: g.bulan,
+      jumlah: g.total,
+      approved: 0,
+      amount,
+      fs: 0,
+      selisih: amount,
+      remark: "",
+      invoice: "",
+      note: "",
+      done: "NO",
+      listWO: g.listWO
+    });
+  });
+
+} else {
+
+  // ================= FORMAT LAMA =================
+  raw.forEach(r => {
+    let region = r.REGION || r.Region || "";
+    if (!region) return;
+
+    let amount = parseAngka(r.AMOUNT || r.Amount);
+    let fs = parseAngka(r["FS AMOUNT"] || r["FS Amount"]);
+
+    newData.push({
+      id: Date.now() + Math.random(),
+      type: "IKR",
+      region,
+      tahun: r.TAHUN || r.Tahun || "",
+      wotype: r["WO TYPE"] || r["Wo Type"] || "",
+      bulan: r.BULAN || r.Bulan || "",
+      jumlah: r["JUMLAH WO"] || 0,
+      approved: r["WO APPROVED"] || 0,
+      amount,
+      fs,
+      selisih: amount - fs,
+      remark: r.REMARK || "",
+      invoice: r["NO INVOICE"] || "",
+      note: r.NOTE || "",
+      done: r.DONE || "NO",
+      listWO: []
+    });
+  });
 }
 
 // ================= SORT =================
