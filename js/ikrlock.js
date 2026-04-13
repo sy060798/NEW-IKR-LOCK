@@ -75,11 +75,10 @@ function importExcel(e) {
 
         if (
           first["Wo End"] ||
-          first["WO END"] ||
-          first["woEnd"] ||
           first["City"] ||
-          first["city"] ||
           first["Job Name"] ||
+          first["woEnd"] ||
+          first["city"] ||
           first["jobName"]
         ) {
           isIMS = true;
@@ -93,21 +92,17 @@ function importExcel(e) {
 
     // ================= IMS FORMAT =================
     if (isIMS) {
+
       let map = {};
 
       raw.forEach(r => {
         let city = r.City || r.CITY || r.city || "";
-        let woEnd = r["Wo End"] || r["WO END"] || r["woEnd"] || "";
-        let job = r["Job Name"] || r["JOB NAME"] || r["jobName"] || "";
+        let woEnd = r["Wo End"] || r["woEnd"] || "";
+        let job = r["Job Name"] || r["jobName"] || "";
 
         if (!city || !woEnd) return;
 
-        let wo = parseAngka(
-          r["Wo Total"] ??
-          r["WO TOTAL"] ??
-          r["WoTotal"] ??
-          r["woTotal"] ?? 0
-        );
+        let wo = parseAngka(r["Wo Total"] || r["woTotal"] || 0);
 
         let date = new Date(woEnd);
         if (isNaN(date)) return;
@@ -192,7 +187,7 @@ function importExcel(e) {
           remark: r.REMARK || "",
           invoice: r["NO INVOICE"] || "",
           note: r.NOTE || "",
-          done: r.DONE || "NO",
+          done: "NO",
           listWO: []
         });
       });
