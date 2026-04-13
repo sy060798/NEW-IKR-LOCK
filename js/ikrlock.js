@@ -424,6 +424,6 @@ window.addEventListener("load", () => {
 });
 
 window.triggerUpload = function () {
-  console.log("UPLOAD CLICKED");
+  alert("UPLOAD OK");
   document.getElementById("file")?.click();
 };
