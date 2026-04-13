@@ -523,3 +523,15 @@ function closePopup() {
   let popup = document.getElementById("popupWO");
   if (popup) popup.style.display = "none";
 }
+
+function hapusData() {
+  if (!confirm("Yakin mau hapus semua data?")) return;
+
+  dataIKR = [];
+  render();
+
+  alert("Data berhasil dihapus");
+}
+
+// WAJIB global supaya onclick bisa akses
+window.hapusData = hapusData;
