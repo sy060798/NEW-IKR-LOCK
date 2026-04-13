@@ -91,60 +91,90 @@ function importExcel(e) {
 
     let newData = [];
 
-   // ================= IMS =================
-if (isIMS) {
-  let map = {};
+    // ================= IMS =================
+    if (isIMS) {
+      let map = {};
 
-  raw.forEach(r => {
-    let city = r.City || r.CITY || r.city || "";
-    let woEnd = r["Wo End"] || r["WO END"] || r["woEnd"] || "";
-    let job = r["Job Name"] || r["JOB NAME"] || r["jobName"] || "";
+      raw.forEach(r => {
+        let city = r.City || r.CITY || r.city || "";
+        let woEnd = r["Wo End"] || r["WO END"] || r["woEnd"] || "";
+        let job = r["Job Name"] || r["JOB NAME"] || r["jobName"] || "";
 
-    if (!city || !woEnd) return;
+        if (!city || !woEnd) return;
 
-    let woRaw =
-      r["Wo Total"] ??
-      r["WO TOTAL"] ??
-      r["WoTotal"] ??
-      r["WO_TOTAL"] ??
-      r["woTotal"] ??
-      0;
+        let woRaw =
+          r["Wo Total"] ??
+          r["WO TOTAL"] ??
+          r["WoTotal"] ??
+          r["WO_TOTAL"] ??
+          r["woTotal"] ??
+          0;
 
-    let wo = parseAngka(woRaw);
+        let wo = parseAngka(woRaw);
 
-    let date;
+        let date = new Date(woEnd);
+        if (isNaN(date)) return;
 
-    if (typeof woEnd === "number") {
-      date = new Date((woEnd - 25569) * 86400 * 1000);
-    } else if (typeof woEnd === "string" && woEnd.includes("/")) {
-      let [d, m, y] = woEnd.split(" ")[0].split("/");
-      date = new Date(`${y}-${m}-${d}`);
-    } else if (typeof woEnd === "string" && woEnd.includes("-")) {
-      date = new Date(woEnd.replace(" ", "T"));
-    } else {
-      date = new Date(woEnd);
+        let tahun = date.getFullYear();
+        let bulan = date.toLocaleString("id-ID", { month: "short" });
+
+        let key = city + "_" + tahun + "_" + bulan + "_" + job;
+
+        if (!map[key]) {
+          map[key] = {
+            city,
+            tahun,
+            bulan,
+            job,
+            total: 0,
+            woTotal: 0,
+            listWO: []
+          };
+        }
+
+        map[key].total++;
+        map[key].woTotal += wo;
+
+        let woNumber = r["Wonumber"] || r["WONUMBER"] || "-";
+
+        // ✅ FIX DOUBLE WO
+        let sudahAda = map[key].listWO.find(x => x.wo === woNumber);
+
+        if (!sudahAda) {
+          map[key].listWO.push({
+            wo: woNumber,
+            ref: r["Reference Code"] || "-",
+            quo: r["Quotation Id"] || "-",
+            status: r["Status"] || "-"
+          });
+        }
+      });
+
+      // ✅ WAJIB DI LUAR LOOP
+      Object.values(map).forEach(g => {
+        let amount = Math.round(g.woTotal * 1.11);
+
+        newData.push({
+          id: Date.now() + Math.random(),
+          type: "IKR",
+          region: g.city,
+          tahun: g.tahun,
+          wotype: g.job,
+          bulan: g.bulan,
+          jumlah: g.total,
+          approved: 0,
+          amount: amount,
+          fs: 0,
+          selisih: amount,
+          remark: "",
+          invoice: "",
+          note: "",
+          done: "NO",
+          listWO: g.listWO
+        });
+      });
     }
 
-    if (isNaN(date)) return;
-
-    let tahun = date.getFullYear();
-    let bulan = date.toLocaleString("id-ID", { month: "short" });
-
-    let key = city + "_" + tahun + "_" + bulan + "_" + job;
-
-    if (!map[key]) {
-      map[key] = {
-        city,
-        tahun,
-        bulan,
-        job,
-        total: 0,
-        woTotal: 0,
-        listWO: []
-      };
-    }
-
-  
     // ================= FORMAT LAMA =================
     else {
       raw.forEach(r => {
@@ -187,7 +217,6 @@ if (isIMS) {
 
   reader.readAsBinaryString(file);
 }
-
 
 // ================= Popup =================
 function showDetail(index) {
