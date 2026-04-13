@@ -212,46 +212,7 @@ function importExcel(e) {
 }
     
 
-    // ================= FORMAT LAMA =================
-   function importExcel(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = function (evt) {
-    const wb = XLSX.read(evt.target.result, { type: "binary" });
-
-    let raw = [];
-    let isIMS = false;
-
-    wb.SheetNames.forEach(s => {
-      const json = XLSX.utils.sheet_to_json(wb.Sheets[s], {
-        defval: "",
-        raw: false
-      });
-
-      if (json.length) {
-        const first = json[0];
-
-        if (
-          first["Wo End"] ||
-          first["WO END"] ||
-          first["woEnd"] ||
-          first["City"] ||
-          first["city"] ||
-          first["Job Name"] ||
-          first["jobName"]
-        ) {
-          isIMS = true;
-        }
-
-        json.forEach(r => raw.push(r));
-      }
-    });
-
-    let newData = [];
-
+   
     // ================= IMS =================
     if (isIMS) {
       let map = {};
