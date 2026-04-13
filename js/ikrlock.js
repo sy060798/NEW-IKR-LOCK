@@ -94,7 +94,6 @@ function importExcel(e) {
 if (isIMS) {
   let map = {};
 
-  // ================= LOOP DATA =================
   raw.forEach(r => {
     let city = r.City || r.CITY || r.city || "";
     let woEnd = r["Wo End"] || r["WO END"] || r["woEnd"] || "";
@@ -145,12 +144,13 @@ if (isIMS) {
       };
     }
 
+    // HITUNG
     map[key].total++;
     map[key].woTotal += wo;
 
     let woNumber = String(r["Wonumber"] || r["WONUMBER"] || "").trim();
 
-    // ✅ FIX (tidak return)
+    // SIMPAN DETAIL TANPA DUPLIKAT
     if (woNumber) {
       let sudahAda = map[key].listWO.find(x => x.wo === woNumber);
 
@@ -164,6 +164,31 @@ if (isIMS) {
       }
     }
   });
+
+  // FINAL BUILD DATA
+  Object.values(map).forEach(g => {
+    let amount = Math.round(g.woTotal * 1.11);
+
+    newData.push({
+      id: Date.now() + Math.random(),
+      type: "IKR",
+      region: g.city,
+      tahun: g.tahun,
+      wotype: g.job,
+      bulan: g.bulan,
+      jumlah: g.total,
+      approved: 0,
+      amount: amount,
+      fs: 0,
+      selisih: amount,
+      remark: "",
+      invoice: "",
+      note: "",
+      done: "NO",
+      listWO: g.listWO
+    });
+  });
+}
 
   // ================= BARU DI SINI =================
   Object.values(map).forEach(g => {
