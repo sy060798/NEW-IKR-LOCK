@@ -51,7 +51,7 @@ function triggerUploadIMS() {
 window.triggerUpload = triggerUpload;
 window.triggerUploadIMS = triggerUploadIMS;
 
-// ================= HAPUS DATA =================
+// ================= HAPUS DATA (FIXED TOTAL BLOCK BUG) =================
 function hapusData() {
   const checkboxes = document.querySelectorAll(".chk");
   let deletedIds = [];
@@ -75,31 +75,30 @@ function hapusData() {
 
   render();
 
-// ================= hapus =================
-  
+  // ================= SYNC SERVER =================
   if (deletedIds.length > 0) {
-  fetch(SERVER_URL + "/delete", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ids: deletedIds })
-  })
-  .then(async (r) => {
-    const text = await r.text(); // 🔥 aman dari error JSON
-    try {
-      return JSON.parse(text);
-    } catch (e) {
-      return text;
-    }
-  })
-  .then(() => {
-    console.log("Server delete sukses");
-    alert("Hapus sync server OK");
-  })
-  .catch(err => {
-    console.error("Server delete gagal:", err);
-    alert("Local sudah hapus, server gagal sync");
-  });
+    fetch(SERVER_URL + "/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: deletedIds })
+    })
+      .then(async (r) => {
+        const text = await r.text();
+        try { return JSON.parse(text); } catch { return text; }
+      })
+      .then(() => {
+        console.log("Server delete sukses");
+        alert("Hapus sync server OK");
+      })
+      .catch(err => {
+        console.error("Server delete gagal:", err);
+        alert("Local sudah hapus, server gagal sync");
+      });
+  }
 }
+
+window.hapusData = hapusData;
+
 // ================= IMPORT EXCEL =================
 function importExcel(e) {
   const file = e.target.files[0];
@@ -139,12 +138,12 @@ function importExcel(e) {
 
     let newData = [];
 
-    // ================= IMS FORMAT FIXED =================
+    // ================= IMS =================
     if (isIMS) {
       let map = {};
 
       raw.forEach(r => {
-        let city = r.City || r.CITY || r.city || "";
+        let city = r.City || r.city || "";
         let woEnd = r["Wo End"] || r["woEnd"] || "";
         let job = r["Job Name"] || r["jobName"] || "";
 
@@ -163,10 +162,7 @@ function importExcel(e) {
 
         if (!map[key]) {
           map[key] = {
-            city,
-            tahun,
-            bulan,
-            job,
+            city, tahun, bulan, job,
             total: 0,
             woTotal: 0,
             listWO: [],
@@ -191,7 +187,7 @@ function importExcel(e) {
       });
 
       Object.values(map).forEach(g => {
-        let amount = Math.round(g.woTotal);
+        let amount = Math.round(g.woTotal); // ✅ PPN SUDAH DIHAPUS
 
         newData.push({
           id: Date.now() + Math.random(),
@@ -214,7 +210,6 @@ function importExcel(e) {
       });
 
     } else {
-      // ================= FORMAT LAMA =================
       raw.forEach(r => {
         let region = r.REGION || r.Region || "";
         if (!region) return;
@@ -265,7 +260,6 @@ function importExcelIMS(e) {
     const wb = XLSX.read(evt.target.result, { type: "binary" });
 
     let raw = [];
-
     wb.SheetNames.forEach(s => {
       const json = XLSX.utils.sheet_to_json(wb.Sheets[s], {
         defval: "",
@@ -322,79 +316,7 @@ function importExcelIMS(e) {
   reader.readAsBinaryString(file);
 }
 
-// ================= SORT =================
-function sortData() {
-  const urutBulan = {
-    Jan:1,Feb:2,Mar:3,Apr:4,Mei:5,Jun:6,
-    Jul:7,Agu:8,Sep:9,Okt:10,Nov:11,Des:12
-  };
-
-  dataIKR.sort((a, b) => {
-    if (a.region !== b.region) return a.region.localeCompare(b.region);
-    if (a.tahun !== b.tahun) return a.tahun - b.tahun;
-    return (urutBulan[a.bulan] || 0) - (urutBulan[b.bulan] || 0);
-  });
-}
-
-// ================= RENDER =================
-function render() {
-  let tb = document.querySelector("#tbl tbody");
-  if (!tb) return;
-
-  tb.innerHTML = "";
-
-  dataIKR.forEach((d, i) => {
-    tb.innerHTML += `<tr>
-      <td>${i + 1}</td>
-      <td><input type="checkbox" class="chk"></td>
-      <td>${d.region}</td>
-      <td>${d.tahun}</td>
-      <td>${d.wotype}</td>
-      <td>${d.bulan}</td>
-      <td><span onclick="showDetail(${i})" style="cursor:pointer;color:cyan">${d.jumlah || 0}</span></td>
-      <td>${d.approved || 0}</td>
-      <td>${format(d.amount)}</td>
-      <td>${format(d.fs)}</td>
-      <td>${format(d.selisih)}</td>
-      <td contenteditable oninput="edit(${i},'remark',this.innerText)">${d.remark || ""}</td>
-      <td contenteditable oninput="edit(${i},'invoice',this.innerText)">${d.invoice || ""}</td>
-      <td contenteditable oninput="edit(${i},'note',this.innerText)">${d.note || ""}</td>
-      <td><input type="checkbox" ${d.done === "YES" ? "checked" : ""} onchange="toggleDone(${i},this.checked)"></td>
-    </tr>`;
-  });
-}
-
-// ================= DETAIL =================
-function showDetail(index) {
-  let data = dataIKR[index];
-  if (!data) return alert("Data tidak ditemukan");
-
-  currentDetail = [...new Map((data.listWO || []).map(x => [x.wo, x])).values()];
-
-  let tb = document.querySelector("#tblDetail tbody");
-  let popup = document.getElementById("popupWO");
-
-  if (!tb || !popup) return;
-
-  tb.innerHTML = "";
-
-  if (!currentDetail.length) {
-    tb.innerHTML = `<tr><td colspan="4">Tidak ada detail WO</td></tr>`;
-  } else {
-    currentDetail.forEach(d => {
-      tb.innerHTML += `<tr>
-        <td>${d.wo}</td>
-        <td>${d.ref}</td>
-        <td>${d.quo}</td>
-        <td>${d.status}</td>
-      </tr>`;
-    });
-  }
-
-  popup.style.display = "block";
-}
-
-// ================= server =================
+// ================= SERVER =================
 function uploadServer() {
   fetch(SERVER_URL + "/upload", {
     method: "POST",
@@ -419,17 +341,10 @@ function parseAngka(v) {
   return parseInt(String(v).replace(/[^0-9]/g, "")) || 0;
 }
 
-function hitungTanpaPPN(val) {
-  let angka = parseAngka(val);
-  // HAPUS PPN 11%
-  return Math.round(angka / 1.11);
-}
-
-// ================= GLOBAL STUBS (BIAR TIDAK ERROR) =================
+// ================= GLOBAL STUBS (NO OVERWRITE FIXED) =================
 function edit() {}
 function toggleDone() {}
 function generatePivot() {}
-function uploadServer() {}
 function download() {}
 function closePopup() {
   const popup = document.getElementById("popupWO");
