@@ -24,7 +24,7 @@ function openTab(id, btn) {
   document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
 
   document.getElementById("tab-" + id)?.classList.add("active");
-  document.getElementById("tb-" + id)?.classList.add("active"); // FIX INI (toolbar kamu pakai tb- bukan toolbar-)
+  document.getElementById("tb-" + id)?.classList.add("active");
 
   btn?.classList.add("active");
 }
@@ -53,70 +53,79 @@ function importIKR(e) {
     let map = {};
 
     // ================= LOOP DATA =================
-raw.forEach(r => {
+    raw.forEach(r => {
 
-  let region = r.City || r.city || r.Region || "";
-  let woEnd = r["Wo End"] || "";
-  let boq = parseInt(String(r["Boq Total"] || 0).replace(/[^0-9]/g, "")) || 0;
+      let region = r.City || r.city || r.Region || "";
+      let woEnd = r["Wo End"] || "";
+      let boq = parseInt(String(r["Boq Total"] || 0).replace(/[^0-9]/g, "")) || 0;
 
-  if (!region || !woEnd) return;
+      if (!region || !woEnd) return;
 
-  let dt = new Date(woEnd);
-  if (isNaN(dt)) return;
+      let dt = new Date(woEnd);
+      if (isNaN(dt)) return;
 
-  let tahun = dt.getFullYear();
-  let bulan = dt.toLocaleString("id-ID", { month: "short" });
+      let tahun = dt.getFullYear();
+      let bulan = dt.toLocaleString("id-ID", { month: "short" });
 
-  let key = region + "_" + tahun + "_" + bulan;
+      let key = region + "_" + tahun + "_" + bulan;
 
-  // ================= INIT MAP =================
-  if (!map[key]) {
-    map[key] = {
-      region,
-      tahun,
-      bulan,
-      wotype: "",
-      jumlah: 0,
-      approved: 0,
-      amount: 0,
-      fs: 0,
-      remark: "",
-      invoice: "",
-      note: "",
-      done: "NO",
-      detail: [],
-      woSet: new Set()   // 👈 PENTING
-    };
-  }
+      // ================= INIT MAP =================
+      if (!map[key]) {
+        map[key] = {
+          region,
+          tahun,
+          bulan,
+          wotype: "",
+          jumlah: 0,
+          approved: 0,
+          amount: 0,
+          fs: 0,
+          remark: "",
+          invoice: "",
+          note: "",
+          done: "NO",
+          detail: [],
+          woSet: new Set()
+        };
+      }
 
-  // ================= AMOUNT =================
-  map[key].amount += boq;
+      // ================= AMOUNT =================
+      map[key].amount += boq;
 
-  // ================= WO + DETAIL =================
-  const wo = String(r.Wonumber || "-").trim();
-  const status = r.Status || "-";
+      // ================= WO + DETAIL =================
+      const wo = String(r.Wonumber || "-").trim();
+      const status = r.Status || "-";
 
-  // hanya hitung WO unik
-  if (!map[key].woSet.has(wo)) {
-    map[key].woSet.add(wo);
-    map[key].jumlah++;
-  }
+      // hanya hitung WO unik
+      if (!map[key].woSet.has(wo)) {
+        map[key].woSet.add(wo);
+        map[key].jumlah++;
+      }
 
-  // tetap simpan detail (boleh duplikat untuk tracking)
-  map[key].detail.push({
-    wo,
-    status,
-    amount: boq
-  });
-});
+      // tetap simpan detail
+      map[key].detail.push({
+        wo,
+        status,
+        amount: boq
+      });
 
-// ================= FINAL CLEAN =================
-dataIKR = Object.values(map).map(x => {
-  delete x.woSet;
-  return x;
-});
+    });
 
-renderIKR();
+    // ================= FINAL CLEAN =================
+    dataIKR = Object.values(map).map(x => {
+      delete x.woSet;
+      return x;
+    });
+
+    renderIKR();
+
+    e.target.value = "";
+    alert("UPLOAD OK");
+  };
+
+  reader.readAsBinaryString(file);
+}
+
 // ================= RENDER =================
 function renderIKR() {
   const tb = document.querySelector("#tblIKR tbody");
@@ -155,7 +164,7 @@ function renderIKR() {
   });
 }
 
-// ================= POPUP DETAIL (FIX 100%) =================
+// ================= POPUP DETAIL =================
 let popupExportData = [];
 
 function showDetail(i) {
@@ -169,7 +178,6 @@ function showDetail(i) {
 
   tb.innerHTML = "";
 
-  // ================= UNIQUE WO =================
   const uniqueMap = new Map();
 
   (d.detail || []).forEach(x => {
@@ -180,7 +188,6 @@ function showDetail(i) {
 
   const uniqueData = [...uniqueMap.values()];
 
-  // update export juga
   popupExportData = uniqueData.map(x => ({
     WO: x.wo,
     Status: x.status,
@@ -204,9 +211,9 @@ function showDetail(i) {
   popup.style.display = "block";
 }
 
-// ================= excel woditail =================
+window.showDetail = showDetail;
 
-
+// ================= EXPORT DETAIL =================
 function exportPopupExcel() {
   if (!popupExportData || popupExportData.length === 0) {
     alert("Tidak ada data untuk export");
@@ -217,11 +224,11 @@ function exportPopupExcel() {
   const wb = XLSX.utils.book_new();
 
   XLSX.utils.book_append_sheet(wb, ws, "DETAIL_WO");
-
   XLSX.writeFile(wb, "DETAIL_WO.xlsx");
 }
 
 window.exportPopupExcel = exportPopupExcel;
+
 // ================= UTIL =================
 function formatRp(n) {
   return "Rp " + (Number(n || 0).toLocaleString("id-ID"));
