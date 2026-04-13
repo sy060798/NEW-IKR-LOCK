@@ -1,10 +1,11 @@
-// js/ikrlock.js
-
+// ================= GLOBAL =================
 let dataIKR = [];
 let popupDetailIKR = [];
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
+
+  console.log("IKRLOCK LOADED");
 
   const fileIKR = document.getElementById("fileIKR");
   const checkIKR = document.getElementById("checkIKR");
@@ -20,11 +21,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ================= IMPORT DATA IKR =================
+// ================= IMPORT EXCEL =================
 function importIKR(e) {
 
   const file = e.target.files[0];
-  if (!file) return;
+  if (!file) return alert("File kosong");
 
   const reader = new FileReader();
 
@@ -48,7 +49,7 @@ function importIKR(e) {
     raw.forEach(r => {
 
       let region = r.City || r.city || r.Region || "";
-      let woEnd = r["Wo End"] || "";
+      let woEnd = r["Wo End"] || r["woEnd"] || "";
       let status = r.Status || "";
       let wo = r.Wonumber || "";
       let boq = angka(r["Boq Total"]);
@@ -89,14 +90,13 @@ function importIKR(e) {
         status,
         amount: boq
       });
-
     });
 
     dataIKR = Object.values(group);
 
     renderIKR();
 
-    alert("Upload data berhasil");
+    alert("Upload IKR sukses: " + dataIKR.length);
     e.target.value = "";
   };
 
@@ -107,6 +107,8 @@ function importIKR(e) {
 function renderIKR() {
 
   let tb = document.querySelector("#tblIKR tbody");
+  if (!tb) return;
+
   tb.innerHTML = "";
 
   dataIKR.forEach((d, i) => {
@@ -120,9 +122,7 @@ function renderIKR() {
       <td>${d.wotype}</td>
       <td>${d.bulan}</td>
       <td>
-        <span class="click" onclick="detailIKR(${i})">
-          ${d.jumlah}
-        </span>
+        <span class="click" onclick="detailIKR(${i})">${d.jumlah}</span>
       </td>
       <td>${d.approved}</td>
       <td>${rupiah(d.amount)}</td>
@@ -132,44 +132,46 @@ function renderIKR() {
       <td contenteditable oninput="editIKR(${i},'note',this.innerText)">${d.note}</td>
       <td>
         <input type="checkbox"
-        ${d.done==="YES"?"checked":""}
-        onchange="doneIKR(${i},this.checked)">
+          ${d.done === "YES" ? "checked" : ""}
+          onchange="doneIKR(${i},this.checked)">
       </td>
     </tr>`;
   });
 }
 
-// ================= DETAIL =================
+// ================= DETAIL POPUP =================
 function detailIKR(i) {
 
   let d = dataIKR[i];
-  if (!d) return;
+  if (!d) return alert("Data tidak ditemukan");
 
-  popupDetailIKR = d.detail;
+  popupDetailIKR = d.detail || [];
 
   let thead = document.querySelector("#tblPopup thead");
   let tbody = document.querySelector("#tblPopup tbody");
 
+  if (!thead || !tbody) return;
+
   thead.innerHTML = `
-  <tr>
-    <th>WO Number</th>
-    <th>Status</th>
-    <th>Amount</th>
-  </tr>`;
+    <tr>
+      <th>WO Number</th>
+      <th>Status</th>
+      <th>Amount</th>
+    </tr>`;
 
   tbody.innerHTML = "";
 
-  d.detail.forEach(x => {
+  popupDetailIKR.forEach(x => {
     tbody.innerHTML += `
-    <tr>
-      <td>${x.wo}</td>
-      <td>${x.status}</td>
-      <td>${rupiah(x.amount)}</td>
-    </tr>`;
+      <tr>
+        <td>${x.wo}</td>
+        <td>${x.status}</td>
+        <td>${rupiah(x.amount)}</td>
+      </tr>`;
   });
 
-  document.getElementById("popupTitle").innerText = "DETAIL WO";
-  document.getElementById("popup").style.display = "block";
+  let popup = document.getElementById("popup");
+  if (popup) popup.style.display = "block";
 }
 
 // ================= DELETE =================
@@ -177,7 +179,7 @@ function hapusIKR() {
 
   let chk = document.querySelectorAll(".chkIKR");
 
-  dataIKR = dataIKR.filter((x, i) => !chk[i].checked);
+  dataIKR = dataIKR.filter((x, i) => !chk[i]?.checked);
 
   renderIKR();
 }
@@ -205,10 +207,12 @@ function downloadIKR() {
 
 // ================= EDIT =================
 function editIKR(i, field, val) {
+  if (!dataIKR[i]) return;
   dataIKR[i][field] = val;
 }
 
 function doneIKR(i, val) {
+  if (!dataIKR[i]) return;
   dataIKR[i].done = val ? "YES" : "NO";
 }
 
@@ -222,5 +226,16 @@ function rupiah(v) {
 }
 
 function closePopup() {
-  document.getElementById("popup").style.display = "none";
+  let p = document.getElementById("popup");
+  if (p) p.style.display = "none";
 }
+
+// ================= GLOBAL FIX (ANTI GITHUB ERROR) =================
+window.importIKR = importIKR;
+window.renderIKR = renderIKR;
+window.detailIKR = detailIKR;
+window.hapusIKR = hapusIKR;
+window.downloadIKR = downloadIKR;
+window.editIKR = editIKR;
+window.doneIKR = doneIKR;
+window.closePopup = closePopup;
