@@ -196,7 +196,121 @@ if (isIMS) {
 }
  
     // ================= FORMAT LAMA =================
-    else {
+   function importExcel(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function (evt) {
+    const wb = XLSX.read(evt.target.result, { type: "binary" });
+
+    let raw = [];
+    let isIMS = false;
+
+    wb.SheetNames.forEach(s => {
+      const json = XLSX.utils.sheet_to_json(wb.Sheets[s], {
+        defval: "",
+        raw: false
+      });
+
+      if (json.length) {
+        const first = json[0];
+
+        if (
+          first["Wo End"] ||
+          first["WO END"] ||
+          first["woEnd"] ||
+          first["City"] ||
+          first["city"] ||
+          first["Job Name"] ||
+          first["jobName"]
+        ) {
+          isIMS = true;
+        }
+
+        json.forEach(r => raw.push(r));
+      }
+    });
+
+    let newData = [];
+
+    // ================= IMS =================
+    if (isIMS) {
+      let map = {};
+
+      raw.forEach(r => {
+        let city = r.City || r.CITY || r.city || "";
+        let woEnd = r["Wo End"] || r["WO END"] || r["woEnd"] || "";
+        let job = r["Job Name"] || r["JOB NAME"] || r["jobName"] || "";
+
+        if (!city || !woEnd) return;
+
+        let wo = parseAngka(
+          r["Wo Total"] ??
+          r["WO TOTAL"] ??
+          r["WoTotal"] ??
+          r["WO_TOTAL"] ??
+          r["woTotal"] ?? 0
+        );
+
+        let date = new Date(woEnd);
+        if (isNaN(date)) return;
+
+        let tahun = date.getFullYear();
+        let bulan = date.toLocaleString("id-ID", { month: "short" });
+
+        let key = city + "_" + tahun + "_" + bulan + "_" + job;
+
+        if (!map[key]) {
+          map[key] = {
+            city, tahun, bulan, job,
+            total: 0,
+            woTotal: 0,
+            listWO: []
+          };
+        }
+
+        map[key].total++;
+        map[key].woTotal += wo;
+
+        let woNumber = String(r["Wonumber"] || "").trim();
+
+        if (woNumber && !map[key].listWO.find(x => x.wo === woNumber)) {
+          map[key].listWO.push({
+            wo: woNumber,
+            ref: r["Reference Code"] || "-",
+            quo: r["Quotation Id"] || "-",
+            status: r["Status"] || "-"
+          });
+        }
+      });
+
+      Object.values(map).forEach(g => {
+        let amount = Math.round(g.woTotal * 1.11);
+
+        newData.push({
+          id: Date.now() + Math.random(),
+          type: "IKR",
+          region: g.city,
+          tahun: g.tahun,
+          wotype: g.job,
+          bulan: g.bulan,
+          jumlah: g.total,
+          approved: 0,
+          amount,
+          fs: 0,
+          selisih: amount,
+          remark: "",
+          invoice: "",
+          note: "",
+          done: "NO",
+          listWO: g.listWO
+        });
+      });
+
+    // ================= FORMAT LAMA =================
+    } else {
       raw.forEach(r => {
         let region = r.REGION || r.Region || "";
         if (!region) return;
@@ -225,6 +339,7 @@ if (isIMS) {
       });
     }
 
+    // ================= FINAL =================
     dataIKR = [...dataIKR, ...newData];
 
     sortData();
