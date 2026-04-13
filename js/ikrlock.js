@@ -51,7 +51,7 @@ function triggerUploadIMS() {
 window.triggerUpload = triggerUpload;
 window.triggerUploadIMS = triggerUploadIMS;
 
-// ================= HAPUS DATA (FIXED TOTAL BLOCK BUG) =================
+// ================= HAPUS DATA (FIX STABLE + SYNC) =================
 function hapusData() {
   const checkboxes = document.querySelectorAll(".chk");
   let deletedIds = [];
@@ -63,29 +63,28 @@ function hapusData() {
 
   if (!confirm("Hapus data terpilih?")) return;
 
-  dataIKR = dataIKR.filter((d, i) => {
+  const newData = [];
+
+  dataIKR.forEach((d, i) => {
     const checked = checkboxes[i]?.checked;
 
     if (checked) {
       if (d.id) deletedIds.push(d.id);
-      return false;
+    } else {
+      newData.push(d);
     }
-    return true;
   });
 
+  dataIKR = newData;
   render();
 
-  // ================= SYNC SERVER =================
   if (deletedIds.length > 0) {
     fetch(SERVER_URL + "/delete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids: deletedIds })
     })
-      .then(async (r) => {
-        const text = await r.text();
-        try { return JSON.parse(text); } catch { return text; }
-      })
+      .then(r => r.json())
       .then(() => {
         console.log("Server delete sukses");
         alert("Hapus sync server OK");
@@ -162,7 +161,10 @@ function importExcel(e) {
 
         if (!map[key]) {
           map[key] = {
-            city, tahun, bulan, job,
+            city,
+            tahun,
+            bulan,
+            job,
             total: 0,
             woTotal: 0,
             listWO: [],
@@ -187,7 +189,8 @@ function importExcel(e) {
       });
 
       Object.values(map).forEach(g => {
-        let amount = Math.round(g.woTotal); // ✅ PPN SUDAH DIHAPUS
+        // ================= FIX PPN (HILANGKAN 11%) =================
+        let amount = Math.round(g.woTotal / 1.11);
 
         newData.push({
           id: Date.now() + Math.random(),
@@ -210,6 +213,7 @@ function importExcel(e) {
       });
 
     } else {
+      // ================= FORMAT LAMA =================
       raw.forEach(r => {
         let region = r.REGION || r.Region || "";
         if (!region) return;
@@ -260,6 +264,7 @@ function importExcelIMS(e) {
     const wb = XLSX.read(evt.target.result, { type: "binary" });
 
     let raw = [];
+
     wb.SheetNames.forEach(s => {
       const json = XLSX.utils.sheet_to_json(wb.Sheets[s], {
         defval: "",
@@ -316,19 +321,72 @@ function importExcelIMS(e) {
   reader.readAsBinaryString(file);
 }
 
-// ================= SERVER =================
-function uploadServer() {
-  fetch(SERVER_URL + "/upload", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(dataIKR)
-  })
-    .then(r => r.json())
-    .then(() => alert("Upload ke server sukses"))
-    .catch(err => {
-      console.error(err);
-      alert("Upload server gagal");
-    });
+// ================= SORT =================
+function sortData() {
+  const urutBulan = {
+    Jan:1,Feb:2,Mar:3,Apr:4,Mei:5,Jun:6,
+    Jul:7,Agu:8,Sep:9,Okt:10,Nov:11,Des:12
+  };
+
+  dataIKR.sort((a, b) => {
+    if (a.region !== b.region) return a.region.localeCompare(b.region);
+    if (a.tahun !== b.tahun) return a.tahun - b.tahun;
+    return (urutBulan[a.bulan] || 0) - (urutBulan[b.bulan] || 0);
+  });
+}
+
+// ================= RENDER =================
+function render() {
+  let tb = document.querySelector("#tbl tbody");
+  if (!tb) return;
+
+  tb.innerHTML = "";
+
+  dataIKR.forEach((d, i) => {
+    tb.innerHTML += `<tr>
+      <td>${i + 1}</td>
+      <td><input type="checkbox" class="chk"></td>
+      <td>${d.region}</td>
+      <td>${d.tahun}</td>
+      <td>${d.wotype}</td>
+      <td>${d.bulan}</td>
+      <td><span onclick="showDetail(${i})" style="cursor:pointer;color:cyan">${d.jumlah || 0}</span></td>
+      <td>${d.approved || 0}</td>
+      <td>${format(d.amount)}</td>
+      <td>${format(d.fs)}</td>
+      <td>${format(d.selisih)}</td>
+      <td contenteditable>${d.remark || ""}</td>
+      <td contenteditable>${d.invoice || ""}</td>
+      <td contenteditable>${d.note || ""}</td>
+      <td><input type="checkbox" ${d.done === "YES" ? "checked" : ""}></td>
+    </tr>`;
+  });
+}
+
+// ================= DETAIL =================
+function showDetail(index) {
+  let data = dataIKR[index];
+  if (!data) return;
+
+  currentDetail = [...new Map((data.listWO || []).map(x => [x.wo, x])).values()];
+
+  let tb = document.querySelector("#tblDetail tbody");
+  let popup = document.getElementById("popupWO");
+
+  if (!tb || !popup) return;
+
+  tb.innerHTML = "";
+
+  currentDetail.forEach(d => {
+    tb.innerHTML += `<tr>
+      <td>${d.wo}</td>
+      <td>${d.ref}</td>
+      <td>${d.quo}</td>
+      <td>${d.status}</td>
+    </tr>`;
+  });
+
+  popup.style.display = "block";
 }
 
 // ================= UTIL =================
@@ -341,20 +399,29 @@ function parseAngka(v) {
   return parseInt(String(v).replace(/[^0-9]/g, "")) || 0;
 }
 
-// ================= GLOBAL STUBS (NO OVERWRITE FIXED) =================
+// ================= SERVER =================
+function uploadServer() {
+  fetch(SERVER_URL + "/upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dataIKR)
+  })
+    .then(r => r.json())
+    .then(() => alert("Upload server sukses"))
+    .catch(() => alert("Upload server gagal"));
+}
+
+// ================= GLOBAL STUBS =================
 function edit() {}
 function toggleDone() {}
 function generatePivot() {}
 function download() {}
 function closePopup() {
-  const popup = document.getElementById("popupWO");
-  if (popup) popup.style.display = "none";
+  document.getElementById("popupWO")?.style.display = "none";
 }
 
 window.showTab = showTab;
 window.showDetail = showDetail;
 window.hapusData = hapusData;
-window.closePopup = closePopup;
-window.download = download;
-window.generatePivot = generatePivot;
 window.uploadServer = uploadServer;
+window.closePopup = closePopup;
