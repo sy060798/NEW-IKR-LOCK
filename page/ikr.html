@@ -10,30 +10,30 @@
 
 <style>
 body{font-family:Arial;background:#0e0e0e;color:#fff;padding:18px}
-h1{text-align:center}
 
-.menu{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
-.menu button{background:#222;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer}
+h1{text-align:center;margin-bottom:15px}
+
+.menu{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.menu button{background:#222;color:#fff;border:0;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold}
 .menu button.active{background:#8e44ad}
 
 .toolbar{display:none;gap:10px;flex-wrap:wrap;margin-bottom:10px}
 .toolbar.active{display:flex}
 
-button{padding:8px 12px;border:none;border-radius:6px;color:#fff;cursor:pointer;font-weight:bold}
+button{border:0;padding:8px 12px;border-radius:6px;color:#fff;font-weight:bold;cursor:pointer}
 .blue{background:#3498db}
 .green{background:#2ecc71}
 .red{background:#e74c3c}
 .orange{background:#f39c12}
-.gray{background:#555}
 
 .tab{display:none}
 .tab.active{display:block}
 
-.wrap{overflow:auto;background:#171717;border-radius:10px;max-height:500px}
+.wrap{overflow:auto;background:#171717;border-radius:10px;max-height:520px}
+
 table{width:100%;border-collapse:collapse;min-width:1200px}
 th,td{border:1px solid #333;padding:6px;font-size:12px;text-align:center}
 th{background:#8e44ad;position:sticky;top:0}
-.click{color:#00eaff;cursor:pointer}
 </style>
 </head>
 
@@ -41,11 +41,13 @@ th{background:#8e44ad;position:sticky;top:0}
 
 <h1>NEW IKR LOCK SYSTEM</h1>
 
+<!-- MENU -->
 <div class="menu">
 <button class="active" onclick="openTab('ikr',this)">DATA IKR LOCK</button>
 <button onclick="openTab('ims',this)">DATA IMS</button>
 <button onclick="openTab('pivot',this)">PIVOT</button>
 <button onclick="openTab('status',this)">STATUS</button>
+<button class="green" onclick="uploadServer()">UPLOAD KE SERVER</button>
 </div>
 
 <!-- TOOLBAR IKR -->
@@ -80,8 +82,7 @@ th{background:#8e44ad;position:sticky;top:0}
 <table id="tableIKR">
 <thead>
 <tr>
-<th>No</th><th>Region</th><th>Tahun</th><th>Bulan</th><th>WO Type</th>
-<th>Jumlah</th><th>Amount</th>
+<th>No</th><th>Region</th><th>Tahun</th><th>Bulan</th><th>Jumlah WO</th><th>Amount</th>
 </tr>
 </thead>
 <tbody></tbody>
@@ -95,7 +96,7 @@ th{background:#8e44ad;position:sticky;top:0}
 <table id="tableIMS">
 <thead>
 <tr>
-<th>No</th><th>City</th><th>Pra Invoice</th><th>Invoice</th><th>Job</th>
+<th>No</th><th>City</th><th>Pra Invoice</th><th>Invoice</th><th>Job Name</th>
 </tr>
 </thead>
 <tbody></tbody>
@@ -116,7 +117,7 @@ th{background:#8e44ad;position:sticky;top:0}
 <table id="tableStatus">
 <thead>
 <tr>
-<th>Region</th><th>Total WO</th><th>Amount</th>
+<th>Region</th><th>Total WO</th><th>Total Amount</th>
 </tr>
 </thead>
 <tbody></tbody>
