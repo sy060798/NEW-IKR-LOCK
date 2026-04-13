@@ -43,13 +43,13 @@ function showTab(id, btn) {
 }
 
 // ================= UPLOAD =================
-function triggerUpload() {
+window.triggerUpload = function () {
   document.getElementById("file").click();
-}
+};
 
-function triggerUploadIMS() {
+window.triggerUploadIMS = function () {
   document.getElementById("fileIMS").click();
-}
+};
 
 // ================= IMPORT DATA =================
 function importExcel(e) {
