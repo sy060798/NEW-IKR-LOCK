@@ -1,190 +1,102 @@
-// js/dataims.js
+let dataIKR = [];
 
-let dataIMS = [];
-
-// ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
 
-  const fileIMS = document.getElementById("fileIMS");
+  document.getElementById("fileIKR").addEventListener("change", importIKR);
 
-  if (fileIMS) fileIMS.addEventListener("change", importIMS);
-
-  document.getElementById("searchPra")?.addEventListener("input", renderIMS);
-  document.getElementById("searchInv")?.addEventListener("input", renderIMS);
-  document.getElementById("searchRegion")?.addEventListener("input", renderIMS);
+  window.openTab = openTab;
 });
 
-// ================= IMPORT IMS =================
-function importIMS(e) {
+function openTab(name, btn){
+
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".toolbar").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+
+  document.getElementById("tab-" + name).classList.add("active");
+  document.getElementById("toolbar-" + name).classList.add("active");
+
+  if(btn) btn.classList.add("active");
+}
+
+// ================= IMPORT IKR =================
+function importIKR(e){
 
   const file = e.target.files[0];
-  if (!file) return;
+  if(!file) return;
 
   const reader = new FileReader();
 
-  reader.onload = function (evt) {
+  reader.onload = function(evt){
 
-    const wb = XLSX.read(evt.target.result, { type: "binary" });
-
+    const wb = XLSX.read(evt.target.result,{type:"binary"});
     let raw = [];
 
-    wb.SheetNames.forEach(s => {
-      const json = XLSX.utils.sheet_to_json(wb.Sheets[s], {
-        defval: "",
-        raw: false
-      });
-
-      json.forEach(r => raw.push(r));
+    wb.SheetNames.forEach(s=>{
+      const json = XLSX.utils.sheet_to_json(wb.Sheets[s],{defval:""});
+      raw.push(...json);
     });
 
-    let group = {};
+    let map = {};
 
-    raw.forEach(r => {
+    raw.forEach(r=>{
 
-      let city = r.City || "";
-      let pra = r["Pra Invoice Number"] || "";
-      let inv = r["Invoice Number"] || "";
-      let job = r["Job Name"] || "";
-      let wo = r.Wonumber || "";
-      let total = angka(r["Boq Total"]);
+      let region = r.City || r.Region || "";
+      let date = new Date(r["Wo End"] || "");
+      if(!region || isNaN(date)) return;
 
-      if (!pra) return;
+      let tahun = date.getFullYear();
+      let bulan = date.toLocaleString("id-ID",{month:"short"});
+      let key = region+"_"+tahun+"_"+bulan;
 
-      if (!group[pra]) {
-        group[pra] = {
-          city,
-          pra,
-          inv,
-          job,
-          jumlah: 0,
-          total: 0,
-          detail: []
+      if(!map[key]){
+        map[key]={
+          region,tahun,bulan,jumlah:0,amount:0
         };
       }
 
-      group[pra].jumlah++;
-      group[pra].total += total;
-
-      group[pra].detail.push({
-        wo,
-        total
-      });
+      map[key].jumlah++;
+      map[key].amount += Number(r["Boq Total"]||0);
 
     });
 
-    dataIMS = Object.values(group);
+    dataIKR = Object.values(map);
+    renderIKR();
 
-    renderIMS();
-
-    syncIMSKeIKR();
-
-    alert("Upload IMS berhasil");
-    e.target.value = "";
   };
 
   reader.readAsBinaryString(file);
 }
 
 // ================= RENDER =================
-function renderIMS() {
+function renderIKR(){
 
-  let tb = document.querySelector("#tblIMS tbody");
-  tb.innerHTML = "";
+  let tb = document.querySelector("#tableIKR tbody");
+  tb.innerHTML="";
 
-  let sPra = document.getElementById("searchPra")?.value.toLowerCase() || "";
-  let sInv = document.getElementById("searchInv")?.value.toLowerCase() || "";
-  let sReg = document.getElementById("searchRegion")?.value.toLowerCase() || "";
-
-  let rows = dataIMS.filter(x => {
-
-    return x.pra.toLowerCase().includes(sPra) &&
-           x.inv.toLowerCase().includes(sInv) &&
-           x.city.toLowerCase().includes(sReg);
-  });
-
-  rows.forEach((d, i) => {
-
+  dataIKR.forEach((d,i)=>{
     tb.innerHTML += `
     <tr>
-      <td>${i + 1}</td>
-      <td><input type="checkbox" class="chkIMS"></td>
-      <td>${d.city}</td>
-      <td>${d.pra}</td>
-      <td>${d.inv}</td>
-      <td>
-        <span class="click" onclick="detailIMS('${d.pra}')">
-          ${d.jumlah}
-        </span>
-      </td>
-      <td>${d.job}</td>
-      <td>${rupiah(d.total)}</td>
-    </tr>`;
-  });
-}
-
-// ================= DETAIL =================
-function detailIMS(pra) {
-
-  let d = dataIMS.find(x => x.pra === pra);
-  if (!d) return;
-
-  let thead = document.querySelector("#tblPopup thead");
-  let tbody = document.querySelector("#tblPopup tbody");
-
-  thead.innerHTML = `
-  <tr>
-    <th>WO Number</th>
-    <th>Total</th>
-  </tr>`;
-
-  tbody.innerHTML = "";
-
-  d.detail.forEach(x => {
-    tbody.innerHTML += `
-    <tr>
-      <td>${x.wo}</td>
-      <td>${rupiah(x.total)}</td>
+      <td>${i+1}</td>
+      <td>${d.region}</td>
+      <td>${d.tahun}</td>
+      <td>${d.bulan}</td>
+      <td>-</td>
+      <td>${d.jumlah}</td>
+      <td>${d.amount}</td>
     </tr>`;
   });
 
-  document.getElementById("popupTitle").innerText = "DETAIL PRA INVOICE";
-  document.getElementById("popup").style.display = "block";
 }
 
-// ================= DELETE =================
-function hapusIMS() {
-
-  let chk = document.querySelectorAll(".chkIMS");
-
-  dataIMS = dataIMS.filter((x, i) => !chk[i].checked);
-
-  renderIMS();
-}
-
-// ================= DOWNLOAD =================
-function downloadIMS() {
-
-  let ws = XLSX.utils.json_to_sheet(dataIMS);
-  let wb = XLSX.utils.book_new();
-
-  XLSX.utils.book_append_sheet(wb, ws, "IMS");
-  XLSX.writeFile(wb, "DATA_IMS.xlsx");
-}
-
-// ================= SYNC IMS KE IKR =================
-function syncIMSKeIKR() {
-
-  if (!dataIKR.length) return;
-
-  dataIKR.forEach(r => {
-
-    let cocok = dataIMS.filter(x =>
-      x.city.toLowerCase() === r.region.toLowerCase()
-    );
-
-    r.approved = cocok.length;
-    r.fs = cocok.reduce((a, b) => a + b.total, 0);
-  });
-
+function hapusIKR(){
+  dataIKR=[];
   renderIKR();
 }
+
+function downloadIKR(){
+  alert("download IKR");
+}
+
+window.downloadIKR=downloadIKR;
+window.hapusIKR=hapusIKR;
