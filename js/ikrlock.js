@@ -149,21 +149,19 @@ if (isIMS) {
 
    let woNumber = String(r["Wonumber"] || r["WONUMBER"] || "").trim();
 
-// skip kalau kosong
-if (!woNumber) return;
+// JANGAN return, cukup skip push detail
+if (woNumber) {
+  let sudahAda = map[key].listWO.find(x => x.wo === woNumber);
 
-    // ANTI DOUBLE
-    let sudahAda = map[key].listWO.find(x => x.wo === woNumber);
-
-    if (!sudahAda) {
-      map[key].listWO.push({
-        wo: woNumber,
-        ref: r["Reference Code"] || "-",
-        quo: r["Quotation Id"] || "-",
-        status: r["Status"] || "-"
-      });
-    }
-  });
+  if (!sudahAda) {
+    map[key].listWO.push({
+      wo: woNumber,
+      ref: r["Reference Code"] || "-",
+      quo: r["Quotation Id"] || "-",
+      status: r["Status"] || "-"
+    });
+  }
+}
 
   // ⬅️ INI HARUS DI LUAR LOOP (BENAR)
   Object.values(map).forEach(g => {
