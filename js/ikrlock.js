@@ -54,6 +54,7 @@ window.triggerUploadIMS = function () {
 
 // ================= HAPUS DATA =================
 
+// ================= HAPUS DATA (FINAL PATCH AMAN SERVER) =================
 function hapusData() {
   const checkboxes = document.querySelectorAll(".chk");
   let deletedIds = [];
@@ -65,23 +66,33 @@ function hapusData() {
 
   if (!confirm("Hapus data terpilih?")) return;
 
+  // hapus lokal + kumpulkan id
   dataIKR = dataIKR.filter((d, i) => {
     const checked = checkboxes[i]?.checked;
-    if (checked) deletedIds.push(d.id);
-    return !checked;
+
+    if (checked) {
+      if (d.id) deletedIds.push(d.id);
+      return false;
+    }
+    return true;
   });
 
   render();
 
-  // kirim ke server
-  fetch(SERVER_URL + "/delete", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ids: deletedIds })
-  })
-  .then(res => res.json())
-  .then(() => console.log("Delete sync OK"))
-  .catch(err => console.error("Delete sync gagal", err));
+  // sync ke server
+  if (deletedIds.length > 0) {
+    fetch(SERVER_URL + "/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: deletedIds })
+    })
+    .then(r => r.json())
+    .then(() => console.log("Server delete sukses"))
+    .catch(err => {
+      console.error("Server delete gagal:", err);
+      alert("Local terhapus tapi server gagal sync");
+    });
+  }
 }
 
 window.hapusData = hapusData;
