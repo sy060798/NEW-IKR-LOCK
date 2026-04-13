@@ -1,138 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NEW IKR SYSTEM</title>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{font-family:Arial;background:#0e0e0e;color:#fff;padding:15px}
+
+h1{text-align:center;margin-bottom:15px}
+
+/* MENU */
+.menu{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.menu button{
+  background:#222;color:#fff;border:0;
+  padding:10px;border-radius:8px;cursor:pointer;font-weight:bold
+}
+.menu button.active{background:#8e44ad}
+
+/* TOOLBAR */
+.toolbar{display:none;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.toolbar.active{display:flex}
+
+/* TAB */
+.tab{display:none}
+.tab.active{display:block}
+
+/* TABLE */
+.wrap{overflow:auto;background:#171717;border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:1200px}
+th,td{border:1px solid #333;padding:6px;font-size:12px;text-align:center}
+th{background:#8e44ad;position:sticky;top:0}
+</style>
+</head>
+
+<body>
+
+<h1>NEW IKR LOCK SYSTEM</h1>
+
 <!-- MENU -->
 <div class="menu">
-
   <button class="active" onclick="openTab('ikr',this)">DATA IKR LOCK</button>
   <button onclick="openTab('ims',this)">DATA IMS</button>
   <button onclick="openTab('pivot',this)">PIVOT</button>
   <button onclick="openTab('status',this)">STATUS</button>
-
-  <button class="green" onclick="uploadServerAll()">UPLOAD SERVER SEMUA</button>
-
 </div>
 
 <!-- TOOLBAR IKR -->
-<div id="toolbar-ikr" class="toolbar active">
-  <button class="blue" onclick="downloadIKR()">DOWNLOAD EXCEL</button>
-
+<div id="tb-ikr" class="toolbar active">
+  <button onclick="downloadIKR()">DOWNLOAD EXCEL</button>
   <input type="file" id="fileIKR" hidden>
-  <button class="orange" onclick="fileIKR.click()">UPLOAD DATA</button>
-
-  <button class="red" onclick="hapusIKR()">HAPUS</button>
+  <button onclick="document.getElementById('fileIKR').click()">UPLOAD DATA</button>
+  <button onclick="hapusIKR()">HAPUS</button>
 </div>
 
 <!-- TOOLBAR IMS -->
-<div id="toolbar-ims" class="toolbar">
-  <button class="blue" onclick="downloadIMS()">DOWNLOAD EXCEL</button>
-
+<div id="tb-ims" class="toolbar">
+  <button onclick="downloadIMS()">DOWNLOAD EXCEL</button>
   <input type="file" id="fileIMS" hidden>
-  <button class="orange" onclick="fileIMS.click()">UPLOAD IMS</button>
-
-  <button class="red" onclick="hapusIMS()">HAPUS</button>
+  <button onclick="document.getElementById('fileIMS').click()">UPLOAD IMS</button>
 </div>
 
 <!-- TOOLBAR PIVOT -->
-<div id="toolbar-pivot" class="toolbar">
-  <button class="green" onclick="generatePivot()">REFRESH</button>
+<div id="tb-pivot" class="toolbar">
+  <button onclick="generatePivot()">REFRESH PIVOT</button>
 </div>
 
 <!-- TOOLBAR STATUS -->
-<div id="toolbar-status" class="toolbar">
-  <button class="green" onclick="generateStatus()">REFRESH</button>
+<div id="tb-status" class="toolbar">
+  <button onclick="generateStatus()">REFRESH STATUS</button>
 </div>
 
 <!-- TAB IKR -->
 <div id="tab-ikr" class="tab active">
-  <div class="wrap">
-    <table id="tblIKR">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th><input type="checkbox" id="checkIKR"></th>
-          <th>Region</th>
-          <th>Tahun</th>
-          <th>WO Type</th>
-          <th>Bulan</th>
-          <th>Jumlah WO</th>
-          <th>Approved</th>
-          <th>Amount</th>
-          <th>FS Amount</th>
-          <th>Remark</th>
-          <th>Invoice</th>
-          <th>Note</th>
-          <th>Done</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<div class="wrap">
+<table id="tblIKR">
+<thead>
+<tr>
+<th>No</th>
+<th><input type="checkbox" id="checkIKR"></th>
+<th>Region</th>
+<th>Tahun</th>
+<th>WO Type</th>
+<th>Bulan</th>
+<th>Jumlah WO</th>
+<th>WO Approved</th>
+<th>Amount</th>
+<th>FS Amount</th>
+<th>Remark</th>
+<th>No Invoice</th>
+<th>Note</th>
+<th>Done</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 </div>
 
 <!-- TAB IMS -->
 <div id="tab-ims" class="tab">
-  <div class="wrap">
-    <table id="tblIMS">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th><input type="checkbox"></th>
-          <th>City</th>
-          <th>Pra Invoice</th>
-          <th>Invoice</th>
-          <th>Jumlah WO</th>
-          <th>Job Name</th>
-          <th>Invoice Total</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<div class="wrap">
+<table id="tblIMS">
+<thead>
+<tr>
+<th>No</th>
+<th><input type="checkbox" id="checkIMS"></th>
+<th>City</th>
+<th>Pra Invoice</th>
+<th>Invoice</th>
+<th>Jumlah WO</th>
+<th>Job Name</th>
+<th>Invoice Total</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 </div>
 
 <!-- TAB PIVOT -->
 <div id="tab-pivot" class="tab">
-  <div class="wrap" style="padding:15px">
-    <canvas id="chartPivot"></canvas>
-  </div>
+<div class="wrap" style="padding:10px">
+<canvas id="chartPivot"></canvas>
+</div>
 </div>
 
 <!-- TAB STATUS -->
 <div id="tab-status" class="tab">
-  <div class="wrap" style="padding:15px">
-    <table id="tblStatus">
-      <thead>
-        <tr>
-          <th>Region</th>
-          <th>Total WO</th>
-          <th>Approved</th>
-          <th>Amount</th>
-          <th>FS Amount</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<div class="wrap" style="padding:10px">
+<table id="tblStatus">
+<thead>
+<tr>
+<th>Region</th>
+<th>Total WO</th>
+<th>Amount</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 </div>
 
-<!-- POPUP -->
-<div id="popup" style="display:none">
-  <div class="popup-box">
-    <h3>DETAIL</h3>
+<!-- JS -->
+<script src="../js/ikrlock.js"></script>
+<script src="../js/dataims.js"></script>
 
-    <div class="popup-body">
-      <table>
-        <thead>
-          <tr>
-            <th>WO</th>
-            <th>Status</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody id="popupBody"></tbody>
-      </table>
-    </div>
+<script>
+function openTab(id, btn){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("tab-"+id).classList.add("active");
 
-    <div class="popup-action">
-      <button onclick="closePopup()">CLOSE</button>
-    </div>
-  </div>
-</div>
+  document.querySelectorAll(".toolbar").forEach(t=>t.classList.remove("active"));
+  document.getElementById("tb-"+id).classList.add("active");
+
+  document.querySelectorAll(".menu button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+}
+</script>
+
+</body>
+</html>
