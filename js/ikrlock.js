@@ -470,3 +470,10 @@ window.showTab = showTab;
 window.showDetail = showDetail;
 window.closePopup = closePopup;
 window.downloadDetail = downloadDetail;
+
+// ✅ TAMBAHIN INI
+function triggerUploadIMS() {
+  triggerUpload();
+}
+window.triggerUploadIMS = triggerUploadIMS;
+
