@@ -1,28 +1,23 @@
-// ================= GLOBAL =================
 let dataIKR = [];
-let chartPivot = null;
 
-const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
-
-// ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
+  const file = document.getElementById("fileIKR");
+  const check = document.getElementById("checkIKR");
 
-  const fileIKR = document.getElementById("fileIKR");
-  const fileIMS = document.getElementById("fileIMS");
-  const checkIKR = document.getElementById("checkIKR");
+  if (file) file.addEventListener("change", importIKR);
 
-  if (fileIKR) fileIKR.addEventListener("change", importIKR);
-
-  if (checkIKR) {
-    checkIKR.addEventListener("change", e => {
-      document.querySelectorAll(".chkIKR").forEach(c => c.checked = e.target.checked);
+  if (check) {
+    check.addEventListener("change", e => {
+      document.querySelectorAll(".chkIKR").forEach(c => {
+        c.checked = e.target.checked;
+      });
     });
   }
 
   renderIKR();
 });
 
-// ================= TAB =================
+// ================= TAB FIX =================
 function openTab(id, btn) {
 
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
@@ -32,12 +27,12 @@ function openTab(id, btn) {
   document.getElementById("tab-" + id)?.classList.add("active");
   document.getElementById("toolbar-" + id)?.classList.add("active");
 
-  if (btn) btn.classList.add("active");
+  btn?.classList.add("active");
 }
 
 window.openTab = openTab;
 
-// ================= IMPORT IKR =================
+// ================= IMPORT FIX =================
 function importIKR(e) {
 
   const file = e.target.files[0];
@@ -52,11 +47,10 @@ function importIKR(e) {
     let raw = [];
 
     wb.SheetNames.forEach(s => {
-      const json = XLSX.utils.sheet_to_json(wb.Sheets[s], {
+      XLSX.utils.sheet_to_json(wb.Sheets[s], {
         defval: "",
         raw: false
-      });
-      json.forEach(r => raw.push(r));
+      }).forEach(r => raw.push(r));
     });
 
     let map = {};
@@ -65,8 +59,7 @@ function importIKR(e) {
 
       let region = r.City || r.city || r.Region || "";
       let woEnd = r["Wo End"] || "";
-      let status = r.Status || "";
-      let boq = parseAngka(r["Boq Total"] || 0);
+      let boq = parseInt(String(r["Boq Total"] || 0).replace(/[^0-9]/g, "")) || 0;
 
       if (!region || !woEnd) return;
 
@@ -83,7 +76,7 @@ function importIKR(e) {
           region,
           tahun,
           bulan,
-          wotype: status,
+          wotype: "",
           jumlah: 0,
           approved: 0,
           amount: 0,
@@ -101,22 +94,22 @@ function importIKR(e) {
 
       map[key].detail.push({
         wo: r.Wonumber,
-        status,
+        status: r.Status,
         amount: boq
       });
     });
 
     dataIKR = Object.values(map);
-
     renderIKR();
-    alert("DATA IKR berhasil diupload");
+
     e.target.value = "";
+    alert("UPLOAD OK");
   };
 
   reader.readAsBinaryString(file);
 }
 
-// ================= RENDER IKR =================
+// ================= RENDER FIX =================
 function renderIKR() {
 
   const tb = document.querySelector("#tblIKR tbody");
@@ -134,21 +127,21 @@ function renderIKR() {
         <td>${d.tahun}</td>
         <td>${d.wotype}</td>
         <td>${d.bulan}</td>
-        <td><span class="click" onclick="showDetailIKR(${i})">${d.jumlah}</span></td>
+        <td><span onclick="showDetail(${i})">${d.jumlah}</span></td>
         <td>${d.approved}</td>
         <td>${formatRp(d.amount)}</td>
         <td>${formatRp(d.fs)}</td>
-        <td contenteditable oninput="editIKR(${i},'remark',this.innerText)">${d.remark}</td>
-        <td contenteditable oninput="editIKR(${i},'invoice',this.innerText)">${d.invoice}</td>
-        <td contenteditable oninput="editIKR(${i},'note',this.innerText)">${d.note}</td>
-        <td><input type="checkbox" ${d.done==="YES"?"checked":""} onchange="toggleDone(${i},this.checked)"></td>
+        <td contenteditable>${d.remark}</td>
+        <td contenteditable>${d.invoice}</td>
+        <td contenteditable>${d.note}</td>
+        <td><input type="checkbox"></td>
       </tr>
     `;
   });
 }
 
-// ================= DETAIL POPUP =================
-function showDetailIKR(i) {
+// ================= DETAIL FIX =================
+function showDetail(i) {
 
   let d = dataIKR[i];
   if (!d) return;
@@ -161,7 +154,7 @@ function showDetailIKR(i) {
       <tr>
         <td>${x.wo}</td>
         <td>${x.status}</td>
-        <td>${formatRp(x.amount)}</td>
+        <td>${x.amount}</td>
       </tr>
     `;
   });
@@ -169,62 +162,28 @@ function showDetailIKR(i) {
   document.getElementById("popup").style.display = "block";
 }
 
-window.showDetailIKR = showDetailIKR;
+window.showDetail = showDetail;
 
-// ================= DELETE =================
+// ================= UTIL =================
+function formatRp(n) {
+  return "Rp " + (Number(n) || 0).toLocaleString("id-ID");
+}
+
 function hapusIKR() {
   const chk = document.querySelectorAll(".chkIKR");
-
   dataIKR = dataIKR.filter((_, i) => !chk[i]?.checked);
-
   renderIKR();
 }
 
 window.hapusIKR = hapusIKR;
 
-// ================= EXPORT =================
-function downloadIKR() {
-  let out = dataIKR.map(x => ({
-    Region: x.region,
-    Tahun: x.tahun,
-    Bulan: x.bulan,
-    WOType: x.wotype,
-    JumlahWO: x.jumlah,
-    Amount: x.amount
-  }));
-
-  const ws = XLSX.utils.json_to_sheet(out);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "IKR");
-  XLSX.writeFile(wb, "IKR.xlsx");
-}
-
-window.downloadIKR = downloadIKR;
-
-// ================= UTIL =================
-function parseAngka(v) {
-  return parseInt(String(v || 0).replace(/[^0-9]/g, "")) || 0;
-}
-
-function formatRp(n) {
-  return "Rp " + (Number(n) || 0).toLocaleString("id-ID");
-}
-
-function editIKR(i, f, v) {
-  dataIKR[i][f] = v;
-}
-
-function toggleDone(i, v) {
-  dataIKR[i].done = v ? "YES" : "NO";
-}
-
-// stub
+// stub aman biar tidak error
+function downloadIKR() {}
+function downloadIMS() {}
+function hapusIMS() {}
 function generatePivot() {}
 function generateStatus() {}
 function uploadServerAll() {}
-function downloadIMS() {}
-function hapusIMS() {}
-function downloadStatus() {}
 
 window.closePopup = () => {
   document.getElementById("popup").style.display = "none";
