@@ -52,60 +52,71 @@ function importIKR(e) {
 
     let map = {};
 
-    raw.forEach(r => {
-      let region = r.City || r.city || r.Region || "";
-      let woEnd = r["Wo End"] || "";
-      let boq = parseInt(String(r["Boq Total"] || 0).replace(/[^0-9]/g, "")) || 0;
+    // ================= LOOP DATA =================
+raw.forEach(r => {
 
-      if (!region || !woEnd) return;
+  let region = r.City || r.city || r.Region || "";
+  let woEnd = r["Wo End"] || "";
+  let boq = parseInt(String(r["Boq Total"] || 0).replace(/[^0-9]/g, "")) || 0;
 
-      let dt = new Date(woEnd);
-      if (isNaN(dt)) return;
+  if (!region || !woEnd) return;
 
-      let tahun = dt.getFullYear();
-      let bulan = dt.toLocaleString("id-ID", { month: "short" });
+  let dt = new Date(woEnd);
+  if (isNaN(dt)) return;
 
-      let key = region + "_" + tahun + "_" + bulan;
+  let tahun = dt.getFullYear();
+  let bulan = dt.toLocaleString("id-ID", { month: "short" });
 
-      if (!map[key]) {
-        map[key] = {
-          region,
-          tahun,
-          bulan,
-          wotype: "",
-          jumlah: 0,
-          approved: 0,
-          amount: 0,
-          fs: 0,
-          remark: "",
-          invoice: "",
-          note: "",
-          done: "NO",
-          detail: []
-        };
-      }
+  let key = region + "_" + tahun + "_" + bulan;
 
-      map[key].jumlah++;
-      map[key].amount += boq;
+  // ================= INIT MAP =================
+  if (!map[key]) {
+    map[key] = {
+      region,
+      tahun,
+      bulan,
+      wotype: "",
+      jumlah: 0,
+      approved: 0,
+      amount: 0,
+      fs: 0,
+      remark: "",
+      invoice: "",
+      note: "",
+      done: "NO",
+      detail: [],
+      woSet: new Set()   // 👈 PENTING
+    };
+  }
 
-      map[key].detail.push({
-        wo: r.Wonumber || "-",
-        status: r.Status || "-",
-        amount: boq
-      });
-    });
+  // ================= AMOUNT =================
+  map[key].amount += boq;
 
-    dataIKR = Object.values(map);
+  // ================= WO + DETAIL =================
+  const wo = String(r.Wonumber || "-").trim();
+  const status = r.Status || "-";
 
-    renderIKR();
+  // hanya hitung WO unik
+  if (!map[key].woSet.has(wo)) {
+    map[key].woSet.add(wo);
+    map[key].jumlah++;
+  }
 
-    e.target.value = "";
-    alert("UPLOAD OK");
-  };
+  // tetap simpan detail (boleh duplikat untuk tracking)
+  map[key].detail.push({
+    wo,
+    status,
+    amount: boq
+  });
+});
 
-  reader.readAsBinaryString(file);
-}
+// ================= FINAL CLEAN =================
+dataIKR = Object.values(map).map(x => {
+  delete x.woSet;
+  return x;
+});
 
+renderIKR();
 // ================= RENDER =================
 function renderIKR() {
   const tb = document.querySelector("#tblIKR tbody");
