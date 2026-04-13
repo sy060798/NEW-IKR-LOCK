@@ -92,35 +92,7 @@ function importExcel(e) {
     let newData = [];
 
    
-    // ================= FORMAT LAMA =================
-    } else {
-      raw.forEach(r => {
-        let region = r.REGION || r.Region || "";
-        if (!region) return;
-
-        let amount = parseAngka(r.AMOUNT || r.Amount);
-        let fs = parseAngka(r["FS AMOUNT"] || r["FS Amount"]);
-
-        newData.push({
-          id: Date.now() + Math.random(),
-          type: "IKR",
-          region,
-          tahun: r.TAHUN || r.Tahun || "",
-          wotype: r["WO TYPE"] || r["Wo Type"] || "",
-          bulan: r.BULAN || r.Bulan || "",
-          jumlah: r["JUMLAH WO"] || 0,
-          approved: r["WO APPROVED"] || 0,
-          amount,
-          fs,
-          selisih: amount - fs,
-          remark: r.REMARK || "",
-          invoice: r["NO INVOICE"] || "",
-          note: r.NOTE || "",
-          done: r.DONE || "NO",
-          listWO: []
-        });
-      });
-    }
+    
 
     // ================= FINAL =================
     dataIKR = [...dataIKR, ...newData];
