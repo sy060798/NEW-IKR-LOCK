@@ -3,6 +3,7 @@ let dataIKR = [];
 let chart = null;
 const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
 
+// DETAIL POPUP
 let currentDetail = [];
 
 // ================= INIT =================
@@ -33,6 +34,7 @@ function showTab(id, btn) {
   if (el) el.classList.add("active");
 
   document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+
   if (btn) btn.classList.add("active");
 
   if (id === "pivot") generatePivot?.();
@@ -56,6 +58,7 @@ function hapusData() {
 
   dataIKR = dataIKR.filter((d, i) => {
     const checked = checkboxes[i]?.checked;
+
     if (checked) {
       if (d.id) deletedIds.push(d.id);
       return false;
@@ -88,7 +91,6 @@ function importExcel(e) {
     const wb = XLSX.read(evt.target.result, { type: "binary" });
 
     let raw = [];
-    let isIMS = false;
     let newData = [];
 
     wb.SheetNames.forEach(s => {
@@ -96,21 +98,6 @@ function importExcel(e) {
         defval: "",
         raw: false
       });
-
-      if (!json.length) return;
-
-      const first = json[0];
-
-      if (
-        first["Wo End"] ||
-        first["City"] ||
-        first["Job Name"] ||
-        first["woEnd"] ||
-        first["city"] ||
-        first["jobName"]
-      ) {
-        isIMS = true;
-      }
 
       json.forEach(r => raw.push(r));
     });
@@ -158,7 +145,11 @@ function importExcel(e) {
 // ================= POPUP DETAIL =================
 function showDetail(index) {
   let data = dataIKR[index];
-  if (!data) return alert("Data tidak ditemukan");
+
+  if (!data) {
+    alert("Data tidak ditemukan");
+    return;
+  }
 
   currentDetail = data.listWO || [];
 
@@ -167,15 +158,21 @@ function showDetail(index) {
 
   if (!tb || !popup) return;
 
-  tb.innerHTML = currentDetail.length
-    ? currentDetail.map(d => `
+  tb.innerHTML = "";
+
+  if (currentDetail.length === 0) {
+    tb.innerHTML = `<tr><td colspan="4">Tidak ada detail WO</td></tr>`;
+  } else {
+    currentDetail.forEach(d => {
+      tb.innerHTML += `
 <tr>
 <td>${d.wo}</td>
 <td>${d.ref}</td>
 <td>${d.quo}</td>
 <td>${d.status}</td>
-</tr>`).join("")
-    : `<tr><td colspan="4">Tidak ada detail WO</td></tr>`;
+</tr>`;
+    });
+  }
 
   popup.style.display = "block";
 }
@@ -238,6 +235,7 @@ function importExcelIMS(e) {
     });
 
     render();
+
     alert("IMS berhasil update");
     e.target.value = "";
   };
@@ -253,9 +251,9 @@ function sortData() {
   };
 
   dataIKR.sort((a,b)=>{
-    if(a.region!==b.region) return a.region.localeCompare(b.region);
-    if(a.tahun!==b.tahun) return a.tahun-b.tahun;
-    return (urutBulan[a.bulan]||0)-(urutBulan[b.bulan]||0);
+    if (a.region !== b.region) return a.region.localeCompare(b.region);
+    if (a.tahun !== b.tahun) return a.tahun - b.tahun;
+    return (urutBulan[a.bulan] || 0) - (urutBulan[b.bulan] || 0);
   });
 }
 
@@ -275,26 +273,26 @@ function render() {
 <td>${d.tahun}</td>
 <td>${d.wotype}</td>
 <td>${d.bulan}</td>
-<td><span onclick="showDetail(${i})" style="cursor:pointer;color:cyan">${d.jumlah||0}</span></td>
-<td>${d.approved||0}</td>
+<td><span onclick="showDetail(${i})" style="cursor:pointer;color:cyan">${d.jumlah || 0}</span></td>
+<td>${d.approved || 0}</td>
 <td>${format(d.amount)}</td>
 <td>${format(d.fs)}</td>
 <td>${format(d.selisih)}</td>
-<td contenteditable>${d.remark||""}</td>
-<td contenteditable>${d.invoice||""}</td>
-<td contenteditable>${d.note||""}</td>
-<td><input type="checkbox" ${d.done==="YES"?"checked":""}></td>
+<td contenteditable>${d.remark || ""}</td>
+<td contenteditable>${d.invoice || ""}</td>
+<td contenteditable>${d.note || ""}</td>
+<td><input type="checkbox" ${d.done === "YES" ? "checked" : ""}></td>
 </tr>`;
   });
 }
 
 // ================= UTIL =================
 function format(n){
-  return "Rp " + (Number(n)||0).toLocaleString("id-ID");
+  return "Rp " + (Number(n) || 0).toLocaleString("id-ID");
 }
 
 function parseAngka(v){
-  return parseInt(String(v||"").replace(/[^0-9]/g,"")) || 0;
+  return parseInt(String(v || "").replace(/[^0-9]/g, "")) || 0;
 }
 
 // ================= GLOBAL EXPORT =================
@@ -303,7 +301,9 @@ window.triggerUploadIMS = triggerUploadIMS;
 window.hapusData = hapusData;
 window.showTab = showTab;
 window.showDetail = showDetail;
-window.closePopup = () => {
-  const p = document.getElementById("popupWO");
-  if (p) p.style.display = "none";
-};
+
+function closePopup() {
+  let popup = document.getElementById("popupWO");
+  if (popup) popup.style.display = "none";
+}
+window.closePopup = closePopup;
