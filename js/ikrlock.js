@@ -51,6 +51,28 @@ window.triggerUploadIMS = function () {
   document.getElementById("fileIMS").click();
 };
 
+
+// ================= HAPUS DATA =================
+
+function hapusData() {
+  const checked = document.querySelectorAll(".chk:checked");
+
+  if (checked.length === 0) {
+    alert("Pilih data dulu!");
+    return;
+  }
+
+  if (!confirm("Hapus data terpilih?")) return;
+
+  dataIKR = dataIKR.filter((_, i) => {
+    return !document.querySelectorAll(".chk")[i]?.checked;
+  });
+
+  render();
+}
+window.hapusData = hapusData;
+
+
 // ================= IMPORT DATA =================
 function importExcel(e) {
   const file = e.target.files[0];
