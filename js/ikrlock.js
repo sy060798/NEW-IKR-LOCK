@@ -3,6 +3,7 @@ let dataIKR = [];
 let chart = null;
 const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
 
+// DETAIL POPUP
 let currentDetail = [];
 
 // ================= INIT =================
@@ -38,19 +39,20 @@ function showTab(id, btn) {
   if (id === "pivot") generatePivot?.();
 }
 
-// ================= GLOBAL BUTTON (WAJIB BIAR ONCLICK JALAN) =================
-window.triggerUpload = function () {
-  console.log("UPLOAD CLICKED");
+// ================= UPLOAD =================
+function triggerUpload() {
   document.getElementById("file")?.click();
-};
+}
 
-window.triggerUploadIMS = function () {
-  console.log("IMS CLICKED");
+function triggerUploadIMS() {
   document.getElementById("fileIMS")?.click();
-};
+}
+
+window.triggerUpload = triggerUpload;
+window.triggerUploadIMS = triggerUploadIMS;
 
 // ================= HAPUS DATA =================
-window.hapusData = function () {
+function hapusData() {
   const checkboxes = document.querySelectorAll(".chk");
   let deletedIds = [];
 
@@ -83,7 +85,9 @@ window.hapusData = function () {
       .then(() => console.log("Server delete sukses"))
       .catch(err => console.error(err));
   }
-};
+}
+
+window.hapusData = hapusData;
 
 // ================= IMPORT EXCEL =================
 function importExcel(e) {
@@ -124,7 +128,7 @@ function importExcel(e) {
 
     let newData = [];
 
-    // ================= IMS =================
+    // ================= IMS FORMAT =================
     if (isIMS) {
       let map = {};
 
@@ -176,33 +180,33 @@ function importExcel(e) {
       });
 
       Object.values(map).forEach(g => {
-        if (!g) return;
 
-        // ================= NO PPN (PURE VALUE) =================
+        // ================= NO PPN (FIX FINAL) =================
         let amount = Math.round(Number(g.woTotal) || 0);
 
         newData.push({
           id: Date.now() + Math.random(),
           type: "IKR",
-          region: g.city || "",
-          tahun: g.tahun || "",
-          wotype: g.job || "",
-          bulan: g.bulan || "",
-          jumlah: g.total || 0,
+          region: g.city,
+          tahun: g.tahun,
+          wotype: g.job,
+          bulan: g.bulan,
+          jumlah: g.total,
           approved: 0,
-          amount,              // ✔ PURE NO PPN
+          amount,        // ✔ NO PPN
           fs: 0,
-          selisih: amount,     // ✔ NO FS = FULL
+          selisih: amount,
           remark: "",
           invoice: "",
           note: "",
           done: "NO",
-          listWO: g.listWO || []
+          listWO: g.listWO
         });
       });
 
     } else {
-      // ================= OLD FORMAT =================
+
+      // ================= FORMAT LAMA =================
       raw.forEach(r => {
         let region = r.REGION || r.Region || "";
         if (!region) return;
@@ -219,7 +223,7 @@ function importExcel(e) {
           bulan: r.BULAN || r.Bulan || "",
           jumlah: r["JUMLAH WO"] || 0,
           approved: r["WO APPROVED"] || 0,
-          amount,              // ✔ NO PPN
+          amount,   // ✔ NO PPN
           fs,
           selisih: amount - fs,
           remark: "",
@@ -235,7 +239,7 @@ function importExcel(e) {
     sortData();
     render();
 
-    alert("Upload sukses: " + newData.length);
+    alert("Upload sukses: " + newData.length + " data");
     e.target.value = "";
   };
 
@@ -296,7 +300,7 @@ function importExcelIMS(e) {
     });
 
     render();
-    alert("IMS update sukses");
+    alert("IMS berhasil update");
   };
 
   reader.readAsBinaryString(file);
@@ -337,8 +341,39 @@ function render() {
       <td>${format(d.amount)}</td>
       <td>${format(d.fs)}</td>
       <td>${format(d.selisih)}</td>
+      <td contenteditable oninput="edit(${i},'remark',this.innerText)">${d.remark||""}</td>
+      <td contenteditable oninput="edit(${i},'invoice',this.innerText)">${d.invoice||""}</td>
+      <td contenteditable oninput="edit(${i},'note',this.innerText)">${d.note||""}</td>
+      <td><input type="checkbox" ${d.done==="YES"?"checked":""} onchange="toggleDone(${i},this.checked)"></td>
     </tr>`;
   });
+}
+
+// ================= DETAIL POPUP =================
+function showDetail(index) {
+  let data = dataIKR[index];
+  if (!data) return alert("Data tidak ditemukan");
+
+  currentDetail = [...new Map((data.listWO||[]).map(x=>[x.wo,x])).values()];
+
+  let tb = document.querySelector("#tblDetail tbody");
+  let popup = document.getElementById("popupWO");
+
+  if (!tb || !popup) return;
+
+  tb.innerHTML = "";
+
+  currentDetail.forEach(d=>{
+    tb.innerHTML += `
+      <tr>
+        <td>${d.wo}</td>
+        <td>${d.ref}</td>
+        <td>${d.quo}</td>
+        <td>${d.status}</td>
+      </tr>`;
+  });
+
+  popup.style.display = "block";
 }
 
 // ================= UTIL =================
@@ -350,3 +385,8 @@ function parseAngka(v){
   if(!v) return 0;
   return parseInt(String(v).replace(/[^0-9]/g,""))||0;
 }
+
+// ================= GLOBAL WINDOW =================
+window.showTab = showTab;
+window.showDetail = showDetail;
+window.hapusData = hapusData;
