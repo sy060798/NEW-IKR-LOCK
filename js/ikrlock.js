@@ -90,7 +90,9 @@ function importExcel(e) {
     });
 
    let newData = [];
-
+    
+// ================= --- ================
+    
 if (isIMS) {
   let map = {};
 
@@ -125,6 +127,10 @@ if (isIMS) {
         listWO: []
       };
     }
+
+    map[key].total++;
+    map[key].woTotal += wo;
+
     let woNumber = String(r["Wonumber"] || "").trim();
 
     if (woNumber && !map[key].listWO.find(x => x.wo === woNumber)) {
@@ -188,7 +194,6 @@ if (isIMS) {
     });
   });
 }
-
  
     // ================= FORMAT LAMA =================
     else {
