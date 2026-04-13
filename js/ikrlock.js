@@ -159,18 +159,26 @@ function importExcel(e) {
 
         if (!map[key]) {
           map[key] = {
-            city,
-            tahun,
-            bulan,
-            job,
-            total: 0,
-            woTotal: 0,
-            listWO: []
-          };
-        }
+  city,
+  tahun,
+  bulan,
+  job,
+  total: 0,
+  woTotal: 0,
+  listWO: [],
+  woSet: new Set() 
+};
 
-        map[key].total++;
-        map[key].woTotal += wo;
+       if (!map[key].woSet) {
+  map[key].woSet = new Set();
+}
+
+if (!map[key].woSet.has(woNumber)) {
+  map[key].woSet.add(woNumber);
+
+  map[key].total++;
+  map[key].woTotal += wo;
+}
 
         let woNumber = String(r["Wonumber"] || "").trim();
 
@@ -257,7 +265,9 @@ function showDetail(index) {
     return;
   }
 
-  currentDetail = data.listWO || [];
+  currentDetail = [...new Map(
+  (data.listWO || []).map(x => [x.wo, x])
+).values()];
 
   let tb = document.querySelector("#tblDetail tbody");
   let popup = document.getElementById("popupWO");
