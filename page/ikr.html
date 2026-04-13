@@ -1,124 +1,93 @@
+<!-- page/ikr.html -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>IKCR LOCK</title>
+<title>NEW IKR LOCK</title>
 
-<!-- LIBRARY -->
+<!-- LIB -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 *{
+  margin:0;
+  padding:0;
   box-sizing:border-box;
 }
 
 body{
-  margin:0;
-  padding:20px;
-  font-family:Arial,sans-serif;
-  background:#0f0f0f;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#0e0e0e;
   color:#fff;
+  padding:18px;
 }
 
-h2{
-  margin:0 0 15px;
+h1{
   text-align:center;
-  font-size:26px;
+  font-size:28px;
+  margin-bottom:18px;
 }
 
-/* MENU + BUTTON */
-.menu,
-.btn-group{
+/* MENU */
+.menu{
   display:flex;
   gap:10px;
   flex-wrap:wrap;
   margin-bottom:15px;
 }
 
+.menu button{
+  background:#222;
+  color:#fff;
+  border:none;
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.menu button.active{
+  background:#8e44ad;
+}
+
+/* TOOLBAR */
+.toolbar{
+  display:none;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+
+.toolbar.active{
+  display:flex;
+}
+
 button{
   border:none;
-  padding:8px 14px;
-  border-radius:6px;
+  padding:9px 14px;
+  border-radius:8px;
   cursor:pointer;
-  color:#fff;
   font-weight:bold;
-  transition:.2s;
-}
-
-button:hover{
-  opacity:.9;
-  transform:translateY(-1px);
-}
-
-.menu button{
-  background:#2a2a2a;
-}
-
-.menu button.active,
-.purple{
-  background:#8e44ad;
+  color:#fff;
 }
 
 .blue{background:#3498db;}
-.orange{background:#f39c12;}
-.red{background:#e74c3c;}
 .green{background:#2ecc71;}
+.red{background:#e74c3c;}
+.orange{background:#f39c12;}
+.purple{background:#8e44ad;}
+.gray{background:#555;}
 
-/* INFO TEXT */
-.info-upload{
-  width:100%;
-  font-size:12px;
-  opacity:.75;
-  margin-top:-8px;
-  margin-bottom:5px;
-}
-
-/* TABLE */
-.table-wrap{
-  overflow:auto;
-  max-height:520px;
-  background:#1b1b1b;
-  border:1px solid #444;
+input[type="text"]{
+  padding:9px;
+  border:none;
   border-radius:8px;
+  min-width:180px;
 }
 
-table{
-  width:100%;
-  min-width:1300px;
-  border-collapse:collapse;
-}
-
-th,td{
-  border:1px solid #333;
-  padding:6px;
-  font-size:12px;
-  text-align:center;
-  white-space:nowrap;
-}
-
-thead th{
-  background:#8e44ad;
-  position:sticky;
-  top:0;
-  z-index:5;
-}
-
-tbody tr:hover{
-  background:#252525;
-}
-
-td[contenteditable="true"]{
-  background:#181818;
-}
-
-td[contenteditable="true"]:focus{
-  outline:none;
-  background:#262626;
-}
-
-/* TAB */
+/* CONTENT */
 .tab{
   display:none;
 }
@@ -127,8 +96,48 @@ td[contenteditable="true"]:focus{
   display:block;
 }
 
+/* TABLE */
+.wrap{
+  overflow:auto;
+  max-height:560px;
+  background:#171717;
+  border:1px solid #333;
+  border-radius:10px;
+}
+
+table{
+  width:100%;
+  min-width:1500px;
+  border-collapse:collapse;
+}
+
+th,td{
+  border:1px solid #333;
+  padding:7px;
+  font-size:12px;
+  text-align:center;
+  white-space:nowrap;
+}
+
+th{
+  background:#8e44ad;
+  position:sticky;
+  top:0;
+  z-index:5;
+}
+
+tr:hover{
+  background:#222;
+}
+
+.click{
+  color:#00eaff;
+  cursor:pointer;
+  font-weight:bold;
+}
+
 /* POPUP */
-#popupWO{
+#popup{
   display:none;
   position:fixed;
   inset:0;
@@ -137,12 +146,12 @@ td[contenteditable="true"]:focus{
 }
 
 .popup-box{
-  width:90%;
-  max-width:850px;
-  height:500px;
-  margin:30px auto;
+  width:92%;
+  max-width:900px;
+  height:88vh;
+  margin:25px auto;
   background:#111;
-  border-radius:10px;
+  border-radius:12px;
   padding:15px;
   display:flex;
   flex-direction:column;
@@ -161,50 +170,17 @@ td[contenteditable="true"]:focus{
   margin-top:10px;
 }
 
-/* LOADING */
-#loadingBox{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.75);
-  z-index:99999;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-}
-
-.loader{
-  width:55px;
-  height:55px;
-  border:5px solid #444;
-  border-top:5px solid #8e44ad;
-  border-radius:50%;
-  animation:spin .8s linear infinite;
-}
-
-.loadingText{
-  margin-top:12px;
-  font-size:14px;
-}
-
-@keyframes spin{
-  to{transform:rotate(360deg);}
-}
-
 /* MOBILE */
 @media(max-width:768px){
 
-  body{
-    padding:10px;
-  }
+  body{padding:10px;}
 
-  h2{
-    font-size:22px;
-  }
+  h1{font-size:22px;}
 
+  .menu button,
   button{
     font-size:12px;
-    padding:7px 10px;
+    padding:8px 10px;
   }
 
   th,td{
@@ -212,143 +188,150 @@ td[contenteditable="true"]:focus{
     padding:5px;
   }
 
-  .popup-box{
-    width:95%;
-    height:90vh;
-  }
-
-  .info-upload{
-    font-size:11px;
+  input[type="text"]{
+    min-width:130px;
   }
 }
 </style>
 </head>
-
 <body>
 
-<!-- LOADING -->
-<div id="loadingBox">
-  <div class="loader"></div>
-  <div class="loadingText" id="loadingText">Loading...</div>
-</div>
-
-<!-- POPUP DETAIL -->
-<div id="popupWO">
-  <div class="popup-box">
-
-    <h3 style="margin:0">Detail WO</h3>
-
-    <div class="popup-body">
-      <table id="tblDetail">
-        <thead>
-          <tr>
-            <th>WO Number</th>
-            <th>Reference</th>
-            <th>Quotation</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <div class="popup-action">
-      <button class="blue" onclick="downloadDetail()">Download</button>
-      <button style="background:#444" onclick="closePopup()">Close</button>
-    </div>
-
-  </div>
-</div>
-
-<h2>🔒 IKCR LOCK</h2>
+<h1>🔒 NEW IKR LOCK</h1>
 
 <!-- MENU -->
 <div class="menu">
-  <button class="active" onclick="showTab('data',this)">Data</button>
-  <button onclick="showTab('pivot',this)">Pivot</button>
-  <button onclick="showTab('status',this);generateStatus()">Status</button>
+  <button class="active" onclick="openTab('ikr',this)">DATA IKR LOCK</button>
+  <button onclick="openTab('ims',this)">DATA IMS</button>
+  <button onclick="openTab('status',this)">PIVOT STATUS</button>
+  <button class="green" onclick="uploadServerAll()">UPLD SERVER</button>
 </div>
 
-<!-- BUTTON -->
-  
-<div class="btn-group">
-  <button class="blue" onclick="download()">Download</button>
+<!-- TOOLBAR IKR -->
+<div id="toolbar-ikr" class="toolbar active">
+  <button class="blue" onclick="downloadIKR()">DOWNLOAD EXCEL</button>
 
-  <input type="file" id="file" hidden accept=".xlsx,.xls">
-  <button class="orange" onclick="triggerUpload()">Upload Data</button>
+  <input type="file" id="fileIKR" hidden accept=".xlsx,.xls">
+  <button class="orange" onclick="document.getElementById('fileIKR').click()">UPLD DATA</button>
+
+  <button class="red" onclick="hapusIKR()">HAPUS</button>
+</div>
+
+<!-- TOOLBAR IMS -->
+<div id="toolbar-ims" class="toolbar">
+  <button class="blue" onclick="downloadIMS()">DOWNLOAD EXCEL</button>
 
   <input type="file" id="fileIMS" hidden accept=".xlsx,.xls">
-  <button class="purple" onclick="triggerUploadIMS()">Upload IMS</button>
+  <button class="orange" onclick="document.getElementById('fileIMS').click()">UPLD IMS</button>
 
-  <button class="green" onclick="uploadServer()">Upload Server</button>
-  <button class="red" onclick="hapusData()">Hapus</button>
+  <button class="red" onclick="hapusIMS()">HAPUS</button>
+
+  <input type="text" id="searchPra" placeholder="Pra Invoice">
+  <input type="text" id="searchInv" placeholder="Invoice Number">
+  <input type="text" id="searchRegion" placeholder="Region">
 </div>
 
-<div class="info-upload">
-  Upload Data = file utama | Upload IMS = update approved / invoice
+<!-- TOOLBAR STATUS -->
+<div id="toolbar-status" class="toolbar">
+  <button class="green" onclick="generateStatus()">REFRESH STATUS</button>
+  <button class="blue" onclick="downloadStatus()">DOWNLOAD STATUS</button>
 </div>
 
-<!-- DATA -->
-<div id="data" class="tab active">
-  <div class="table-wrap">
-    <table id="tbl">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th><input type="checkbox" id="checkAll"></th>
-          <th>Region</th>
-          <th>Tahun</th>
-          <th>WO Type</th>
-          <th>Bulan</th>
-          <th>Jumlah WO</th>
-          <th>WO Approved</th>
-          <th>Amount</th>
-          <th>FS Amount</th>
-          <th>Selisih</th>
-          <th>Remark</th>
-          <th>No Invoice</th>
-          <th>Note</th>
-          <th>Done</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<!-- TAB IKR -->
+<div id="tab-ikr" class="tab active">
+<div class="wrap">
+<table id="tblIKR">
+<thead>
+<tr>
+<th>No</th>
+<th><input type="checkbox" id="checkIKR"></th>
+<th>Region</th>
+<th>Tahun</th>
+<th>WO Type</th>
+<th>Bulan</th>
+<th>Jumlah WO</th>
+<th>WO Approved</th>
+<th>Amount</th>
+<th>FS Amount</th>
+<th>Remark</th>
+<th>No Invoice</th>
+<th>Note</th>
+<th>Done</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 </div>
 
-<!-- PIVOT -->
-<div id="pivot" class="tab">
-  <div class="table-wrap" style="padding:15px;max-height:none">
-    <canvas id="chart"></canvas>
-  </div>
+<!-- TAB IMS -->
+<div id="tab-ims" class="tab">
+<div class="wrap">
+<table id="tblIMS">
+<thead>
+<tr>
+<th>No</th>
+<th><input type="checkbox" id="checkIMS"></th>
+<th>City</th>
+<th>Pra Invoice Number</th>
+<th>Invoice Number</th>
+<th>Jumlah WO</th>
+<th>Job Name</th>
+<th>Invoice Total</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 </div>
 
-<!-- STATUS -->
-<div id="status" class="tab">
-  <div class="table-wrap">
-    <table id="tblStatus">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>Jenis</th>
-          <th>Tahun</th>
-          <th>Total WO Approved</th>
-          <th>Total Invoice</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<!-- TAB STATUS -->
+<div id="tab-status" class="tab">
+<div class="wrap" style="padding:15px;max-height:none;">
+<canvas id="chartStatus" height="120"></canvas>
 
-  <br>
+<br><br>
 
-  <button class="green" onclick="downloadStatus()">
-    Download Status
-  </button>
+<table id="tblStatus">
+<thead>
+<tr>
+<th>No</th>
+<th>Region</th>
+<th>Total WO</th>
+<th>Approved</th>
+<th>Amount</th>
+<th>FS Amount</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 </div>
 
-<!-- SCRIPT -->
+<!-- POPUP -->
+<div id="popup">
+<div class="popup-box">
+
+<h3 id="popupTitle">DETAIL</h3>
+
+<div class="popup-body">
+<table id="tblPopup">
+<thead></thead>
+<tbody></tbody>
+</table>
+</div>
+
+<div class="popup-action">
+<button class="blue" onclick="downloadPopup()">DOWNLOAD</button>
+<button class="gray" onclick="closePopup()">CLOSE</button>
+</div>
+
+</div>
+</div>
+
+<!-- JS -->
+<script src="../js/main.js"></script>
 <script src="../js/ikrlock.js"></script>
+<script src="../js/dataims.js"></script>
 <script src="../js/status.js"></script>
 
 </body>
