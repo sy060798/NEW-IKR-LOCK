@@ -270,15 +270,18 @@ td[contenteditable="true"]:focus{
 </div>
 
 <!-- BUTTON -->
+  
 <div class="btn-group">
   <button class="blue" onclick="download()">Download</button>
-  <button class="orange" onclick="triggerUpload()">Upload Data</button>
-  <button class="purple" onclick="triggerUploadIMS()">Upload IMS</button>
-  <button class="green" onclick="uploadServer()">Upload Server</button>
-  <button class="red" onclick="hapusData()">Hapus</button>
 
   <input type="file" id="file" hidden accept=".xlsx,.xls">
+  <button class="orange" onclick="triggerUpload()">Upload Data</button>
+
   <input type="file" id="fileIMS" hidden accept=".xlsx,.xls">
+  <button class="purple" onclick="triggerUploadIMS()">Upload IMS</button>
+
+  <button class="green" onclick="uploadServer()">Upload Server</button>
+  <button class="red" onclick="hapusData()">Hapus</button>
 </div>
 
 <div class="info-upload">
