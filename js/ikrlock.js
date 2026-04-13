@@ -145,6 +145,8 @@ function renderIKR() {
 }
 
 // ================= POPUP DETAIL (FIX 100%) =================
+let popupExportData = [];
+
 function showDetail(i) {
   const d = dataIKR[i];
   if (!d) return alert("Data tidak ditemukan");
@@ -159,15 +161,21 @@ function showDetail(i) {
 
   tb.innerHTML = "";
 
-  if (!d.detail || d.detail.length === 0) {
+  popupExportData = (d.detail || []).map(x => ({
+    WO: x.wo,
+    Status: x.status,
+    Amount: x.amount
+  }));
+
+  if (popupExportData.length === 0) {
     tb.innerHTML = `<tr><td colspan="3">Tidak ada data</td></tr>`;
   } else {
-    d.detail.forEach(x => {
+    popupExportData.forEach(x => {
       tb.innerHTML += `
         <tr>
-          <td>${x.wo}</td>
-          <td>${x.status}</td>
-          <td>${formatRp(x.amount)}</td>
+          <td>${x.WO}</td>
+          <td>${x.Status}</td>
+          <td>${formatRp(x.Amount)}</td>
         </tr>
       `;
     });
@@ -178,6 +186,25 @@ function showDetail(i) {
 
 window.showDetail = showDetail;
 
+
+// ================= excel woditail =================
+
+
+function exportPopupExcel() {
+  if (!popupExportData || popupExportData.length === 0) {
+    alert("Tidak ada data untuk export");
+    return;
+  }
+
+  const ws = XLSX.utils.json_to_sheet(popupExportData);
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb, ws, "DETAIL_WO");
+
+  XLSX.writeFile(wb, "DETAIL_WO.xlsx");
+}
+
+window.exportPopupExcel = exportPopupExcel;
 // ================= UTIL =================
 function formatRp(n) {
   return "Rp " + (Number(n || 0).toLocaleString("id-ID"));
