@@ -101,29 +101,15 @@ if (isIMS) {
 
     if (!city || !woEnd) return;
 
-    let woRaw =
+    let wo = parseAngka(
       r["Wo Total"] ??
       r["WO TOTAL"] ??
       r["WoTotal"] ??
       r["WO_TOTAL"] ??
-      r["woTotal"] ??
-      0;
+      r["woTotal"] ?? 0
+    );
 
-    let wo = parseAngka(woRaw);
-
-    let date;
-
-    if (typeof woEnd === "number") {
-      date = new Date((woEnd - 25569) * 86400 * 1000);
-    } else if (typeof woEnd === "string" && woEnd.includes("/")) {
-      let [d, m, y] = woEnd.split(" ")[0].split("/");
-      date = new Date(`${y}-${m}-${d}`);
-    } else if (typeof woEnd === "string" && woEnd.includes("-")) {
-      date = new Date(woEnd.replace(" ", "T"));
-    } else {
-      date = new Date(woEnd);
-    }
-
+    let date = new Date(woEnd);
     if (isNaN(date)) return;
 
     let tahun = date.getFullYear();
@@ -131,41 +117,30 @@ if (isIMS) {
 
     let key = city + "_" + tahun + "_" + bulan + "_" + job;
 
-    // INIT
     if (!map[key]) {
       map[key] = {
-        city,
-        tahun,
-        bulan,
-        job,
+        city, tahun, bulan, job,
         total: 0,
         woTotal: 0,
         listWO: []
       };
     }
 
-    // HITUNG
     map[key].total++;
     map[key].woTotal += wo;
 
-    let woNumber = String(r["Wonumber"] || r["WONUMBER"] || "").trim();
+    let woNumber = String(r["Wonumber"] || "").trim();
 
-    // SIMPAN DETAIL TANPA DUPLIKAT
-    if (woNumber) {
-      let sudahAda = map[key].listWO.find(x => x.wo === woNumber);
-
-      if (!sudahAda) {
-        map[key].listWO.push({
-          wo: woNumber,
-          ref: r["Reference Code"] || "-",
-          quo: r["Quotation Id"] || "-",
-          status: r["Status"] || "-"
-        });
-      }
+    if (woNumber && !map[key].listWO.find(x => x.wo === woNumber)) {
+      map[key].listWO.push({
+        wo: woNumber,
+        ref: r["Reference Code"] || "-",
+        quo: r["Quotation Id"] || "-",
+        status: r["Status"] || "-"
+      });
     }
   });
 
-  // FINAL BUILD DATA
   Object.values(map).forEach(g => {
     let amount = Math.round(g.woTotal * 1.11);
 
@@ -178,7 +153,7 @@ if (isIMS) {
       bulan: g.bulan,
       jumlah: g.total,
       approved: 0,
-      amount: amount,
+      amount,
       fs: 0,
       selisih: amount,
       remark: "",
@@ -186,6 +161,34 @@ if (isIMS) {
       note: "",
       done: "NO",
       listWO: g.listWO
+    });
+  });
+
+} else {
+  raw.forEach(r => {
+    let region = r.REGION || r.Region || "";
+    if (!region) return;
+
+    let amount = parseAngka(r.AMOUNT || r.Amount);
+    let fs = parseAngka(r["FS AMOUNT"] || r["FS Amount"]);
+
+    newData.push({
+      id: Date.now() + Math.random(),
+      type: "IKR",
+      region,
+      tahun: r.TAHUN || "",
+      wotype: r["WO TYPE"] || "",
+      bulan: r.BULAN || "",
+      jumlah: r["JUMLAH WO"] || 0,
+      approved: r["WO APPROVED"] || 0,
+      amount,
+      fs,
+      selisih: amount - fs,
+      remark: r.REMARK || "",
+      invoice: r["NO INVOICE"] || "",
+      note: r.NOTE || "",
+      done: r.DONE || "NO",
+      listWO: []
     });
   });
 }
