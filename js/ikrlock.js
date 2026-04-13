@@ -183,31 +183,32 @@ function importExcel(e) {
       });
 
       Object.values(map).forEach(g => {
-       let amount = Math.round(
-  parseAngka(g.woTotal ?? g.total ?? 0)
-);
+  let amount = Math.round(
+    parseAngka(g.woTotal ?? g.total ?? 0)
+  );
 
-let fs = parseAngka(g.fs ?? 0);
+  let fs = parseAngka(g.fs ?? 0);
 
-newData.push({
-  id: Date.now() + Math.random(),
-  type: "IKR",
-  region: g.city,
-  tahun: g.tahun,
-  wotype: g.job,
-  bulan: g.bulan,
-  jumlah: g.total,
-  approved: 0,
-  amount,
-  fs,
-  selisih: amount - fs,
-  remark: "",
-  invoice: "",
-  note: "",
-  done: "NO",
-  listWO: g.listWO
+  newData.push({
+    id: Date.now() + Math.random(),
+    type: "IKR",
+    region: g.city,
+    tahun: g.tahun,
+    wotype: g.job,
+    bulan: g.bulan,
+    jumlah: g.total,
+    approved: 0,
+    amount,
+    fs,
+    selisih: amount - fs,
+    remark: "",
+    invoice: "",
+    note: "",
+    done: "NO",
+    listWO: g.listWO
+  });
 });
-
+      
     } else {
       // ================= FORMAT LAMA =================
       raw.forEach(r => {
@@ -417,3 +418,12 @@ window.closePopup = closePopup;
 window.download = download;
 window.generatePivot = generatePivot;
 window.uploadServer = uploadServer;
+
+window.addEventListener("load", () => {
+  console.log("APP LOADED OK");
+});
+
+window.triggerUpload = function () {
+  console.log("UPLOAD CLICKED");
+  document.getElementById("file")?.click();
+};
