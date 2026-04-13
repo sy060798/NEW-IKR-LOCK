@@ -9,15 +9,25 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{font-family:Arial;background:#0e0e0e;color:#fff;padding:15px}
+body{
+  font-family:Arial;
+  background:#0e0e0e;
+  color:#fff;
+  padding:15px;
+}
 
 h1{text-align:center;margin-bottom:15px}
 
 /* MENU */
 .menu{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .menu button{
-  background:#222;color:#fff;border:0;
-  padding:10px;border-radius:8px;cursor:pointer;font-weight:bold
+  background:#222;
+  color:#fff;
+  border:0;
+  padding:10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
 }
 .menu button.active{background:#8e44ad}
 
@@ -30,59 +40,111 @@ h1{text-align:center;margin-bottom:15px}
 .tab.active{display:block}
 
 /* TABLE */
-.wrap{overflow:auto;background:#171717;border-radius:10px}
-table{width:100%;border-collapse:collapse;min-width:1200px}
-th,td{border:1px solid #333;padding:6px;font-size:12px;text-align:center}
-th{background:#8e44ad;position:sticky;top:0}
+.wrap{
+  overflow:auto;
+  background:#171717;
+  border-radius:10px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:1200px;
+}
+th,td{
+  border:1px solid #333;
+  padding:6px;
+  font-size:12px;
+  text-align:center;
+}
+th{
+  background:#8e44ad;
+  position:sticky;
+  top:0;
+}
+
+/* ================= POPUP CLEAN ================= */
+.popup-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.75);
+  z-index:9999;
+}
+
+.popup-box{
+  width:90%;
+  max-width:850px;
+  margin:5% auto;
+  background:#111;
+  border-radius:12px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+.popup-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 15px;
+  background:#8e44ad;
+}
+
+.popup-header h3{
+  margin:0;
+  font-size:16px;
+}
+
+.close-btn{
+  background:transparent;
+  border:none;
+  color:#fff;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.popup-body{
+  padding:10px;
+  max-height:60vh;
+  overflow:auto;
+}
+
+.popup-table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.popup-table th,
+.popup-table td{
+  border:1px solid #333;
+  padding:8px;
+  font-size:12px;
+}
+
+.popup-table th{
+  background:#222;
+  position:sticky;
+  top:0;
+}
+
+.popup-footer{
+  padding:10px;
+  text-align:right;
+  background:#0d0d0d;
+}
+
+.btn-red{
+  background:#e74c3c;
+  border:none;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:6px;
+  cursor:pointer;
+}
 </style>
 </head>
 
 <body>
-
-  <!-- POPUP DETAIL IKR -->
-<div id="popup" style="
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.8);
-  z-index:9999;
-">
-
-  <div style="
-    width:90%;
-    max-width:800px;
-    margin:5% auto;
-    background:#111;
-    padding:15px;
-    border-radius:10px;
-  ">
-
-    <h3>DETAIL WO</h3>
-
-    <table style="width:100%;color:white;border-collapse:collapse">
-      <thead>
-        <tr>
-          <th>WO</th>
-          <th>Status</th>
-          <th>Amount</th>
-        </tr>
-      </thead>
-
-      <tbody id="popupBody"></tbody>
-    </table>
-
-    <br>
-
-    <button onclick="closePopup()" style="
-      padding:8px 12px;
-      background:red;
-      color:white;
-      border:none;
-      border-radius:6px;
-    ">TUTUP</button>
-
-  </div>
-</div>
 
 <h1>NEW IKR LOCK SYSTEM</h1>
 
@@ -121,73 +183,102 @@ th{background:#8e44ad;position:sticky;top:0}
 
 <!-- TAB IKR -->
 <div id="tab-ikr" class="tab active">
-<div class="wrap">
-<table id="tblIKR">
-<thead>
-<tr>
-<th>No</th>
-<th><input type="checkbox" id="checkIKR"></th>
-<th>Region</th>
-<th>Tahun</th>
-<th>WO Type</th>
-<th>Bulan</th>
-<th>Jumlah WO</th>
-<th>WO Approved</th>
-<th>Amount</th>
-<th>FS Amount</th>
-<th>Remark</th>
-<th>No Invoice</th>
-<th>Note</th>
-<th>Done</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-</div>
+  <div class="wrap">
+    <table id="tblIKR">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th><input type="checkbox" id="checkIKR"></th>
+          <th>Region</th>
+          <th>Tahun</th>
+          <th>WO Type</th>
+          <th>Bulan</th>
+          <th>Jumlah WO</th>
+          <th>WO Approved</th>
+          <th>Amount</th>
+          <th>FS Amount</th>
+          <th>Remark</th>
+          <th>No Invoice</th>
+          <th>Note</th>
+          <th>Done</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>
 
 <!-- TAB IMS -->
 <div id="tab-ims" class="tab">
-<div class="wrap">
-<table id="tblIMS">
-<thead>
-<tr>
-<th>No</th>
-<th><input type="checkbox" id="checkIMS"></th>
-<th>City</th>
-<th>Pra Invoice</th>
-<th>Invoice</th>
-<th>Jumlah WO</th>
-<th>Job Name</th>
-<th>Invoice Total</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-</div>
+  <div class="wrap">
+    <table id="tblIMS">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th><input type="checkbox" id="checkIMS"></th>
+          <th>City</th>
+          <th>Pra Invoice</th>
+          <th>Invoice</th>
+          <th>Jumlah WO</th>
+          <th>Job Name</th>
+          <th>Invoice Total</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>
 
 <!-- TAB PIVOT -->
 <div id="tab-pivot" class="tab">
-<div class="wrap" style="padding:10px">
-<canvas id="chartPivot"></canvas>
-</div>
+  <div class="wrap" style="padding:10px">
+    <canvas id="chartPivot"></canvas>
+  </div>
 </div>
 
 <!-- TAB STATUS -->
 <div id="tab-status" class="tab">
-<div class="wrap" style="padding:10px">
-<table id="tblStatus">
-<thead>
-<tr>
-<th>Region</th>
-<th>Total WO</th>
-<th>Amount</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
+  <div class="wrap" style="padding:10px">
+    <table id="tblStatus">
+      <thead>
+        <tr>
+          <th>Region</th>
+          <th>Total WO</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>
+
+<!-- POPUP (ONLY 1 VERSION CLEAN) -->
+<div id="popup" class="popup-overlay">
+  <div class="popup-box">
+
+    <div class="popup-header">
+      <h3>DETAIL WO</h3>
+      <button class="close-btn" onclick="closePopup()">✕</button>
+    </div>
+
+    <div class="popup-body">
+      <table class="popup-table">
+        <thead>
+          <tr>
+            <th>WO</th>
+            <th>Status</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody id="popupBody"></tbody>
+      </table>
+    </div>
+
+    <div class="popup-footer">
+      <button class="btn-red" onclick="closePopup()">TUTUP</button>
+    </div>
+
+  </div>
 </div>
 
 <!-- JS -->
@@ -197,28 +288,18 @@ th{background:#8e44ad;position:sticky;top:0}
 <script>
 function openTab(id, btn){
 
-  // reset tab
-  document.querySelectorAll(".tab")
-    .forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("tab-"+id)?.classList.add("active");
 
-  const tab = document.getElementById("tab-" + id);
-  if (tab) tab.classList.add("active");
+  document.querySelectorAll(".toolbar").forEach(t=>t.classList.remove("active"));
+  document.getElementById("tb-"+id)?.classList.add("active");
 
-  // reset toolbar
-  document.querySelectorAll(".toolbar")
-    .forEach(t => t.classList.remove("active"));
-
-  const tb = document.getElementById("tb-" + id);
-  if (tb) tb.classList.add("active");
-
-  // button active
-  document.querySelectorAll(".menu button")
-    .forEach(b => b.classList.remove("active"));
-
-  if (btn) btn.classList.add("active");
+  document.querySelectorAll(".menu button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
 }
 
 window.openTab = openTab;
 </script>
+
 </body>
 </html>
