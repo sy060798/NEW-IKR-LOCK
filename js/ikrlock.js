@@ -183,7 +183,7 @@ function importExcel(e) {
       });
 
       Object.values(map).forEach(g => {
-        let amount = Math.round(g.woTotal * 1.11);
+        let amount = Math.round(g.woTotal * 0);
 
         newData.push({
           id: Date.now() + Math.random(),
