@@ -75,23 +75,31 @@ function hapusData() {
 
   render();
 
+// ================= hapus =================
+  
   if (deletedIds.length > 0) {
-    fetch(SERVER_URL + "/delete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: deletedIds })
-    })
-      .then(r => r.json())
-      .then(() => console.log("Server delete sukses"))
-      .catch(err => {
-        console.error("Server delete gagal:", err);
-        alert("Local terhapus tapi server gagal sync");
-      });
-  }
+  fetch(SERVER_URL + "/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ids: deletedIds })
+  })
+  .then(async (r) => {
+    const text = await r.text(); // 🔥 aman dari error JSON
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      return text;
+    }
+  })
+  .then(() => {
+    console.log("Server delete sukses");
+    alert("Hapus sync server OK");
+  })
+  .catch(err => {
+    console.error("Server delete gagal:", err);
+    alert("Local sudah hapus, server gagal sync");
+  });
 }
-
-window.hapusData = hapusData;
-
 // ================= IMPORT EXCEL =================
 function importExcel(e) {
   const file = e.target.files[0];
@@ -183,7 +191,7 @@ function importExcel(e) {
       });
 
       Object.values(map).forEach(g => {
-        let amount = Math.round(g.woTotal * 1.11);
+        let amount = Math.round(g.woTotal);
 
         newData.push({
           id: Date.now() + Math.random(),
@@ -386,6 +394,21 @@ function showDetail(index) {
   popup.style.display = "block";
 }
 
+// ================= server =================
+function uploadServer() {
+  fetch(SERVER_URL + "/upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dataIKR)
+  })
+    .then(r => r.json())
+    .then(() => alert("Upload ke server sukses"))
+    .catch(err => {
+      console.error(err);
+      alert("Upload server gagal");
+    });
+}
+
 // ================= UTIL =================
 function format(n) {
   return "Rp " + (Number(n) || 0).toLocaleString("id-ID");
@@ -394,6 +417,12 @@ function format(n) {
 function parseAngka(v) {
   if (!v) return 0;
   return parseInt(String(v).replace(/[^0-9]/g, "")) || 0;
+}
+
+function hitungTanpaPPN(val) {
+  let angka = parseAngka(val);
+  // HAPUS PPN 11%
+  return Math.round(angka / 1.11);
 }
 
 // ================= GLOBAL STUBS (BIAR TIDAK ERROR) =================
