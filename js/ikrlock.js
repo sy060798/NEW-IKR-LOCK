@@ -19,29 +19,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ================= TAB FIX =================
 function openTab(id, btn) {
-
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   document.querySelectorAll(".toolbar").forEach(t => t.classList.remove("active"));
   document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
 
   document.getElementById("tab-" + id)?.classList.add("active");
-  document.getElementById("toolbar-" + id)?.classList.add("active");
+  document.getElementById("tb-" + id)?.classList.add("active"); // FIX INI (toolbar kamu pakai tb- bukan toolbar-)
 
   btn?.classList.add("active");
 }
 
 window.openTab = openTab;
 
-// ================= IMPORT FIX =================
+// ================= IMPORT IKR =================
 function importIKR(e) {
-
   const file = e.target.files[0];
   if (!file) return;
 
   const reader = new FileReader();
 
   reader.onload = function (evt) {
-
     const wb = XLSX.read(evt.target.result, { type: "binary" });
 
     let raw = [];
@@ -56,7 +53,6 @@ function importIKR(e) {
     let map = {};
 
     raw.forEach(r => {
-
       let region = r.City || r.city || r.Region || "";
       let woEnd = r["Wo End"] || "";
       let boq = parseInt(String(r["Boq Total"] || 0).replace(/[^0-9]/g, "")) || 0;
@@ -93,13 +89,14 @@ function importIKR(e) {
       map[key].amount += boq;
 
       map[key].detail.push({
-        wo: r.Wonumber,
-        status: r.Status,
+        wo: r.Wonumber || "-",
+        status: r.Status || "-",
         amount: boq
       });
     });
 
     dataIKR = Object.values(map);
+
     renderIKR();
 
     e.target.value = "";
@@ -109,16 +106,14 @@ function importIKR(e) {
   reader.readAsBinaryString(file);
 }
 
-// ================= RENDER FIX =================
+// ================= RENDER =================
 function renderIKR() {
-
   const tb = document.querySelector("#tblIKR tbody");
   if (!tb) return;
 
   tb.innerHTML = "";
 
   dataIKR.forEach((d, i) => {
-
     tb.innerHTML += `
       <tr>
         <td>${i + 1}</td>
@@ -127,57 +122,79 @@ function renderIKR() {
         <td>${d.tahun}</td>
         <td>${d.wotype}</td>
         <td>${d.bulan}</td>
-        <td><span onclick="showDetail(${i})">${d.jumlah}</span></td>
+
+        <td>
+          <span style="color:#00eaff;cursor:pointer"
+            onclick="showDetail(${i})">
+            ${d.jumlah}
+          </span>
+        </td>
+
         <td>${d.approved}</td>
         <td>${formatRp(d.amount)}</td>
         <td>${formatRp(d.fs)}</td>
+
         <td contenteditable>${d.remark}</td>
         <td contenteditable>${d.invoice}</td>
         <td contenteditable>${d.note}</td>
-        <td><input type="checkbox"></td>
+
+        <td><input type="checkbox" ${d.done === "YES" ? "checked" : ""}></td>
       </tr>
     `;
   });
 }
 
-// ================= DETAIL FIX =================
+// ================= POPUP DETAIL (FIX 100%) =================
 function showDetail(i) {
+  const d = dataIKR[i];
+  if (!d) return alert("Data tidak ditemukan");
 
-  let d = dataIKR[i];
-  if (!d) return;
+  const tb = document.getElementById("popupBody");
+  const popup = document.getElementById("popup");
 
-  let tb = document.getElementById("popupBody");
+  if (!tb || !popup) {
+    alert("Popup belum ada di HTML");
+    return;
+  }
+
   tb.innerHTML = "";
 
-  (d.detail || []).forEach(x => {
-    tb.innerHTML += `
-      <tr>
-        <td>${x.wo}</td>
-        <td>${x.status}</td>
-        <td>${x.amount}</td>
-      </tr>
-    `;
-  });
+  if (!d.detail || d.detail.length === 0) {
+    tb.innerHTML = `<tr><td colspan="3">Tidak ada data</td></tr>`;
+  } else {
+    d.detail.forEach(x => {
+      tb.innerHTML += `
+        <tr>
+          <td>${x.wo}</td>
+          <td>${x.status}</td>
+          <td>${formatRp(x.amount)}</td>
+        </tr>
+      `;
+    });
+  }
 
-  document.getElementById("popup").style.display = "block";
+  popup.style.display = "block";
 }
 
 window.showDetail = showDetail;
 
 // ================= UTIL =================
 function formatRp(n) {
-  return "Rp " + (Number(n) || 0).toLocaleString("id-ID");
+  return "Rp " + (Number(n || 0).toLocaleString("id-ID"));
 }
 
+// ================= HAPUS =================
 function hapusIKR() {
   const chk = document.querySelectorAll(".chkIKR");
+
   dataIKR = dataIKR.filter((_, i) => !chk[i]?.checked);
+
   renderIKR();
 }
 
 window.hapusIKR = hapusIKR;
 
-// stub aman biar tidak error
+// ================= STUB BIAR AMAN =================
 function downloadIKR() {}
 function downloadIMS() {}
 function hapusIMS() {}
@@ -186,5 +203,6 @@ function generateStatus() {}
 function uploadServerAll() {}
 
 window.closePopup = () => {
-  document.getElementById("popup").style.display = "none";
+  const popup = document.getElementById("popup");
+  if (popup) popup.style.display = "none";
 };
