@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>NEW IKR LOCK SYSTEM</title>
 
-<!-- LIB -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -14,7 +13,7 @@ body{
   font-family:Arial;
   background:#0e0e0e;
   color:#fff;
-  padding:18px;
+  padding:15px;
 }
 
 h1{
@@ -33,8 +32,8 @@ h1{
 .menu button{
   background:#222;
   color:#fff;
-  border:0;
-  padding:10px;
+  border:none;
+  padding:10px 14px;
   border-radius:8px;
   cursor:pointer;
   font-weight:bold;
@@ -56,29 +55,24 @@ h1{
   display:flex;
 }
 
-/* BUTTON */
 button{
-  border:0;
+  border:none;
   padding:8px 12px;
   border-radius:6px;
-  color:#fff;
-  font-weight:bold;
   cursor:pointer;
+  font-weight:bold;
+  color:#fff;
 }
 
-.blue{background:#3498db}
-.green{background:#2ecc71}
-.red{background:#e74c3c}
-.orange{background:#f39c12}
+.blue{background:#3498db;}
+.green{background:#2ecc71;}
+.red{background:#e74c3c;}
+.orange{background:#f39c12;}
+.gray{background:#555;}
 
 /* TAB */
-.tab{
-  display:none;
-}
-
-.tab.active{
-  display:block;
-}
+.tab{display:none;}
+.tab.active{display:block;}
 
 /* TABLE */
 .wrap{
@@ -91,7 +85,7 @@ button{
 table{
   width:100%;
   border-collapse:collapse;
-  min-width:1200px;
+  min-width:1400px;
 }
 
 th,td{
@@ -106,6 +100,46 @@ th{
   position:sticky;
   top:0;
 }
+
+/* CLICK */
+.click{
+  color:#00eaff;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+/* POPUP */
+#popup{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  z-index:9999;
+}
+
+.popup-box{
+  width:92%;
+  max-width:900px;
+  height:85vh;
+  margin:30px auto;
+  background:#111;
+  padding:15px;
+  border-radius:10px;
+  display:flex;
+  flex-direction:column;
+}
+
+.popup-body{
+  flex:1;
+  overflow:auto;
+}
+
+.popup-action{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:10px;
+}
 </style>
 </head>
 
@@ -115,106 +149,151 @@ th{
 
 <!-- MENU -->
 <div class="menu">
+
   <button class="active" onclick="openTab('ikr',this)">DATA IKR LOCK</button>
   <button onclick="openTab('ims',this)">DATA IMS</button>
   <button onclick="openTab('pivot',this)">PIVOT</button>
   <button onclick="openTab('status',this)">STATUS</button>
-  <button class="green" onclick="uploadServer()">UPLOAD KE SERVER</button>
+
+  <button class="green" onclick="uploadServerAll()">UPLOAD SERVER SEMUA DATA</button>
+
 </div>
 
-<!-- TOOLBAR IKR -->
+<!-- ================= TOOLBAR IKR ================= -->
 <div id="toolbar-ikr" class="toolbar active">
-  <button class="blue" onclick="downloadIKR()">DOWNLOAD</button>
-
+  <button class="blue" onclick="downloadIKR()">DOWNLOAD EXCEL</button>
   <input type="file" id="fileIKR" hidden>
-  <button class="orange" onclick="document.getElementById('fileIKR').click()">UPLOAD IKR</button>
-
+  <button class="orange" onclick="fileIKR.click()">UPLOAD DATA</button>
   <button class="red" onclick="hapusIKR()">HAPUS</button>
 </div>
 
-<!-- TOOLBAR IMS -->
+<!-- ================= TOOLBAR IMS ================= -->
 <div id="toolbar-ims" class="toolbar">
-  <button class="blue" onclick="downloadIMS()">DOWNLOAD</button>
-
+  <button class="blue" onclick="downloadIMS()">DOWNLOAD EXCEL</button>
   <input type="file" id="fileIMS" hidden>
-  <button class="orange" onclick="document.getElementById('fileIMS').click()">UPLOAD IMS</button>
-
+  <button class="orange" onclick="fileIMS.click()">UPLOAD IMS</button>
   <button class="red" onclick="hapusIMS()">HAPUS</button>
+
+  <!-- SEARCH -->
+  <input type="text" placeholder="Pra Invoice Number">
+  <input type="text" placeholder="Invoice Number">
+  <input type="text" placeholder="Region">
 </div>
 
-<!-- TOOLBAR PIVOT -->
+<!-- ================= TOOLBAR PIVOT ================= -->
 <div id="toolbar-pivot" class="toolbar">
-  <button class="green" onclick="generatePivot()">REFRESH</button>
+  <button class="green" onclick="generatePivot()">REFRESH PIVOT</button>
 </div>
 
-<!-- TOOLBAR STATUS -->
+<!-- ================= TOOLBAR STATUS ================= -->
 <div id="toolbar-status" class="toolbar">
-  <button class="green" onclick="generateStatus()">REFRESH</button>
+  <button class="green" onclick="generateStatus()">REFRESH STATUS</button>
+  <button class="blue" onclick="downloadStatus()">DOWNLOAD STATUS</button>
 </div>
 
-<!-- TAB IKR -->
+<!-- ================= TAB IKR ================= -->
 <div id="tab-ikr" class="tab active">
-  <div class="wrap">
-    <table id="tableIKR">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>Region</th>
-          <th>Tahun</th>
-          <th>Bulan</th>
-          <th>Jumlah WO</th>
-          <th>Amount</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<div class="wrap">
+<table id="tblIKR">
+<thead>
+<tr>
+<th>No</th>
+<th><input type="checkbox" id="checkIKR"></th>
+<th>Region</th>
+<th>Tahun</th>
+<th>WO Type</th>
+<th>Bulan</th>
+<th>Jumlah WO</th>
+<th>WO Approved</th>
+<th>Amount</th>
+<th>FS Amount</th>
+<th>Remark</th>
+<th>No Invoice</th>
+<th>Note</th>
+<th>Done</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 </div>
 
-<!-- TAB IMS -->
+<!-- ================= TAB IMS ================= -->
 <div id="tab-ims" class="tab">
-  <div class="wrap">
-    <table id="tableIMS">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>City</th>
-          <th>Pra Invoice</th>
-          <th>Invoice</th>
-          <th>Job Name</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<div class="wrap">
+<table id="tblIMS">
+<thead>
+<tr>
+<th>No</th>
+<th><input type="checkbox"></th>
+<th>City</th>
+<th>Pra Invoice Number</th>
+<th>Invoice Number</th>
+<th>Jumlah WO</th>
+<th>Job Name</th>
+<th>Invoice Total</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 </div>
 
-<!-- TAB PIVOT -->
+<!-- ================= TAB PIVOT ================= -->
 <div id="tab-pivot" class="tab">
-  <div class="wrap" style="padding:15px">
-    <canvas id="chartPivot"></canvas>
-  </div>
+<div class="wrap" style="padding:15px">
+<canvas id="chartPivot"></canvas>
+</div>
 </div>
 
-<!-- TAB STATUS -->
+<!-- ================= TAB STATUS ================= -->
 <div id="tab-status" class="tab">
-  <div class="wrap" style="padding:15px">
-    <table id="tableStatus">
-      <thead>
-        <tr>
-          <th>Region</th>
-          <th>Total WO</th>
-          <th>Total Amount</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+<div class="wrap" style="padding:15px">
+<table id="tblStatus">
+<thead>
+<tr>
+<th>Region</th>
+<th>Total WO</th>
+<th>Approved</th>
+<th>Amount</th>
+<th>FS Amount</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+
+<!-- ================= POPUP ================= -->
+<div id="popup">
+  <div class="popup-box">
+
+    <h3>DETAIL WO</h3>
+
+    <div class="popup-body">
+      <table>
+        <thead>
+          <tr>
+            <th>WO</th>
+            <th>Status</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody id="popupBody"></tbody>
+      </table>
+    </div>
+
+    <div class="popup-action">
+      <button class="blue" onclick="closePopup()">CLOSE</button>
+    </div>
+
   </div>
 </div>
 
-<!-- JS (FIX PATH GITHUB) -->
-<script src="./js/ikrlock.js"></script>
-<script src="./js/dataims.js"></script>
+<!-- JS -->
+<script src="../js/ikrlock.js"></script>
+<script src="../js/dataims.js"></script>
+<script src="../js/status.js"></script>
 
 </body>
 </html>
