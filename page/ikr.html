@@ -9,164 +9,31 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
+body{font-family:Arial;background:#0e0e0e;color:#fff;padding:18px}
+h1{text-align:center}
 
-body{
-  font-family:Arial,Helvetica,sans-serif;
-  background:#0e0e0e;
-  color:#fff;
-  padding:18px;
-}
+.menu{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+.menu button{background:#222;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer}
+.menu button.active{background:#8e44ad}
 
-h1{
-  text-align:center;
-  margin-bottom:18px;
-}
+.toolbar{display:none;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.toolbar.active{display:flex}
 
-/* MENU */
-.menu{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:15px;
-}
+button{padding:8px 12px;border:none;border-radius:6px;color:#fff;cursor:pointer;font-weight:bold}
+.blue{background:#3498db}
+.green{background:#2ecc71}
+.red{background:#e74c3c}
+.orange{background:#f39c12}
+.gray{background:#555}
 
-.menu button{
-  background:#222;
-  color:#fff;
-  border:none;
-  padding:10px 14px;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:bold;
-}
+.tab{display:none}
+.tab.active{display:block}
 
-.menu button.active{
-  background:#8e44ad;
-}
-
-/* TOOLBAR */
-.toolbar{
-  display:none;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:14px;
-}
-
-.toolbar.active{
-  display:flex;
-}
-
-button{
-  border:none;
-  padding:9px 14px;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:bold;
-  color:#fff;
-}
-
-.blue{background:#3498db;}
-.green{background:#2ecc71;}
-.red{background:#e74c3c;}
-.orange{background:#f39c12;}
-.gray{background:#555;}
-
-input[type="text"]{
-  padding:9px;
-  border:none;
-  border-radius:8px;
-  min-width:180px;
-}
-
-/* TAB */
-.tab{
-  display:none;
-}
-
-.tab.active{
-  display:block;
-}
-
-/* TABLE */
-.wrap{
-  overflow:auto;
-  max-height:560px;
-  background:#171717;
-  border:1px solid #333;
-  border-radius:10px;
-}
-
-table{
-  width:100%;
-  min-width:1400px;
-  border-collapse:collapse;
-}
-
-th,td{
-  border:1px solid #333;
-  padding:7px;
-  font-size:12px;
-  text-align:center;
-  white-space:nowrap;
-}
-
-th{
-  background:#8e44ad;
-  position:sticky;
-  top:0;
-}
-
-.click{
-  color:#00eaff;
-  cursor:pointer;
-  font-weight:bold;
-}
-
-/* POPUP */
-#popup{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.82);
-  z-index:9999;
-}
-
-.popup-box{
-  width:92%;
-  max-width:900px;
-  height:88vh;
-  margin:25px auto;
-  background:#111;
-  border-radius:12px;
-  padding:15px;
-  display:flex;
-  flex-direction:column;
-}
-
-.popup-body{
-  flex:1;
-  overflow:auto;
-  margin-top:10px;
-}
-
-.popup-action{
-  display:flex;
-  gap:10px;
-  justify-content:flex-end;
-  margin-top:10px;
-}
-
-/* MOBILE */
-@media(max-width:768px){
-  body{padding:10px}
-  .menu button{font-size:12px;padding:8px}
-  th,td{font-size:11px}
-}
+.wrap{overflow:auto;background:#171717;border-radius:10px;max-height:500px}
+table{width:100%;border-collapse:collapse;min-width:1200px}
+th,td{border:1px solid #333;padding:6px;font-size:12px;text-align:center}
+th{background:#8e44ad;position:sticky;top:0}
+.click{color:#00eaff;cursor:pointer}
 </style>
 </head>
 
@@ -174,151 +41,91 @@ th{
 
 <h1>NEW IKR LOCK SYSTEM</h1>
 
-<!-- MENU TAB -->
 <div class="menu">
-  <button class="active" onclick="openTab('data-ikr',this)">DATA IKR LOCK</button>
-  <button onclick="openTab('data-ims',this)">DATA IMS</button>
-  <button onclick="openTab('pivot',this)">PIVOT</button>
-  <button onclick="openTab('status',this)">STATUS</button>
-  <button class="green" onclick="uploadAllToServer()">UPLOAD KE SERVER</button>
+<button class="active" onclick="openTab('ikr',this)">DATA IKR LOCK</button>
+<button onclick="openTab('ims',this)">DATA IMS</button>
+<button onclick="openTab('pivot',this)">PIVOT</button>
+<button onclick="openTab('status',this)">STATUS</button>
 </div>
 
 <!-- TOOLBAR IKR -->
-<div id="toolbar-data-ikr" class="toolbar active">
-  <button class="blue" onclick="downloadIKR()">DOWNLOAD FILE EXCEL</button>
-
-  <input type="file" id="fileIKR" hidden accept=".xlsx,.xls">
-  <button class="orange" onclick="fileIKR.click()">UPLOAD DATA IKR LOCK</button>
-
-  <button class="red" onclick="hapusIKR()">HAPUS DATA</button>
+<div id="toolbar-ikr" class="toolbar active">
+<button class="blue" onclick="downloadIKR()">DOWNLOAD</button>
+<input type="file" id="fileIKR" hidden>
+<button class="orange" onclick="fileIKR.click()">UPLOAD IKR</button>
+<button class="red" onclick="hapusIKR()">HAPUS</button>
 </div>
 
 <!-- TOOLBAR IMS -->
-<div id="toolbar-data-ims" class="toolbar">
-  <button class="blue" onclick="downloadIMS()">DOWNLOAD FILE EXCEL</button>
-
-  <input type="file" id="fileIMS" hidden accept=".xlsx,.xls">
-  <button class="orange" onclick="fileIMS.click()">UPLOAD DATA IMS</button>
-
-  <button class="red" onclick="hapusIMS()">HAPUS DATA</button>
-
-  <input type="text" id="searchPraInvoice" placeholder="Cari Pra Invoice Number">
-  <input type="text" id="searchInvoiceNumber" placeholder="Cari Invoice Number">
-  <input type="text" id="searchRegion" placeholder="Cari Region">
+<div id="toolbar-ims" class="toolbar">
+<button class="blue" onclick="downloadIMS()">DOWNLOAD</button>
+<input type="file" id="fileIMS" hidden>
+<button class="orange" onclick="fileIMS.click()">UPLOAD IMS</button>
+<button class="red" onclick="hapusIMS()">HAPUS</button>
 </div>
 
 <!-- TOOLBAR PIVOT -->
 <div id="toolbar-pivot" class="toolbar">
-  <button class="green" onclick="generatePivot()">REFRESH PIVOT</button>
+<button class="green" onclick="generatePivot()">REFRESH</button>
 </div>
 
 <!-- TOOLBAR STATUS -->
 <div id="toolbar-status" class="toolbar">
-  <button class="green" onclick="generateStatus()">REFRESH STATUS</button>
-  <button class="blue" onclick="downloadStatus()">DOWNLOAD STATUS</button>
+<button class="green" onclick="generateStatus()">REFRESH</button>
 </div>
 
-<!-- TAB DATA IKR -->
-<div id="tab-data-ikr" class="tab active">
-  <div class="wrap">
-    <table id="tableIKR">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>Check</th>
-          <th>Region</th>
-          <th>Tahun</th>
-          <th>Jenis Pekerjaan</th>
-          <th>Bulan</th>
-          <th>Jumlah Pekerjaan</th>
-          <th>Approved</th>
-          <th>Total Nilai</th>
-          <th>Nilai FS</th>
-          <th>Keterangan</th>
-          <th>Nomor Invoice</th>
-          <th>Catatan</th>
-          <th>Selesai</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<!-- TAB IKR -->
+<div id="tab-ikr" class="tab active">
+<div class="wrap">
+<table id="tableIKR">
+<thead>
+<tr>
+<th>No</th><th>Region</th><th>Tahun</th><th>Bulan</th><th>WO Type</th>
+<th>Jumlah</th><th>Amount</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 </div>
 
-<!-- TAB DATA IMS -->
-<div id="tab-data-ims" class="tab">
-  <div class="wrap">
-    <table id="tableIMS">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>Check</th>
-          <th>Kota</th>
-          <th>Nomor Pra Invoice</th>
-          <th>Nomor Invoice</th>
-          <th>Jumlah Pekerjaan</th>
-          <th>Nama Pekerjaan</th>
-          <th>Total Invoice</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<!-- TAB IMS -->
+<div id="tab-ims" class="tab">
+<div class="wrap">
+<table id="tableIMS">
+<thead>
+<tr>
+<th>No</th><th>City</th><th>Pra Invoice</th><th>Invoice</th><th>Job</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 </div>
 
 <!-- TAB PIVOT -->
 <div id="tab-pivot" class="tab">
-  <div class="wrap" style="padding:15px;">
-    <canvas id="chartPivot" height="120"></canvas>
-  </div>
+<div class="wrap" style="padding:15px">
+<canvas id="chartPivot"></canvas>
+</div>
 </div>
 
 <!-- TAB STATUS -->
 <div id="tab-status" class="tab">
-  <div class="wrap" style="padding:15px;">
-
-    <table id="tableStatus">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>Region</th>
-          <th>Total Pekerjaan</th>
-          <th>Approved</th>
-          <th>Total Nilai</th>
-          <th>Nilai FS</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-  </div>
+<div class="wrap" style="padding:15px">
+<table id="tableStatus">
+<thead>
+<tr>
+<th>Region</th><th>Total WO</th><th>Amount</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 </div>
 
-<!-- POPUP -->
-<div id="popup">
-  <div class="popup-box">
-
-    <h3 id="popupTitle">DETAIL DATA</h3>
-
-    <div class="popup-body">
-      <table id="tablePopup">
-        <thead></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <div class="popup-action">
-      <button class="blue" onclick="downloadPopup()">DOWNLOAD</button>
-      <button class="gray" onclick="closePopup()">CLOSE</button>
-    </div>
-
-  </div>
-</div>
-
-<!-- JS -->
 <script src="../js/ikrlock.js"></script>
 <script src="../js/dataims.js"></script>
-<script src="../js/status.js"></script>
 
 </body>
 </html>
