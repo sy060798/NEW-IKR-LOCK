@@ -141,6 +141,17 @@ th{
   border-radius:6px;
   cursor:pointer;
 }
+
+  .btn-green{
+  background:#2ecc71;
+  border:none;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:6px;
+  cursor:pointer;
+  margin-right:8px;
+}
+  
 </style>
 </head>
 
@@ -253,6 +264,7 @@ th{
 </div>
 
 <!-- POPUP (ONLY 1 VERSION CLEAN) -->
+<!-- POPUP (ONLY 1 VERSION CLEAN) -->
 <div id="popup" class="popup-overlay">
   <div class="popup-box">
 
@@ -274,12 +286,20 @@ th{
       </table>
     </div>
 
+    <!-- ✅ TAMBAHAN EXPORT BUTTON -->
     <div class="popup-footer">
-      <button class="btn-red" onclick="closePopup()">TUTUP</button>
+      <button onclick="exportPopupExcel()" class="btn-green">
+        EXPORT EXCEL
+      </button>
+
+      <button onclick="closePopup()" class="btn-red">
+        TUTUP
+      </button>
     </div>
 
   </div>
 </div>
+
 
 <!-- JS -->
 <script src="../js/ikrlock.js"></script>
