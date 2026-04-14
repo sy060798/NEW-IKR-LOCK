@@ -106,14 +106,13 @@ if (!existing) {
   map[key].jumlah++;
 
   map[key].detail.push({
-  wo,
-  total: woTotal
-});
+    wo,
+    total: woTotal
+  });
 
   map[key].total += woTotal;
 } else {
   existing.total += woTotal;
-  map[key].total += woTotal;
 }
 });
 
