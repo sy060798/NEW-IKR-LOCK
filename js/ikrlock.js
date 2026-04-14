@@ -2,6 +2,10 @@
 let dataIKR = [];
 let popupExportData = [];
 
+if (typeof SERVER_URL === "undefined") {
+  var SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
+}
+
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
   const file = document.getElementById("fileIKR");
