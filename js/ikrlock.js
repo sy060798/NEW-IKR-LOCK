@@ -112,8 +112,11 @@ raw.forEach(r => {
   let bulan = namaBulan[bln];
 
   // ================= INI YANG KURANG =================
-  let key = region + "_" + tahun + "_" + bulan;
-
+  let key =
+(region || "").trim().toUpperCase() + "_" +
+tahun + "_" +
+bulan + "_" +
+(wotype || "").trim().toUpperCase();
   // ================= INIT MAP =================
   if (!map[key]) {
     map[key] = {
@@ -173,20 +176,57 @@ raw.forEach(r => {
 });
 
     // ================= FINAL CLEAN =================
-    dataIKR = Object.values(map).map(x => {
-      delete x.woSet;
-      return x;
-    });
+let hasilBaru = Object.values(map).map(x => {
+  delete x.woSet;
+  return x;
+});
 
-    renderIKR();
+// gabung lama + baru
+let gabung = [...dataIKR, ...hasilBaru];
 
-    e.target.value = "";
-    alert("UPLOAD OK");
-  };
+// merge anti dobel row
+let finalMap = {};
 
-  reader.readAsBinaryString(file);
+gabung.forEach(d => {
+
+  let key =
+    d.region + "_" +
+    d.tahun + "_" +
+    d.bulan + "_" +
+    d.wotype;
+
+  if (!finalMap[key]) {
+
+    finalMap[key] = {
+      ...d,
+      detail: [...(d.detail || [])]
+    };
+
+  } else {
+
+    finalMap[key].jumlah += Number(d.jumlah || 0);
+    finalMap[key].approved += Number(d.approved || 0);
+    finalMap[key].amount += Number(d.amount || 0);
+    finalMap[key].fs += Number(d.fs || 0);
+
+    finalMap[key].detail.push(
+      ...(d.detail || [])
+    );
+
+  }
+
+});
+
+dataIKR = Object.values(finalMap);
+
+renderIKR();
+
+e.target.value = "";
+alert("UPLOAD OK");
+};
+
+reader.readAsBinaryString(file);
 }
-
 // ================= RENDER =================
 function renderIKR() {
   const tb = document.querySelector("#tblIKR tbody");
