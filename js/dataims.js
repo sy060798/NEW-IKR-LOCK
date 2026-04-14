@@ -118,7 +118,8 @@ let hasilBaru = Object.values(map).map(x => {
 
 dataIMS = hasilBaru;
 renderIMS();
-
+syncIMSkeIKR();
+    
     e.target.value = "";
     alert("UPLOAD IMS OK");
   };
