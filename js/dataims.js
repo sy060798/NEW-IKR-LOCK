@@ -94,7 +94,12 @@ function importIMS(e) {
       }
 
       // ✅ TOTAL
-      map[key].total += total;
+     if (!map[key].totalSet) map[key].totalSet = new Set();
+
+if (!map[key].totalSet.has(total)) {
+  map[key].totalSet.add(total);
+  map[key].total += total;
+}
 
       // ✅ DETAIL
       map[key].detail.push({
@@ -213,4 +218,27 @@ function renderIMS() {
 
   // 🔥 TAMBAHAN FOOTER
   renderIMSFooter();
+}
+
+
+function renderIMSFooter() {
+  const tb = document.querySelector("#tblIMS tbody");
+  if (!tb) return;
+
+  let totalWO = 0;
+  let totalAmount = 0;
+
+  dataIMS.forEach(d => {
+    totalWO += Number(d.jumlah || 0);
+    totalAmount += Number(d.total || 0);
+  });
+
+  tb.innerHTML += `
+    <tr style="background:#111;color:#fff;font-weight:bold">
+      <td colspan="5">TOTAL</td>
+      <td>${totalWO}</td>
+      <td></td>
+      <td>${formatRp(totalAmount)}</td>
+    </tr>
+  `;
 }
