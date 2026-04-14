@@ -115,52 +115,12 @@ function showLoading(){
   let div = document.createElement("div");
   div.id = "loadingSync";
 
-  div.style = `
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    z-index: 999999;
-
-    width: 100vw;
-    height: 100vh;
-  `;
-
   div.innerHTML = `
-    <div style="
-      width: 320px;
-      max-width: 90vw;
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      text-align: center;
-      font-family: Arial;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      position: relative;
-      margin: auto;
-    ">
-      <h3 style="margin:0 0 10px;">Sinkronisasi Server</h3>
-
-      <div style="
-        width:100%;
-        height:10px;
-        background:#eee;
-        border-radius:10px;
-        overflow:hidden;
-        margin:15px 0;
-      ">
-        <div id="barSync" style="
-          width:0%;
-          height:100%;
-          background:#4caf50;
-          transition: width 0.3s ease;
-        "></div>
+    <div class="loadBox">
+      <h3>Sinkronisasi Server</h3>
+      <div class="barWrap">
+        <div id="barSync"></div>
       </div>
-
       <div id="txtSync">0%</div>
       <small id="msgSync">Memulai...</small>
     </div>
