@@ -41,12 +41,31 @@ function importIMS(e) {
     let map = {};
 
     raw.forEach(r => {
-      let city = r.City || r.city || "";
+
+      // ================= CITY =================
+      let city = (r.City || r.city || "").toString().trim();
       if (!city) return;
 
-      let pra = r["Pra Invoice"] || r["PRA INVOICE"] || "";
-      let invoice = r.Invoice || r["INVOICE"] || "";
+      // ================= PRA INVOICE =================
+      let pra =
+        r["Pra Invoice Number"] ||
+        r["PRA INVOICE NUMBER"] ||
+        r["Pra Invoice"] ||
+        r["PRA INVOICE"] ||
+        "";
 
+      // ================= INVOICE =================
+      let invoice =
+        r["Invoice Number"] ||
+        r["INVOICE NUMBER"] ||
+        r["Invoice"] ||
+        r["INVOICE"] ||
+        "";
+
+      pra = String(pra).trim();
+      invoice = String(invoice).trim();
+
+      // ================= JUMLAH WO =================
       let wo =
         parseInt(
           String(
@@ -56,8 +75,11 @@ function importIMS(e) {
           ).replace(/[^0-9]/g, "")
         ) || 0;
 
-      let job = r["Job Name"] || r["JOB NAME"] || "";
+      // ================= JOB =================
+      let job =
+        (r["Job Name"] || r["JOB NAME"] || "").toString().trim();
 
+      // ================= TOTAL =================
       let total =
         parseInt(
           String(
@@ -67,8 +89,9 @@ function importIMS(e) {
           ).replace(/[^0-9]/g, "")
         ) || 0;
 
+      // ================= KEY =================
       let key =
-        city.trim().toUpperCase() + "_" +
+        city.toUpperCase() + "_" +
         pra + "_" +
         invoice + "_" +
         job;
@@ -88,6 +111,7 @@ function importIMS(e) {
       map[key].total += total;
     });
 
+    // ================= MERGE DATA =================
     let hasilBaru = Object.values(map);
 
     let gabung = [...dataIMS, ...hasilBaru];
@@ -118,7 +142,6 @@ function importIMS(e) {
 
   reader.readAsBinaryString(file);
 }
-
 // ================= RENDER =================
 function renderIMS() {
   const tb = document.querySelector("#tblIMS tbody");
