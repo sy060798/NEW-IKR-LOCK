@@ -1,9 +1,13 @@
 // =====================================
 // FILE : js/server.js
-// AUTO SYNC DELETE + UPLOAD
+// FIX sesuai server.js backend
 // =====================================
 
-const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
+if (typeof SERVER_URL === "undefined") {
+  var SERVER_URL =
+    "https://tracking-server-production-6a12.up.railway.app";
+}
+
 
 // ===============================
 // UPLOAD SEMUA DATA
@@ -20,81 +24,150 @@ async function uploadServerAll() {
     alert("Sinkronisasi selesai");
 
   } catch (err) {
+
     console.error(err);
     alert("Sinkronisasi gagal");
+
   }
 
 }
 
+
 // ===============================
 // SINKRON IKR
-// hapus lama lalu upload baru
+// hapus lama lalu save baru
 // ===============================
 async function syncIKRServer() {
 
   if (typeof dataIKR === "undefined") return;
 
-  // hapus semua data lama
-  await fetch(SERVER_URL + "/ikr", {
-    method: "DELETE"
-  });
-
-  // upload data baru
-  await fetch(SERVER_URL + "/ikr", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(dataIKR)
-  });
+  await fetch(
+    SERVER_URL + "/api/save",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        type: "IKR",
+        data: dataIKR
+      })
+    }
+  );
 
 }
 
+
 // ===============================
 // SINKRON IMS
-// hapus lama lalu upload baru
 // ===============================
 async function syncIMSServer() {
 
   if (typeof dataIMS === "undefined") return;
 
-  // hapus lama
-  await fetch(SERVER_URL + "/ims", {
-    method: "DELETE"
-  });
-
-  // upload baru
-  await fetch(SERVER_URL + "/ims", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(dataIMS)
-  });
+  await fetch(
+    SERVER_URL + "/api/save",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        type: "IMS",
+        data: dataIMS
+      })
+    }
+  );
 
 }
 
+
 // ===============================
-// AUTO SYNC SAAT HAPUS IKR
+// AUTO SYNC HAPUS IKR
 // ===============================
 async function autoSyncIKRDelete() {
+
   try {
     await syncIKRServer();
-  } catch (e) {
-    console.log(e);
+  } catch (err) {
+    console.log(err);
   }
+
 }
 
+
 // ===============================
-// AUTO SYNC SAAT HAPUS IMS
+// AUTO SYNC HAPUS IMS
 // ===============================
 async function autoSyncIMSDelete() {
+
   try {
     await syncIMSServer();
-  } catch (e) {
-    console.log(e);
+  } catch (err) {
+    console.log(err);
   }
+
 }
+
+
+// ===============================
+// LOAD IKR
+// ===============================
+async function loadIKRServer() {
+
+  try {
+
+    const res = await fetch(
+      SERVER_URL + "/api/get?type=IKR"
+    );
+
+    const hasil = await res.json();
+
+    if (Array.isArray(hasil)) {
+      dataIKR = hasil;
+      if (typeof renderIKR === "function") renderIKR();
+    }
+
+  } catch (err) {
+    console.log(err);
+  }
+
+}
+
+
+// ===============================
+// LOAD IMS
+// ===============================
+async function loadIMSServer() {
+
+  try {
+
+    const res = await fetch(
+      SERVER_URL + "/api/get?type=IMS"
+    );
+
+    const hasil = await res.json();
+
+    if (Array.isArray(hasil)) {
+      dataIMS = hasil;
+      if (typeof renderIMS === "function") renderIMS();
+    }
+
+  } catch (err) {
+    console.log(err);
+  }
+
+}
+
+
+// ===============================
+// AUTO LOAD SAAT BUKA
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  loadIKRServer();
+  loadIMSServer();
+});
+
 
 window.uploadServerAll = uploadServerAll;
 window.autoSyncIKRDelete = autoSyncIKRDelete;
