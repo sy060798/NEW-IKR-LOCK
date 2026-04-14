@@ -8,369 +8,84 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- GANTI SELURUH CSS LAMA DENGAN CSS INI -->
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Segoe UI,Arial,sans-serif;background:#f4f7fb;color:#1e2a3a;display:flex;min-height:100vh}
 
-body{
-  font-family:Segoe UI, Arial, sans-serif;
-  background:#f4f7fb;
-  color:#1e2a3a;
-  display:flex;
-  min-height:100vh;
-}
+/* SIDEBAR */
+.sidebar{width:240px;background:#fff;border-right:1px solid #d9e3f0;padding:20px 15px}
+.logo{font-size:22px;font-weight:700;color:#1565c0;margin-bottom:25px}
+.side-title{font-size:11px;font-weight:700;color:#7a8ca5;margin:18px 0 8px;text-transform:uppercase}
+.menu{display:flex;flex-direction:column;gap:6px}
+.menu button{width:100%;border:none;background:transparent;text-align:left;padding:11px 14px;border-radius:10px;cursor:pointer;color:#40566f;font-size:14px;font-weight:600;transition:.2s}
+.menu button:hover{background:#eef5ff;color:#1565c0}
+.menu button.active{background:#1565c0;color:#fff}
 
-/* ================= SIDEBAR ================= */
-.sidebar{
-  width:240px;
-  background:#ffffff;
-  border-right:1px solid #d9e3f0;
-  padding:20px 15px;
-}
+/* CONTENT */
+.main{flex:1;padding:20px}
+.topbar{background:#fff;border:1px solid #dce6f2;border-radius:14px;padding:18px;margin-bottom:15px}
+.topbar h1{font-size:24px;color:#1565c0}
 
-.logo{
-  font-size:22px;
-  font-weight:700;
-  color:#1565c0;
-  margin-bottom:25px;
-}
+/* TOOLBAR */
+.toolbar{display:none;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+.toolbar.active{display:flex}
+.toolbar button{background:#1565c0;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+.toolbar button:hover{background:#0d57ab}
 
-.side-title{
-  font-size:11px;
-  font-weight:700;
-  color:#7a8ca5;
-  margin:18px 0 8px;
-  text-transform:uppercase;
-}
+/* TAB */
+.tab{display:none}
+.tab.active{display:block}
 
-.menu{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
+/* CARD */
+.wrap{background:#fff;border:1px solid #dce6f2;border-radius:14px;overflow:auto}
 
-.menu button{
-  width:100%;
-  border:none;
-  background:transparent;
-  text-align:left;
-  padding:11px 14px;
-  border-radius:10px;
-  cursor:pointer;
-  color:#40566f;
-  font-size:14px;
-  font-weight:600;
-  transition:0.2s;
-}
+/* TABLE */
+table{width:100%;min-width:1200px;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #edf2f7;font-size:13px;text-align:center}
+th{background:#eaf3ff;color:#1565c0;font-weight:700;position:sticky;top:0}
+tr:hover{background:#f8fbff}
+input[type="checkbox"]{transform:scale(1.1)}
 
-.menu button:hover{
-  background:#eef5ff;
-  color:#1565c0;
-}
+/* POPUP */
+.popup-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999}
+.popup-box{width:92%;max-width:900px;margin:4% auto;background:#fff;border-radius:14px;overflow:hidden}
+.popup-header{background:#1565c0;color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+.popup-header h3{font-size:18px}
+.close-btn{border:none;background:transparent;color:#fff;font-size:22px;cursor:pointer}
+.popup-body{padding:15px;max-height:60vh;overflow:auto}
+.popup-table{width:100%;border-collapse:collapse}
+.popup-table th{background:#eaf3ff;color:#1565c0}
+.popup-table td,.popup-table th{border:1px solid #edf2f7;padding:8px}
+.popup-footer{padding:14px;text-align:right;background:#f8fbff}
+.btn-green{background:#1e88e5;color:#fff;border:none;padding:9px 15px;border-radius:8px;margin-right:8px;cursor:pointer}
+.btn-red{background:#e53935;color:#fff;border:none;padding:9px 15px;border-radius:8px;cursor:pointer}
 
-.menu button.active{
-  background:#1565c0;
-  color:#fff;
-}
-
-/* ================= CONTENT ================= */
-.main{
-  flex:1;
-  padding:20px;
-}
-
-.topbar{
-  background:#ffffff;
-  border:1px solid #dce6f2;
-  border-radius:14px;
-  padding:18px;
-  margin-bottom:15px;
-}
-
-.topbar h1{
-  font-size:24px;
-  color:#1565c0;
-}
-
-/* ================= TOOLBAR ================= */
-.toolbar{
-  display:none;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:15px;
-}
-
-.toolbar.active{
-  display:flex;
-}
-
-.toolbar button{
-  background:#1565c0;
-  color:#fff;
-  border:none;
-  padding:10px 14px;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:600;
-}
-
-.toolbar button:hover{
-  background:#0d57ab;
-}
-
-/* ================= TAB ================= */
-.tab{
-  display:none;
-}
-
-.tab.active{
-  display:block;
-}
-
-/* ================= CARD ================= */
-.wrap{
-  background:#ffffff;
-  border:1px solid #dce6f2;
-  border-radius:14px;
-  overflow:auto;
-}
-
-/* ================= TABLE ================= */
-table{
-  width:100%;
-  min-width:1200px;
-  border-collapse:collapse;
-}
-
-th,td{
-  padding:10px;
-  border-bottom:1px solid #edf2f7;
-  font-size:13px;
-  text-align:center;
-}
-
-th{
-  background:#eaf3ff;
-  color:#1565c0;
-  font-weight:700;
-  position:sticky;
-  top:0;
-}
-
-tr:hover{
-  background:#f8fbff;
-}
-
-input[type="checkbox"]{
-  transform:scale(1.1);
-}
-
-/* ================= POPUP ================= */
-.popup-overlay{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.55);
-  z-index:9999;
-}
-
-.popup-box{
-  width:92%;
-  max-width:900px;
-  margin:4% auto;
-  background:#fff;
-  border-radius:14px;
-  overflow:hidden;
-}
-
-.popup-header{
-  background:#1565c0;
-  color:#fff;
-  padding:14px 18px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.popup-header h3{
-  font-size:18px;
-}
-
-.close-btn{
-  border:none;
-  background:transparent;
-  color:#fff;
-  font-size:22px;
-  cursor:pointer;
-}
-
-.popup-body{
-  padding:15px;
-  max-height:60vh;
-  overflow:auto;
-}
-
-.popup-table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-.popup-table th{
-  background:#eaf3ff;
-  color:#1565c0;
-}
-
-.popup-table td,
-.popup-table th{
-  border:1px solid #edf2f7;
-  padding:8px;
-}
-
-.popup-footer{
-  padding:14px;
-  text-align:right;
-  background:#f8fbff;
-}
-
-.btn-green{
-  background:#1e88e5;
-  color:#fff;
-  border:none;
-  padding:9px 15px;
-  border-radius:8px;
-  margin-right:8px;
-  cursor:pointer;
-}
-
-.btn-red{
-  background:#e53935;
-  color:#fff;
-  border:none;
-  padding:9px 15px;
-  border-radius:8px;
-  cursor:pointer;
-}
-
-/* ================= RESPONSIVE ================= */
+/* RESPONSIVE */
 @media(max-width:900px){
-
-  body{
-    flex-direction:column;
-  }
-
-  .sidebar{
-    width:100%;
-    border-right:none;
-    border-bottom:1px solid #dce6f2;
-  }
-
-  .menu{
-    flex-direction:row;
-    flex-wrap:wrap;
-  }
-
-  .menu button{
-    width:auto;
-  }
+body{flex-direction:column}
+.sidebar{width:100%;border-right:none;border-bottom:1px solid #dce6f2}
+.menu{flex-direction:row;flex-wrap:wrap}
+.menu button{width:auto}
 }
- 
-#loadingSync{
-position:fixed;
-top:15px;
-left:50%;
-transform:translateX(-50%);
-z-index:99999;
-}
-
-.loadBox{
-width:260px;
-background:#fff;
-padding:12px 15px;
-border-radius:10px;
-text-align:center;
-box-shadow:0 6px 18px rgba(0,0,0,.25);
-font-family:Arial;
-}
-
-.loadBox h3{
-margin:0 0 8px;
-font-size:14px;
-color:#111;
-}
-
-.barWrap{
-height:10px;
-background:#ddd;
-border-radius:20px;
-overflow:hidden;
-margin-bottom:6px;
-}
-
-#barSync{
-height:100%;
-width:0%;
-background:linear-gradient(90deg,#0d6efd,#00c6ff);
-transition:.4s;
-}
-
-#txtSync{
-font-size:16px;
-font-weight:bold;
-color:#111;
-margin-bottom:4px;
-}
-
-#msgSync{
-font-size:11px;
-color:#666;
-}
-
 </style>
 </head>
 
 <body>
 
-<!-- ================= SIDEBAR KIRI ================= -->
 <div class="sidebar">
-
   <div class="logo">IKR SYSTEM</div>
 
   <div class="side-title">MAIN MENU</div>
-
   <div class="menu">
-
-    <button class="active" onclick="openTab('ikr',this)">
-      DATA IKR LOCK
-    </button>
-
-    <button onclick="openTab('ims',this)">
-      DATA IMS
-    </button>
-
-    <button onclick="openTab('pivot',this)">
-      DATA PIVOT
-    </button>
-
-    <button onclick="openTab('status',this)">
-      DATA STATUS
-    </button>
-
-    <button onclick="uploadServerAll()">
-      UPLOAD SERVER
-    </button>
-
+    <button class="active" onclick="openTab('ikr',this)">DATA IKR LOCK</button>
+    <button onclick="openTab('ims',this)">DATA IMS</button>
+    <button onclick="openTab('pivot',this)">DATA PIVOT</button>
+    <button onclick="openTab('status',this)">DATA STATUS</button>
+    <button onclick="uploadServerAll()">UPLOAD SERVER</button>
   </div>
-
 </div>
 
-<!-- ================= KONTEN KANAN ================= -->
 <div class="main">
-
-  <!-- HEADER -->
   <div class="topbar">
     <h1>NEW IKR LOCK SYSTEM</h1>
   </div>
@@ -378,30 +93,18 @@ color:#666;
   <!-- TOOLBAR IKR -->
   <div id="tb-ikr" class="toolbar active">
     <button onclick="downloadIKR()">DOWNLOAD EXCEL</button>
-
     <input type="file" id="fileIKR" hidden>
-
-    <button onclick="document.getElementById('fileIKR').click()">
-      UPLOAD DATA
-    </button>
-
+    <button onclick="document.getElementById('fileIKR').click()">UPLOAD DATA</button>
     <button onclick="hapusIKR()">HAPUS</button>
   </div>
 
-<!-- TOOLBAR IMS -->
-<div id="tb-ims" class="toolbar">
-  <button onclick="downloadIMS()">DOWNLOAD EXCEL</button>
-
-  <input type="file" id="fileIMS" hidden>
-
-  <button onclick="document.getElementById('fileIMS').click()">
-    UPLOAD IMS
-  </button>
-
-  <button onclick="hapusIMS()" style="background:#e53935;">
-    HAPUS
-  </button>
-</div>
+  <!-- TOOLBAR IMS -->
+  <div id="tb-ims" class="toolbar">
+    <button onclick="downloadIMS()">DOWNLOAD EXCEL</button>
+    <input type="file" id="fileIMS" hidden>
+    <button onclick="document.getElementById('fileIMS').click()">UPLOAD IMS</button>
+    <button onclick="hapusIMS()" style="background:#e53935;">HAPUS</button>
+  </div>
 
   <!-- TOOLBAR PIVOT -->
   <div id="tb-pivot" class="toolbar">
@@ -413,124 +116,114 @@ color:#666;
     <button onclick="generateStatus()">REFRESH STATUS</button>
   </div>
 
-<!-- TAB IKR -->
-<div id="tab-ikr" class="tab active">
-  <div class="wrap">
-    <table id="tblIKR">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th><input type="checkbox" id="checkIKR"></th>
-          <th>Region</th>
-          <th>Tahun</th>
-          <th>WO Type</th>
-          <th>Bulan</th>
-          <th>Jumlah WO</th>
-          <th>WO Approved</th>
-          <th>Amount</th>
-          <th>FS Amount</th>
-          <th>Remark</th>
-          <th>No Invoice</th>
-          <th>Note</th>
-          <th>Done</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- TAB IMS -->
-<div id="tab-ims" class="tab">
-  <div class="wrap">
-    <table id="tblIMS">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th><input type="checkbox" id="checkIMS"></th>
-          <th>City</th>
-          <th>Pra Invoice</th>
-          <th>Invoice</th>
-          <th>Jumlah WO</th>
-          <th>Job Name</th>
-          <th>Invoice Total</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- TAB PIVOT -->
-<div id="tab-pivot" class="tab">
-  <div class="wrap" style="padding:10px">
-    <canvas id="chartPivot"></canvas>
-  </div>
-</div>
-
-<!-- TAB STATUS -->
-<div id="tab-status" class="tab">
-  <div class="wrap" style="padding:10px">
-    <table id="tblStatus">
-      <thead>
-        <tr>
-          <th>Region</th>
-          <th>Total WO</th>
-          <th>Amount</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- POPUP (ONLY 1 VERSION CLEAN) -->
-<!-- POPUP (ONLY 1 VERSION CLEAN) -->
-<div id="popup" class="popup-overlay">
-  <div class="popup-box">
-
-    <div class="popup-header">
-      <h3>DETAIL WO</h3>
-      <button class="close-btn" onclick="closePopup()">✕</button>
-    </div>
-
-    <div class="popup-body">
-      <table class="popup-table">
+  <!-- TAB IKR -->
+  <div id="tab-ikr" class="tab active">
+    <div class="wrap">
+      <table id="tblIKR">
         <thead>
           <tr>
-            <th>WO</th>
-            <th>Status</th>
+            <th>No</th>
+            <th><input type="checkbox" id="checkIKR"></th>
+            <th>Region</th>
+            <th>Tahun</th>
+            <th>WO Type</th>
+            <th>Bulan</th>
+            <th>Jumlah WO</th>
+            <th>WO Approved</th>
+            <th>Amount</th>
+            <th>FS Amount</th>
+            <th>Remark</th>
+            <th>No Invoice</th>
+            <th>Note</th>
+            <th>Done</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB IMS -->
+  <div id="tab-ims" class="tab">
+    <div class="wrap">
+      <table id="tblIMS">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th><input type="checkbox" id="checkIMS"></th>
+            <th>City</th>
+            <th>Pra Invoice</th>
+            <th>Invoice</th>
+            <th>Jumlah WO</th>
+            <th>Job Name</th>
+            <th>Invoice Total</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB PIVOT -->
+  <div id="tab-pivot" class="tab">
+    <div class="wrap" style="padding:10px">
+      <canvas id="chartPivot"></canvas>
+    </div>
+  </div>
+
+  <!-- TAB STATUS -->
+  <div id="tab-status" class="tab">
+    <div class="wrap" style="padding:10px">
+      <table id="tblStatus">
+        <thead>
+          <tr>
+            <th>Region</th>
+            <th>Total WO</th>
             <th>Amount</th>
           </tr>
         </thead>
-        <tbody id="popupBody"></tbody>
+        <tbody></tbody>
       </table>
     </div>
-
-    <!-- ✅ TAMBAHAN EXPORT BUTTON -->
-    <div class="popup-footer">
-      <button onclick="exportPopupExcel()" class="btn-green">
-        EXPORT EXCEL
-      </button>
-
-      <button onclick="closePopup()" class="btn-red">
-        TUTUP
-      </button>
-    </div>
-
   </div>
+
+  <!-- POPUP -->
+  <div id="popup" class="popup-overlay">
+    <div class="popup-box">
+      <div class="popup-header">
+        <h3>DETAIL WO</h3>
+        <button class="close-btn" onclick="closePopup()">✕</button>
+      </div>
+
+      <div class="popup-body">
+        <table class="popup-table">
+          <thead>
+            <tr>
+              <th>WO</th>
+              <th>Status</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody id="popupBody"></tbody>
+        </table>
+      </div>
+
+      <div class="popup-footer">
+        <button onclick="exportPopupExcel()" class="btn-green">EXPORT EXCEL</button>
+        <button onclick="closePopup()" class="btn-red">TUTUP</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-
-<!-- JS -->
 <script src="../js/server.js"></script>
 <script src="../js/ikrlock.js"></script>
 <script src="../js/dataims.js"></script>
 <script src="../js/status.js"></script>
-  
+
 <script>
 function openTab(id, btn){
-
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.getElementById("tab-"+id)?.classList.add("active");
 
@@ -540,7 +233,6 @@ function openTab(id, btn){
   document.querySelectorAll(".menu button").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
 }
-
 window.openTab = openTab;
 </script>
 
