@@ -51,47 +51,48 @@ function importIMS(e) {
 
     let map = {};
 
-    raw.forEach(r => {
+raw.forEach(r => {
 
-  let city = (r.City || "").toString().trim();
+  const row = {};
+  Object.keys(r).forEach(k => {
+    row[k.trim().toLowerCase()] = r[k];
+  });
+
+  // 🔍 DEBUG DI SINI
+  console.log("HEADER:", Object.keys(r));
+  console.log("ROW:", row);
+  console.log("WO TOTAL VALUE:", row["wo total"]);
+
+  let city = (row["city"] || "").toString().trim();
   if (!city) return;
 
   let pra =
-    r["Pra Invoice Number"] ||
-    r["Pra Invoice"] ||
+    row["pra invoice number"] ||
+    row["pra invoice"] ||
     "";
 
   let invoice =
-    r["Invoice Number"] ||
-    r["Invoice"] ||
+    row["invoice number"] ||
+    row["invoice"] ||
     "";
 
- let wo =
-  r["Wonumber"] ||
-  r["WO Number"] ||
-  "-";
+  let wo =
+    row["wonumber"] ||
+    row["wo number"] ||
+    "-";
 
-wo = String(wo).trim().toUpperCase();
+  wo = String(wo).trim().toUpperCase();
 
- const row = {};
-Object.keys(r).forEach(k => {
-  row[k.trim().toLowerCase()] = r[k];
+ let woTotal = 0;
+
+Object.keys(row).forEach(k => {
+  if (k.includes("total")) {
+    let val = String(row[k]).replace(/[^0-9]/g, "");
+    if (val) woTotal += parseInt(val);
+  }
 });
 
-let woTotal =
-  parseInt(
-    String(
-      row["wo total"] ||
-      row["total"] ||
-      0
-    ).replace(/[^0-9]/g, "")
-  ) || 0;
-
-  let job = (r["Job Name"] || "").toString().trim();
-
-  pra = String(pra).trim();
-  invoice = String(invoice).trim();
-  
+  let job = (row["job name"] || "").toString().trim();
 
   let key = (pra || "NO_PRA") + "_" + (invoice || "NO_INV");
 
@@ -109,20 +110,20 @@ let woTotal =
 
   let existing = map[key].detail.find(d => d.wo === wo);
 
-if (!existing) {
-  map[key].jumlah++;
+  if (!existing) {
+    map[key].jumlah++;
 
-  map[key].detail.push({
-    wo,
-    total: woTotal
-  });
+    map[key].detail.push({
+      wo,
+      total: woTotal
+    });
 
-  map[key].total += woTotal;
-} else {
-  existing.total += woTotal;
-}
+    map[key].total += woTotal;
+  } else {
+    existing.total += woTotal;
+  }
+
 });
-
 // ✅ PINDAH KE SINI (DI LUAR LOOP)
 let hasilBaru = Object.values(map).map(x => {
   const ppn = x.total * 0.11;
