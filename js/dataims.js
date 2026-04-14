@@ -203,25 +203,33 @@ function renderIMS() {
 
   dataIMS.forEach((d, i) => {
     tb.innerHTML += `
-  <tr>
-    <td>${i + 1}</td>
-    <td><input type="checkbox" class="chkIMS"></td>
-    <td onclick="showPopupIMS(${i})" style="cursor:pointer;font-weight:bold">
-      ${escapeHTML(d.city)}
-    </td>
-    <td>${escapeHTML(d.pra)}</td>
-    <td>${escapeHTML(d.invoice)}</td>
-    <td>${d.jumlah}</td>
-    <td>${escapeHTML(d.job)}</td>
-    <td>${formatRp(d.total)}</td>
-  </tr>
-`;
-  });
+    <tr>
+      <td>${i + 1}</td>
+      <td><input type="checkbox" class="chkIMS"></td>
 
+     <td onclick="showPopupIMS(${i})"
+    style="cursor:pointer;font-weight:bold">
+  ${escapeHTML(d.city)}
+</td>
+
+      <td>${escapeHTML(d.pra)}</td>
+      <td>${escapeHTML(d.invoice)}</td>
+
+      <td onclick="showPopupIMS(${i})"
+          style="cursor:pointer;color:#1565c0;font-weight:bold">
+        ${d.jumlah}
+      </td>
+
+      <td>${escapeHTML(d.job)}</td>
+      <td>${formatRp(d.total)}</td>
+    </tr>
+    `;
+  });
 
   renderIMSFooter();
 }
 
+//==============
 
 function renderIMSFooter() {
   const tb = document.querySelector("#tblIMS tbody");
