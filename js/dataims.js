@@ -74,24 +74,24 @@ function importIMS(e) {
       // 🔥 GROUP BY PRA + INVOICE
       let key = pra + "_" + invoice;
 
-      if (!map[key]) {
-        map[key] = {
-          city,
-          pra,
-          invoice,
-          jumlah: 0,
-          job,
-          total: 0,
-          detail: [],
-          woSet: new Set()
-        };
-      }
+     if (!map[key]) {
+  map[key] = {
+    city,
+    pra,
+    invoice,
+    jumlah: 0,
+    job,
+    total: 0,
+    detail: [],
+    woSet: new Set(),
+    totalSet: new Set()
+  };
+}
 
       // ✅ HITUNG WO UNIQUE
-      if (!map[key].woSet.has(wo)) {
-        map[key].woSet.add(wo);
-        map[key].jumlah++;
-      }
+     if (!map[key].woSet.has(wo)) {
+  map[key].woSet.add(wo);
+  map[key].jumlah++;
 
       // ✅ TOTAL
      if (!map[key].totalSet) map[key].totalSet = new Set();
