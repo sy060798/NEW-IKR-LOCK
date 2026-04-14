@@ -213,7 +213,36 @@ body{flex-direction:column}
         <button onclick="closePopup()" class="btn-red">TUTUP</button>
       </div>
     </div>
+  <!-- ✅ POPUP IMS (HARUS DI LUAR) -->
+<div id="popupIMS" class="popup-overlay">
+  <div class="popup-box">
+    
+    <div class="popup-header">
+      <h3>DETAIL IMS</h3>
+      <button class="close-btn" onclick="closePopupIMS()">✕</button>
+    </div>
+
+    <div class="popup-body">
+      <table class="popup-table">
+        <thead>
+          <tr>
+            <th>Pra Invoice</th>
+            <th>Invoice</th>
+            <th>WO</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="popupBodyIMS"></tbody>
+      </table>
+    </div>
+
+    <div class="popup-footer">
+      <button onclick="exportPopupIMS()" class="btn-green">EXPORT EXCEL</button>
+      <button onclick="closePopupIMS()" class="btn-red">TUTUP</button>
+    </div>
+
   </div>
+</div>
 
 </div>
 
