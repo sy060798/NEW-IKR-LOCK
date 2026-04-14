@@ -83,14 +83,15 @@ raw.forEach(r => {
 
   wo = String(wo).trim().toUpperCase();
 
- let woTotal = 0;
-
-Object.keys(row).forEach(k => {
-  if (k.includes("total")) {
-    let val = String(row[k]).replace(/[^0-9]/g, "");
-    if (val) woTotal += parseInt(val);
-  }
-});
+ let woTotal =
+  parseInt(
+    String(
+      row["wo total"] ||
+      row["Wo Total"] ||
+      row["WO TOTAL"] ||
+      0
+    ).replace(/[^0-9]/g, "")
+  ) || 0;
 
   let job = (row["job name"] || "").toString().trim();
 
