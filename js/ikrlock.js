@@ -612,3 +612,4 @@ sortedGroup.forEach(g => {
     </tr>
   `;
 });
+}
