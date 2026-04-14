@@ -52,6 +52,15 @@ function importIKR(e) {
 
     let map = {};
 
+    let existingWO = new Set();
+
+// ambil WO lama dari dataIKR (biar tidak dobel dengan data server + local)
+dataIKR.forEach(d => {
+  (d.detail || []).forEach(x => {
+    if (x.wo) existingWO.add(x.wo);
+  });
+});
+
    // ================= LOOP DATA =================
 raw.forEach(r => {
 
@@ -162,20 +171,23 @@ bulan + "_" +
     r["Status"] ||
     "-";
 
-  // ================= WO UNIK =================
-  if (!map[key].woSet.has(wo)) {
-    map[key].woSet.add(wo);
-    map[key].jumlah++;
-  }
+
+  // ================= WO UNIK + SKIP JIKA SUDAH ADA =================
+if (existingWO.has(wo)) return; // 🔥 INI INTI PATCH (skip WO lama)
+
+if (!map[key].woSet.has(wo)) {
+  map[key].woSet.add(wo);
+  map[key].jumlah++;
+}
 
   // ================= DETAIL =================
   map[key].detail.push({
-    wo,
-    status,
-    amount: boq
-  });
-
+  wo,
+  status,
+  amount: boq
 });
+
+existingWO.add(wo); // supaya langsung masuk blacklist global
 
     // ================= FINAL CLEAN =================
 let hasilBaru = Object.values(map).map(x => {
