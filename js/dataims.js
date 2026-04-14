@@ -25,6 +25,17 @@ function importIMS(e) {
   const file = e.target.files[0];
   if (!file) return;
 
+  
+  if (!file.name.match(/\.(xlsx|xls)$/)) {
+    alert("File harus Excel (.xlsx / .xls)");
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("File terlalu besar (max 5MB)");
+    return;
+  }
+
   const reader = new FileReader();
 
   reader.onload = function (evt) {
@@ -42,80 +53,71 @@ function importIMS(e) {
 
     raw.forEach(r => {
 
-      let city = (r.City || "").toString().trim();
-      if (!city) return;
+  let city = (r.City || "").toString().trim();
+  if (!city) return;
 
-      let pra =
-        r["Pra Invoice Number"] ||
-        r["Pra Invoice"] ||
-        "";
+  let pra =
+    r["Pra Invoice Number"] ||
+    r["Pra Invoice"] ||
+    "";
 
-      let invoice =
-        r["Invoice Number"] ||
-        r["Invoice"] ||
-        "";
+  let invoice =
+    r["Invoice Number"] ||
+    r["Invoice"] ||
+    "";
 
-      let wo =
-        r["Wonumber"] ||
-        r["WO Number"] ||
-        "-";
+  let wo =
+    r["Wonumber"] ||
+    r["WO Number"] ||
+    "-";
 
-      let total =
-        parseInt(
-          String(r["Invoice Total"] || 0).replace(/[^0-9]/g, "")
-        ) || 0;
+  let total =
+    parseInt(
+      String(r["Invoice Total"] || 0).replace(/[^0-9]/g, "")
+    ) || 0;
 
-      let job = (r["Job Name"] || "").toString().trim();
+  let job = (r["Job Name"] || "").toString().trim();
 
-      pra = String(pra).trim();
-      invoice = String(invoice).trim();
-      wo = String(wo).trim();
+  pra = String(pra).trim();
+  invoice = String(invoice).trim();
+  wo = String(wo).trim();
 
-      // 🔥 GROUP BY PRA + INVOICE
-      let key = pra + "_" + invoice;
+  let key = pra + "_" + invoice;
 
-     if (!map[key]) {
-  map[key] = {
-    city,
-    pra,
-    invoice,
-    jumlah: 0,
-    job,
-    total: 0,
-    detail: [],
-    woSet: new Set(),
-    totalSet: new Set()
-  };
-}
+  if (!map[key]) {
+    map[key] = {
+      city,
+      pra,
+      invoice,
+      jumlah: 0,
+      job,
+      total: 0,
+      detail: [],
+      woSet: new Set()
+    };
+  }
 
-      // ✅ HITUNG WO UNIQUE
-     if (!map[key].woSet.has(wo)) {
-  map[key].woSet.add(wo);
-  map[key].jumlah++;
+  if (!map[key].woSet.has(wo)) {
+    map[key].woSet.add(wo);
+    map[key].jumlah++;
 
-      // ✅ TOTAL
-     if (!map[key].totalSet) map[key].totalSet = new Set();
+    map[key].total += total;
 
-if (!map[key].totalSet.has(total)) {
-  map[key].totalSet.add(total);
-  map[key].total += total;
-}
-
-      // ✅ DETAIL
-      map[key].detail.push({
-        wo,
-        total
-      });
+    map[key].detail.push({
+      wo,
+      total
     });
+  }
+});
 
-    let hasilBaru = Object.values(map).map(x => {
-      delete x.woSet;
-      return x;
-    });
+// ✅ PINDAH KE SINI (DI LUAR LOOP)
+let hasilBaru = Object.values(map).map(x => {
+  delete x.woSet;
+  return x;
+});
 
-    dataIMS = hasilBaru;
-
-    renderIMS();
+dataIMS = hasilBaru;
+renderIMS();
 
     e.target.value = "";
     alert("UPLOAD IMS OK");
@@ -157,11 +159,11 @@ function showPopupIMS(i) {
   (d.detail || []).forEach(x => {
     tb.innerHTML += `
       <tr>
-        <td>${d.pra}</td>
-        <td>${d.invoice}</td>
-        <td>${x.wo}</td>
+        <td>${escapeHTML(d.pra)}</td>
+        <td>${escapeHTML(d.invoice)}</td>
+        <td>${escapeHTML(x.wo)}</td>
         <td>${formatRp(x.total)}</td>
-      </tr>
+        </tr>
     `;
 
     popupExportIMS.push({
@@ -201,22 +203,22 @@ function renderIMS() {
 
   dataIMS.forEach((d, i) => {
     tb.innerHTML += `
-      <tr>
-        <td>${i + 1}</td>
-        <td><input type="checkbox" class="chkIMS"></td>
-        <td onclick="showPopupIMS(${i})" style="cursor:pointer;font-weight:bold">
-          ${d.city}
-        </td>
-        <td>${d.pra}</td>
-        <td>${d.invoice}</td>
-        <td>${d.jumlah}</td>
-        <td>${d.job}</td>
-        <td>${formatRp(d.total)}</td>
-      </tr>
-    `;
+  <tr>
+    <td>${i + 1}</td>
+    <td><input type="checkbox" class="chkIMS"></td>
+    <td onclick="showPopupIMS(${i})" style="cursor:pointer;font-weight:bold">
+      ${escapeHTML(d.city)}
+    </td>
+    <td>${escapeHTML(d.pra)}</td>
+    <td>${escapeHTML(d.invoice)}</td>
+    <td>${d.jumlah}</td>
+    <td>${escapeHTML(d.job)}</td>
+    <td>${formatRp(d.total)}</td>
+  </tr>
+`;
   });
 
-  // 🔥 TAMBAHAN FOOTER
+
   renderIMSFooter();
 }
 
@@ -241,4 +243,11 @@ function renderIMSFooter() {
       <td>${formatRp(totalAmount)}</td>
     </tr>
   `;
+}
+
+  function escapeHTML(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
