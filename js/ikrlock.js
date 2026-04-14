@@ -1,23 +1,14 @@
-// ================= GLOBAL =================
 let dataIKR = [];
-let dataIMS = [];
 let popupExportData = [];
 
-const SERVER_URL =
-  window.SERVER_URL ||
-  "https://tracking-server-production-6a12.up.railway.app";
-
-// ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
-  const fileIKR = document.getElementById("fileIKR"); // ✅ FIX
-  const fileIMS = document.getElementById("fileIMS");
-  const checkIKR = document.getElementById("checkIKR");
+  const file = document.getElementById("fileIKR");
+  const check = document.getElementById("checkIKR");
 
-  if (fileIKR) fileIKR.addEventListener("change", importIKR);
-  if (fileIMS) fileIMS.addEventListener("change", importIMS);
+  if (file) file.addEventListener("change", importIKR);
 
-  if (checkIKR) {
-    checkIKR.addEventListener("change", e => {
+  if (check) {
+    check.addEventListener("change", e => {
       document.querySelectorAll(".chkIKR").forEach(c => {
         c.checked = e.target.checked;
       });
@@ -25,8 +16,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   renderIKR();
-  renderIMS();
 });
+
+// ================= TAB =================
+function openTab(id, btn) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".toolbar").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+
+  document.getElementById("tab-" + id)?.classList.add("active");
+  document.getElementById("tb-" + id)?.classList.add("active");
+
+  btn?.classList.add("active");
+}
+
+window.openTab = openTab;
 
 // ================= IMPORT IKR =================
 function importIKR(e) {
@@ -35,33 +39,41 @@ function importIKR(e) {
 
   const reader = new FileReader();
 
-  reader.onload = evt => {
+  reader.onload = function (evt) {
     const wb = XLSX.read(evt.target.result, { type: "binary" });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const raw = XLSX.utils.sheet_to_json(ws);
+
+    let raw = [];
+
+    wb.SheetNames.forEach(s => {
+      XLSX.utils.sheet_to_json(wb.Sheets[s], {
+        defval: "",
+        raw: false
+      }).forEach(r => raw.push(r));
+    });
 
     let map = {};
 
     raw.forEach(r => {
-      let region = normalRegion(r.Region || r.City || "");
-      let wotype = r["Job Name"] || "";
-      let wo = String(r["WO Number"] || "").trim();
-      let status = r.Status || "-";
+      let region = r.City || r.city || r.Region || "";
+      let woEnd = r["Wo End"] || "";
+      let boq = parseInt(String(r["Boq Total"] || 0).replace(/[^0-9]/g, "")) || 0;
 
-      let date = new Date(r["WO END"]);
-      if (!region || !wo || isNaN(date)) return;
+      if (!region || !woEnd) return;
 
-      let bulan = date.toLocaleString("id-ID", { month: "short" });
-      let tahun = date.getFullYear();
+      let dt = new Date(woEnd);
+      if (isNaN(dt)) return;
 
-      let key = region + "_" + tahun + "_" + bulan + "_" + wotype;
+      let tahun = dt.getFullYear();
+      let bulan = dt.toLocaleString("id-ID", { month: "short" });
+
+      let key = region + "_" + tahun + "_" + bulan;
 
       if (!map[key]) {
         map[key] = {
           region,
           tahun,
           bulan,
-          wotype,
+          wotype: "",
           jumlah: 0,
           approved: 0,
           amount: 0,
@@ -70,78 +82,44 @@ function importIKR(e) {
           invoice: "",
           note: "",
           done: "NO",
-          detail: []
+          detail: [],
+          woSet: new Set()
         };
       }
 
-      map[key].jumlah++;
-      map[key].amount += parseAngka(r["BOQ TOTAL"]);
+      map[key].amount += boq;
+
+      const wo = String(r.Wonumber || "-").trim();
+      const status = r.Status || "-";
+
+      if (!map[key].woSet.has(wo)) {
+        map[key].woSet.add(wo);
+        map[key].jumlah++;
+      }
 
       map[key].detail.push({
         wo,
         status,
-        amount: parseAngka(r["BOQ TOTAL"])
+        amount: boq
       });
     });
 
-    dataIKR = Object.values(map);
+    dataIKR = Object.values(map).map(x => {
+      delete x.woSet;
+      return x;
+    });
 
     renderIKR();
 
-    console.log("IKR:", dataIKR); // 🔥 DEBUG
-    alert("UPLOAD IKR OK");
+    alert("UPLOAD BERHASIL");
   };
 
   reader.readAsBinaryString(file);
 }
 
-// ================= IMPORT IMS =================
-function importIMS(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = evt => {
-    const wb = XLSX.read(evt.target.result, { type: "binary" });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const raw = XLSX.utils.sheet_to_json(ws);
-
-    dataIMS = raw.map(r => ({
-      wo: String(r["WO Number"] || "").trim(),
-      status: r.Status || "-",
-      amount: parseAngka(r["Invoice Total"])
-    }));
-
-    // MATCH
-    dataIKR.forEach(d => {
-      let total = 0;
-      let count = 0;
-
-      dataIMS.forEach(i => {
-        if (d.detail.some(x => x.wo === i.wo)) {
-          total += i.amount;
-          count++;
-        }
-      });
-
-      d.approved = count;
-      d.fs = total;
-    });
-
-    renderIKR();
-    renderIMS();
-
-    console.log("IMS:", dataIMS); // 🔥 DEBUG
-    alert("IMS MATCHED");
-  };
-
-  reader.readAsBinaryString(file);
-}
-
-// ================= RENDER IKR =================
+// ================= RENDER =================
 function renderIKR() {
-  const tb = document.querySelector("#tblIKR tbody"); // ✅ FIX
+  const tb = document.querySelector("#tblIKR tbody");
   if (!tb) return;
 
   tb.innerHTML = "";
@@ -155,37 +133,23 @@ function renderIKR() {
         <td>${d.tahun}</td>
         <td>${d.wotype}</td>
         <td>${d.bulan}</td>
-        <td onclick="showDetail(${i})" style="cursor:pointer;color:blue">${d.jumlah}</td>
+
+        <td>
+          <span style="color:#00eaff;cursor:pointer"
+            onclick="showDetail(${i})">
+            ${d.jumlah}
+          </span>
+        </td>
+
         <td>${d.approved}</td>
         <td>${formatRp(d.amount)}</td>
         <td>${formatRp(d.fs)}</td>
+
         <td contenteditable>${d.remark}</td>
         <td contenteditable>${d.invoice}</td>
         <td contenteditable>${d.note}</td>
-        <td><input type="checkbox"></td>
-      </tr>
-    `;
-  });
-}
 
-// ================= RENDER IMS =================
-function renderIMS() {
-  const tb = document.querySelector("#tblIMS tbody");
-  if (!tb) return;
-
-  tb.innerHTML = "";
-
-  dataIMS.forEach((d, i) => {
-    tb.innerHTML += `
-      <tr>
-        <td>${i + 1}</td>
-        <td><input type="checkbox"></td>
-        <td>-</td>
-        <td>-</td>
-        <td>${d.wo}</td>
-        <td>-</td>
-        <td>${d.status}</td>
-        <td>${formatRp(d.amount)}</td>
+        <td><input type="checkbox" ${d.done === "YES" ? "checked" : ""}></td>
       </tr>
     `;
   });
@@ -197,26 +161,72 @@ function showDetail(i) {
   if (!d) return;
 
   const tb = document.getElementById("popupBody");
-  const popup = document.getElementById("popup"); 
+  const popup = document.getElementById("popup");
 
   tb.innerHTML = "";
-  popupExportData = [];
+
+  const uniqueMap = new Map();
 
   d.detail.forEach(x => {
-    tb.innerHTML += `
-      <tr>
-        <td>${x.wo}</td>
-        <td>${x.status}</td>
-        <td>${formatRp(x.amount)}</td>
-      </tr>
-    `;
-
-    popupExportData.push(x);
+    if (x.wo && !uniqueMap.has(x.wo)) {
+      uniqueMap.set(x.wo, x);
+    }
   });
+
+  const uniqueData = [...uniqueMap.values()];
+
+  popupExportData = uniqueData.map(x => ({
+    WO: x.wo,
+    Status: x.status,
+    Amount: x.amount
+  }));
+
+  if (uniqueData.length === 0) {
+    tb.innerHTML = `<tr><td colspan="3">Tidak ada data</td></tr>`;
+  } else {
+    uniqueData.forEach(x => {
+      tb.innerHTML += `
+        <tr>
+          <td>${x.wo}</td>
+          <td>${x.status}</td>
+          <td>${formatRp(x.amount)}</td>
+        </tr>
+      `;
+    });
+  }
 
   popup.style.display = "block";
 }
 
-function closePopup() {
-  document.getElementById("popup").style.display = "none";
+// ================= EXPORT =================
+function exportPopupExcel() {
+  if (!popupExportData.length) {
+    alert("Tidak ada data");
+    return;
+  }
+
+  const ws = XLSX.utils.json_to_sheet(popupExportData);
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb, ws, "DETAIL_WO");
+  XLSX.writeFile(wb, "DETAIL_WO.xlsx");
 }
+
+// ================= UTIL =================
+function formatRp(n) {
+  return "Rp " + Number(n || 0).toLocaleString("id-ID");
+}
+
+// ================= HAPUS =================
+function hapusIKR() {
+  const chk = document.querySelectorAll(".chkIKR");
+
+  dataIKR = dataIKR.filter((_, i) => !chk[i]?.checked);
+
+  renderIKR();
+}
+
+// ================= CLOSE POPUP =================
+window.closePopup = () => {
+  document.getElementById("popup").style.display = "none";
+};
