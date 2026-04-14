@@ -152,11 +152,13 @@ function importIKR(e) {
 
       map[key].amount += boq;
 
-      map[key].detail.push({
+      mmap[key].detail.push({
         wo,
+        ref,
+        quo,
         status,
         amount: boq
-      });
+        });
 
       existingWO.add(wo);
     });
@@ -202,6 +204,16 @@ function importIKR(e) {
 
   reader.readAsBinaryString(file);
 }
+
+const ref =
+  r["Reference Code"] ||
+  r["REFERENCE CODE"] ||
+  "-";
+
+const quo =
+  r["Quotation Id"] ||
+  r["QUOTATION ID"] ||
+  "-";
 
 // ================= NORMAL REGION =================
 function normalRegion(txt) {
@@ -305,20 +317,23 @@ function showDetail(i) {
   popupExportData = [];
 
   (d.detail || []).forEach(x => {
-    tb.innerHTML += `
-      <tr>
-        <td>${x.wo}</td>
-        <td>${x.status}</td>
-        <td>${formatRp(x.amount)}</td>
-      </tr>
-    `;
+   tb.innerHTML += `
+  <tr>
+    <td>${x.wo}</td>
+    <td>${x.ref || "-"}</td>
+    <td>${x.quo || "-"}</td>
+    <td>${x.status}</td>
+    <td>${formatRp(x.amount)}</td>
+  </tr>
+`;
 
     popupExportData.push({
-      WO: x.wo,
-      Status: x.status,
-      Amount: x.amount
-    });
-  });
+  WO: x.wo,
+  Reference: x.ref,
+  Quotation: x.quo,
+  Status: x.status,
+  Amount: x.amount
+});
 
   document.getElementById("popup").style.display = "block";
 }
