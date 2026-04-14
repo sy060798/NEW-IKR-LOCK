@@ -63,6 +63,16 @@ function importIKR(e) {
     let map = {};
 
     raw.forEach(r => {
+      const ref =
+    r["Reference Code"] ||
+    r["REFERENCE CODE"] ||
+    "-";
+
+  const quo =
+    r["Quotation Id"] ||
+    r["QUOTATION ID"] ||
+    "-";
+      
       let region = normalRegion(
         r.City || r.city || r.Region || r.region || ""
       );
@@ -152,7 +162,7 @@ function importIKR(e) {
 
       map[key].amount += boq;
 
-      mmap[key].detail.push({
+      map[key].detail.push({
         wo,
         ref,
         quo,
@@ -205,15 +215,7 @@ function importIKR(e) {
   reader.readAsBinaryString(file);
 }
 
-const ref =
-  r["Reference Code"] ||
-  r["REFERENCE CODE"] ||
-  "-";
 
-const quo =
-  r["Quotation Id"] ||
-  r["QUOTATION ID"] ||
-  "-";
 
 // ================= NORMAL REGION =================
 function normalRegion(txt) {
@@ -316,28 +318,27 @@ function showDetail(i) {
 
   popupExportData = [];
 
-  (d.detail || []).forEach(x => {
-   tb.innerHTML += `
-  <tr>
-    <td>${x.wo}</td>
-    <td>${x.ref || "-"}</td>
-    <td>${x.quo || "-"}</td>
-    <td>${x.status}</td>
-    <td>${formatRp(x.amount)}</td>
-  </tr>
-`;
+ (d.detail || []).forEach(x => {
+  tb.innerHTML += `
+    <tr>
+      <td>${x.wo}</td>
+      <td>${x.ref || "-"}</td>
+      <td>${x.quo || "-"}</td>
+      <td>${x.status}</td>
+      <td>${formatRp(x.amount)}</td>
+    </tr>
+  `;
 
-    popupExportData.push({
-  WO: x.wo,
-  Reference: x.ref,
-  Quotation: x.quo,
-  Status: x.status,
-  Amount: x.amount
-});
+  popupExportData.push({
+    WO: x.wo,
+    Reference: x.ref,
+    Quotation: x.quo,
+    Status: x.status,
+    Amount: x.amount
+  });
+}); 
 
-  document.getElementById("popup").style.display = "block";
-}
-
+document.getElementById("popup").style.display = "block";
 window.closePopup = () => {
   document.getElementById("popup").style.display = "none";
 };
