@@ -52,194 +52,170 @@ function importIKR(e) {
 
     let map = {};
 
-    let existingWO = new Set();
-
-// ambil WO lama dari dataIKR (biar tidak dobel dengan data server + local)
-dataIKR.forEach(d => {
-  (d.detail || []).forEach(x => {
-    if (x.wo) existingWO.add(x.wo);
-  });
-});
-
-   // ================= LOOP DATA =================
-raw.forEach(r => {
-
-  // ================= AMBIL DATA =================
-  let region =
-  r.City ||
-  r.city ||
-  r.Region ||
-  r.region ||
-  "";
-
-region = normalRegion(region);
-
-  let woEnd =
-    r["Wo End"] ||
-    r["WO END"] ||
-    r["wo end"] ||
-    "";
-
-  let boq =
-    parseInt(
-      String(
-        r["Boq Total"] ||
-        r["BOQ TOTAL"] ||
-        r["boq total"] ||
-        0
-      ).replace(/[^0-9]/g, "")
-    ) || 0;
-
-  // ================= WO TYPE =================
-  let wotype =
-    r["Job Name"] ||
-    r["JOB NAME"] ||
-    r["job name"] ||
-    "";
-
-  if (!region || !woEnd) return;
-
-  // ================= FORMAT TANGGAL =================
-  let txt = String(woEnd).trim().split(" ")[0];
-  let p = txt.split("/");
-
-  if (p.length !== 3) return;
-
-  let hari = parseInt(p[0]);
-  let bln  = parseInt(p[1]) - 1;
-  let thn  = parseInt(p[2]);
-
-  let dt = new Date(thn, bln, hari);
-
-  if (isNaN(dt)) return;
-
-  let tahun = thn;
-
-  let namaBulan = [
-    "Jan","Feb","Mar","Apr","Mei","Jun",
-    "Jul","Agu","Sep","Okt","Nov","Des"
-  ];
-
-  let bulan = namaBulan[bln];
-
-  // ================= INI YANG KURANG =================
-  let key =
-(region || "").trim().toUpperCase() + "_" +
-tahun + "_" +
-bulan + "_" +
-(wotype || "").trim().toUpperCase();
-  // ================= INIT MAP =================
-  if (!map[key]) {
-    map[key] = {
-      region,
-      tahun,
-      bulan,
-      wotype: wotype,
-      jumlah: 0,
-      approved: 0,
-      amount: 0,
-      fs: 0,
-      remark: "",
-      invoice: "",
-      note: "",
-      done: "NO",
-      detail: [],
-      woSet: new Set()
-    };
-  }
-
-  // kalau kosong isi
-  if (!map[key].wotype && wotype) {
-    map[key].wotype = wotype;
-  }
-
-  // ================= AMOUNT =================
-  map[key].amount += boq;
-
-  // ================= WO =================
-  const wo =
-    String(
-      r.Wonumber ||
-      r["Wonumber"] ||
-      r["WO Number"] ||
-      r["WO NUMBER"] ||
-      "-"
-    ).trim();
-
-  const status =
-    r.Status ||
-    r["Status"] ||
-    "-";
-
-
-  // ================= WO UNIK + SKIP JIKA SUDAH ADA =================
-if (existingWO.has(wo)) return; // 🔥 INI INTI PATCH (skip WO lama)
-
-if (!map[key].woSet.has(wo)) {
-  map[key].woSet.add(wo);
-  map[key].jumlah++;
-}
-
-  // ================= DETAIL =================
-  map[key].detail.push({
-  wo,
-  status,
-  amount: boq
-});
-
-existingWO.add(wo); // supaya langsung masuk blacklist global
-
-    // ================= FINAL CLEAN =================
-let hasilBaru = Object.values(map).map(x => {
-  delete x.woSet;
-  return x;
-});
-
-// gabung lama + baru
-let gabung = [...dataIKR, ...hasilBaru];
-
-// merge anti dobel row
-let finalMap = {};
-
-gabung.forEach(d => {
-
-  let key =
-    d.region + "_" +
-    d.tahun + "_" +
-    d.bulan + "_" +
-    d.wotype;
-
-  if (!finalMap[key]) {
-
-    finalMap[key] = {
-      ...d,
-      detail: [...(d.detail || [])]
-    };
-
-  } else {
-
-    finalMap[key].jumlah += Number(d.jumlah || 0);
-    finalMap[key].approved += Number(d.approved || 0);
-    finalMap[key].amount += Number(d.amount || 0);
-    finalMap[key].fs += Number(d.fs || 0);
-
-    finalMap[key].detail.push(
-      ...(d.detail || [])
+    // ================= WO EXISTING GLOBAL (ANTI DOUBLE TOTAL SYSTEM) =================
+    let existingWO = new Set(
+      dataIKR.flatMap(d => (d.detail || []).map(x => x.wo))
     );
 
-  }
+    // ================= LOOP DATA =================
+    raw.forEach(r => {
 
-});
+      // ================= AMBIL DATA =================
+      let region =
+        r.City ||
+        r.city ||
+        r.Region ||
+        r.region ||
+        "";
 
-dataIKR = Object.values(finalMap);
+      region = normalRegion(region);
 
-renderIKR();
+      let woEnd =
+        r["Wo End"] ||
+        r["WO END"] ||
+        r["wo end"] ||
+        "";
 
-e.target.value = "";
-alert("UPLOAD OK");
-};
+      let boq =
+        parseInt(
+          String(
+            r["Boq Total"] ||
+            r["BOQ TOTAL"] ||
+            r["boq total"] ||
+            0
+          ).replace(/[^0-9]/g, "")
+        ) || 0;
 
-reader.readAsBinaryString(file);
+      let wotype =
+        r["Job Name"] ||
+        r["JOB NAME"] ||
+        r["job name"] ||
+        "";
+
+      if (!region || !woEnd) return;
+
+      // ================= FORMAT TANGGAL =================
+      let txt = String(woEnd).trim().split(" ")[0];
+      let p = txt.split("/");
+
+      if (p.length !== 3) return;
+
+      let hari = parseInt(p[0]);
+      let bln  = parseInt(p[1]) - 1;
+      let thn  = parseInt(p[2]);
+
+      let dt = new Date(thn, bln, hari);
+      if (isNaN(dt)) return;
+
+      let namaBulan = [
+        "Jan","Feb","Mar","Apr","Mei","Jun",
+        "Jul","Agu","Sep","Okt","Nov","Des"
+      ];
+
+      let bulan = namaBulan[bln];
+
+      let key =
+        region.trim().toUpperCase() + "_" +
+        thn + "_" +
+        bulan + "_" +
+        (wotype || "").trim().toUpperCase();
+
+      // ================= INIT MAP =================
+      if (!map[key]) {
+        map[key] = {
+          region,
+          tahun: thn,
+          bulan,
+          wotype,
+          jumlah: 0,
+          approved: 0,
+          amount: 0,
+          fs: 0,
+          remark: "",
+          invoice: "",
+          note: "",
+          done: "NO",
+          detail: [],
+          woSet: new Set()
+        };
+      }
+
+      const wo =
+        String(
+          r.Wonumber ||
+          r["Wonumber"] ||
+          r["WO Number"] ||
+          r["WO NUMBER"] ||
+          "-"
+        ).trim();
+
+      const status =
+        r.Status ||
+        r["Status"] ||
+        "-";
+
+      // ================= 🔥 INTI PATCH: SKIP WO SUDAH ADA =================
+      if (existingWO.has(wo)) return;
+
+      if (!map[key].woSet.has(wo)) {
+        map[key].woSet.add(wo);
+        map[key].jumlah++;
+      }
+
+      map[key].amount += boq;
+
+      map[key].detail.push({
+        wo,
+        status,
+        amount: boq
+      });
+
+      existingWO.add(wo);
+    });
+
+    // ================= CLEAN MAP =================
+    let hasilBaru = Object.values(map).map(x => {
+      delete x.woSet;
+      return x;
+    });
+
+    // ================= MERGE OLD + NEW =================
+    let gabung = [...dataIKR, ...hasilBaru];
+
+    let finalMap = {};
+
+    gabung.forEach(d => {
+
+      let key =
+        d.region + "_" +
+        d.tahun + "_" +
+        d.bulan + "_" +
+        d.wotype;
+
+      if (!finalMap[key]) {
+        finalMap[key] = {
+          ...d,
+          detail: [...(d.detail || [])]
+        };
+      } else {
+        finalMap[key].jumlah += Number(d.jumlah || 0);
+        finalMap[key].approved += Number(d.approved || 0);
+        finalMap[key].amount += Number(d.amount || 0);
+        finalMap[key].fs += Number(d.fs || 0);
+
+        finalMap[key].detail.push(...(d.detail || []));
+      }
+    });
+
+    dataIKR = Object.values(finalMap);
+
+    renderIKR();
+
+    e.target.value = "";
+    alert("UPLOAD OK (WO DUPLICATE SKIP ACTIVE)");
+  };
+
+  reader.readAsBinaryString(file);
 }
 // ================= MASTER GRUOING =================
 
