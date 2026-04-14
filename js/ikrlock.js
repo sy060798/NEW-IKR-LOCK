@@ -355,31 +355,29 @@ function uploadServerAll() {}
 
 window.downloadIKR = downloadIKR;
 
-// ==========================================
-// PATCH LOAD DATA DARI SERVER SAAT BUKA PAGE
-// taruh di file ikrlock.js
-// ==========================================
-
-const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
-
-document.addEventListener("DOMContentLoaded", () => {
-  loadIKRFromServer();
-});
-
 // ===============================
-// AMBIL DATA LAMA DARI SERVER
+// AMBIL DATA IKR DARI SERVER
+// sinkron dengan server.js
 // ===============================
 async function loadIKRFromServer() {
 
   try {
 
-    const res = await fetch(SERVER_URL + "/ikr");
+    const res = await fetch(
+      SERVER_URL + "/api/get?type=IKR"
+    );
 
-    if (!res.ok) throw new Error("Gagal ambil data");
+    if (!res.ok) {
+      throw new Error("Gagal ambil data");
+    }
 
     const hasil = await res.json();
 
-    if (!Array.isArray(hasil)) return;
+    if (!Array.isArray(hasil)) {
+      dataIKR = [];
+      renderIKR();
+      return;
+    }
 
     dataIKR = hasil;
 
@@ -388,12 +386,55 @@ async function loadIKRFromServer() {
     console.log("Data IKR berhasil dimuat");
 
   } catch (err) {
+
     console.log("Load server gagal", err);
+
   }
 
 }
 
 
+// ===============================
+// SIMPAN DATA IKR KE SERVER
+// ===============================
+async function saveIKRToServer() {
+
+  try {
+
+    await fetch(
+      SERVER_URL + "/api/save",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          type: "IKR",
+          data: dataIKR
+        })
+      }
+    );
+
+    console.log("Data IKR tersimpan");
+
+  } catch (err) {
+
+    console.log("Save gagal", err);
+
+  }
+
+}
+
+
+// ===============================
+// AUTO LOAD SAAT BUKA
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  loadIKRFromServer();
+});
+
+
+// ===============================
 window.closePopup = () => {
   const popup = document.getElementById("popup");
   if (popup) popup.style.display = "none";
