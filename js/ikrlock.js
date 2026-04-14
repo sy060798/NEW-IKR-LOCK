@@ -617,17 +617,34 @@ function renderIKRGroupFooter() {
   const tb = document.querySelector("#tblIKR tbody");
   if (!tb) return;
 
+  const monthOrder = {
+    "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4,
+    "Mei": 5, "Jun": 6, "Jul": 7, "Agu": 8,
+    "Sep": 9, "Okt": 10, "Nov": 11, "Des": 12
+  };
+
+  const woOrder = {
+    "Activation Broadband": 1,
+    "TroubleShooting BroadBand": 2
+  };
+
   let group = {};
 
+  // ================= GROUP FIX =================
   dataIKR.forEach(d => {
 
-    let key = d.region + "_" + d.tahun + "_" + d.bulan;
+    let key =
+      d.region + "_" +
+      d.tahun + "_" +
+      d.bulan + "_" +
+      d.wotype;   // 🔥 INI WAJIB TAMBAH WO TYPE
 
     if (!group[key]) {
       group[key] = {
         region: d.region,
         tahun: d.tahun,
         bulan: d.bulan,
+        wotype: d.wotype,
         jumlah: 0,
         amount: 0,
         fs: 0
@@ -639,6 +656,25 @@ function renderIKRGroupFooter() {
     group[key].fs += Number(d.fs || 0);
   });
 
+  // ================= SORT RAPI =================
+  let sortedGroup = Object.values(group).sort((a, b) => {
+
+    const regionA = (a.region || "").localeCompare(b.region || "");
+    if (regionA !== 0) return regionA;
+
+    const tahunA = (a.tahun || 0) - (b.tahun || 0);
+    if (tahunA !== 0) return tahunA;
+
+    const bulanA = (monthOrder[a.bulan] || 99) - (monthOrder[b.bulan] || 99);
+    if (bulanA !== 0) return bulanA;
+
+    const woA = (woOrder[a.wotype] || 99) - (woOrder[b.wotype] || 99);
+    if (woA !== 0) return woA;
+
+    return 0;
+  });
+
+  // ================= RENDER =================
   tb.innerHTML += `
     <tr style="background:#111;color:#fff">
       <td colspan="13" style="padding:10px">
@@ -647,12 +683,12 @@ function renderIKRGroupFooter() {
     </tr>
   `;
 
-  Object.values(group).forEach(g => {
+  sortedGroup.forEach(g => {
 
     tb.innerHTML += `
       <tr style="background:#f2f2f2;font-weight:bold">
         <td colspan="5">
-          ${g.region} | ${g.tahun} | ${g.bulan}
+          ${g.region} | ${g.tahun} | ${g.bulan} | ${g.wotype}
         </td>
 
         <td>${g.jumlah}</td>
@@ -662,7 +698,6 @@ function renderIKRGroupFooter() {
         <td colspan="4"></td>
       </tr>
     `;
-
   });
 }
 
