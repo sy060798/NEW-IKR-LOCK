@@ -126,7 +126,6 @@ function showLoading(){
 
     z-index: 999999;
 
-    /* 🔥 FIX CENTER STABIL */
     width: 100vw;
     height: 100vh;
   `;
@@ -141,8 +140,6 @@ function showLoading(){
       text-align: center;
       font-family: Arial;
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-
-      /* 🔥 tambahan biar tidak geser */
       position: relative;
       margin: auto;
     ">
