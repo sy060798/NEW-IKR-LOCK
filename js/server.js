@@ -1,42 +1,46 @@
 // =====================================
 // FILE : js/server.js
+// AUTO SYNC DELETE + UPLOAD
 // =====================================
 
 const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
 
 // ===============================
-// UPLOAD ALL DATA
+// UPLOAD SEMUA DATA
 // ===============================
 async function uploadServerAll() {
 
   try {
 
-    if (!confirm("Upload semua data ke server?")) return;
+    alert("Sinkronisasi server dimulai...");
 
-    alert("Proses upload dimulai...");
+    await syncIKRServer();
+    await syncIMSServer();
 
-    await uploadIKRServer();
-    await uploadIMSServer();
-
-    alert("Upload selesai");
+    alert("Sinkronisasi selesai");
 
   } catch (err) {
     console.error(err);
-    alert("Upload gagal");
+    alert("Sinkronisasi gagal");
   }
 
 }
 
 // ===============================
-// UPLOAD DATA IKR
+// SINKRON IKR
+// hapus lama lalu upload baru
 // ===============================
-async function uploadIKRServer() {
+async function syncIKRServer() {
 
-  if (typeof dataIKR === "undefined" || !dataIKR.length) {
-    return;
-  }
+  if (typeof dataIKR === "undefined") return;
 
-  const res = await fetch(SERVER_URL + "/ikr", {
+  // hapus semua data lama
+  await fetch(SERVER_URL + "/ikr", {
+    method: "DELETE"
+  });
+
+  // upload data baru
+  await fetch(SERVER_URL + "/ikr", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -44,22 +48,23 @@ async function uploadIKRServer() {
     body: JSON.stringify(dataIKR)
   });
 
-  if (!res.ok) {
-    throw new Error("Upload IKR gagal");
-  }
-
 }
 
 // ===============================
-// UPLOAD DATA IMS
+// SINKRON IMS
+// hapus lama lalu upload baru
 // ===============================
-async function uploadIMSServer() {
+async function syncIMSServer() {
 
-  if (typeof dataIMS === "undefined" || !dataIMS.length) {
-    return;
-  }
+  if (typeof dataIMS === "undefined") return;
 
-  const res = await fetch(SERVER_URL + "/ims", {
+  // hapus lama
+  await fetch(SERVER_URL + "/ims", {
+    method: "DELETE"
+  });
+
+  // upload baru
+  await fetch(SERVER_URL + "/ims", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -67,10 +72,30 @@ async function uploadIMSServer() {
     body: JSON.stringify(dataIMS)
   });
 
-  if (!res.ok) {
-    throw new Error("Upload IMS gagal");
-  }
+}
 
+// ===============================
+// AUTO SYNC SAAT HAPUS IKR
+// ===============================
+async function autoSyncIKRDelete() {
+  try {
+    await syncIKRServer();
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+// ===============================
+// AUTO SYNC SAAT HAPUS IMS
+// ===============================
+async function autoSyncIMSDelete() {
+  try {
+    await syncIMSServer();
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 window.uploadServerAll = uploadServerAll;
+window.autoSyncIKRDelete = autoSyncIKRDelete;
+window.autoSyncIMSDelete = autoSyncIMSDelete;
