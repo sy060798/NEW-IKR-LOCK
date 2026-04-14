@@ -119,23 +119,34 @@ function showLoading(){
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.6);
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     z-index: 999999;
+
+    /* 🔥 FIX CENTER STABIL */
+    width: 100vw;
+    height: 100vh;
   `;
 
   div.innerHTML = `
     <div style="
       width: 320px;
+      max-width: 90vw;
       background: #fff;
       padding: 20px;
       border-radius: 12px;
       text-align: center;
       font-family: Arial;
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+
+      /* 🔥 tambahan biar tidak geser */
+      position: relative;
+      margin: auto;
     ">
-      <h3>Sinkronisasi Server</h3>
+      <h3 style="margin:0 0 10px;">Sinkronisasi Server</h3>
 
       <div style="
         width:100%;
