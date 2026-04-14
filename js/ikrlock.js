@@ -473,6 +473,28 @@ document.addEventListener("DOMContentLoaded", () => {
   loadIKRFromServer();
 });
 
+// ===============================
+// AUTO ditec region
+// ===============================
+function normalRegion(txt){
+
+  let r = String(txt || "")
+    .trim()
+    .toLowerCase();
+
+  // hapus kata umum
+  r = r.replace("kota ","");
+  r = r.replace("kabupaten ","");
+  r = r.replace("kab ","");
+
+  // typo manual
+  if (r === "pelembang") r = "palembang";
+  if (r === "beksi") r = "bekasi";
+  if (r === "jombnag") r = "jombang";
+
+  // kapital awal kata
+  return r.replace(/\b\w/g, s => s.toUpperCase());
+}
 
 // ===============================
 window.closePopup = () => {
