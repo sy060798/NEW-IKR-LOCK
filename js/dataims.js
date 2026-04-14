@@ -1,10 +1,6 @@
 // ================= GLOBAL =================
 let dataIMS = [];
-
-const SERVER_URL =
-  window.SERVER_URL ||
-  "https://tracking-server-production-6a12.up.railway.app";
-
+const SERVER_URL = window.SERVER_URL;
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
@@ -27,74 +23,50 @@ document.addEventListener("DOMContentLoaded", () => {
   renderIMS();
 });
 
+// ================= import excel =================
+/let existingKey = new Set();
 
-// ================= IMPORT IMS =================
-function importIMS(e) {
+raw.forEach(r => {
 
-  const file = e.target.files[0];
-  if (!file) return;
+  let city = r.City || r.city || "";
+  let pra = r["Pra Invoice Number"] || "";
+  let inv = r["Invoice Number"] || "";
+  let job = r["Job Name"] || "";
 
-  const reader = new FileReader();
+  if (!city) return;
 
-  reader.onload = function (evt) {
+  // ================= 🔥 ANTI DUPLICATE (GLOBAL ROW) =================
+  let keyUniq = String(pra).trim() + "_" + String(inv).trim();
 
-    const wb = XLSX.read(evt.target.result, { type: "binary" });
+  if (existingKey.has(keyUniq)) return;
+  existingKey.add(keyUniq);
 
-    let raw = [];
+  // ================= 🔥 GROUP KEY (STABIL) =================
+  let keyGroup = city + "_" + pra + "_" + inv;
 
-    wb.SheetNames.forEach(s => {
-      const json = XLSX.utils.sheet_to_json(wb.Sheets[s], {
-        defval: "",
-        raw: false
-      });
-      json.forEach(r => raw.push(r));
-    });
+  if (!map[keyGroup]) {
+    map[keyGroup] = {
+      city,
+      pra,
+      inv,
+      job,
+      jumlah: 0,
+      total: 0,
+      detail: []
+    };
+  }
 
-    let map = {};
+  map[keyGroup].jumlah++;
+  map[keyGroup].total += parseAngka(r["Invoice Total"]);
 
-    raw.forEach(r => {
-
-      let city = r.City || r.city || "";
-      let pra = r["Pra Invoice Number"] || "";
-      let inv = r["Invoice Number"] || "";
-      let job = r["Job Name"] || "";
-
-      if (!city) return;
-
-      let key = city + "_" + pra;
-
-      if (!map[key]) {
-        map[key] = {
-          city,
-          pra,
-          inv,
-          job,
-          jumlah: 0,
-          total: 0,
-          detail: []
-        };
-      }
-
-      map[key].jumlah++;
-      map[key].total += parseAngka(r["Invoice Total"]);
-
-      map[key].detail.push({
-        wo: r.Wonumber || "-",
-        status: r.Status || "-",
-        amount: parseAngka(r["Invoice Total"])
-      });
-    });
-
-    dataIMS = Object.values(map);
-
-    renderIMS();
-    alert("IMS upload sukses");
-    e.target.value = "";
-  };
-
-  reader.readAsBinaryString(file);
-}
-
+  map[keyGroup].detail.push({
+    wo: r.Wonumber || "-",
+    status: r.Status || "-",
+    amount: parseAngka(r["Invoice Total"]),
+    pra,
+    inv
+  });
+});
 
 // ================= RENDER IMS =================
 function renderIMS() {
@@ -230,4 +202,100 @@ function autoCleanApprovedWO() {
   });
 
   renderIMS();
+}
+
+
+// ===============================
+// 🔥 IMS → IKR SYNC PATCH (BY WO)
+// ===============================
+
+function syncIMS_to_IKR() {
+
+  if (!Array.isArray(dataIMS) || !Array.isArray(dataIKR)) return;
+
+  // ================= INDEX IKR BY WO =================
+  const woMap = new Map();
+
+  dataIKR.forEach((group, gi) => {
+    (group.detail || []).forEach((d, di) => {
+
+      const wo = String(d.wo || "").trim().toUpperCase();
+      if (!wo) return;
+
+      if (!woMap.has(wo)) woMap.set(wo, []);
+      woMap.get(wo).push({ gi, di });
+
+    });
+  });
+
+  // ================= UPDATED WO (ANTI DUPLICATE) =================
+  const updatedWO = new Set();
+
+  // ================= LOOP IMS =================
+  dataIMS.forEach(ims => {
+
+    (ims.detail || []).forEach(x => {
+
+      const wo = String(x.wo || "").trim().toUpperCase();
+      if (!wo) return;
+
+      const list = woMap.get(wo);
+      if (!list) return;
+
+      list.forEach(pos => {
+
+        const detail = dataIKR[pos.gi].detail[pos.di];
+        if (!detail) return;
+
+        // ================= UPDATE ONLY STATUS =================
+        detail.status = x.status || detail.status;
+
+      });
+
+      updatedWO.add(wo);
+
+    });
+
+  });
+
+  // ================= RECALC =================
+  recalcIKR();
+  renderIKR();
+
+  // ================= SAVE SERVER =================
+  fetch(SERVER_URL + "/api/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: "IKR",
+      data: dataIKR,
+      updatedWO: [...updatedWO]
+    })
+  }).catch(err => console.log("SYNC ERROR:", err));
+}
+
+function recalcIKR() {
+
+  dataIKR.forEach(group => {
+
+    const approvedSet = new Set();
+    let fsTotal = 0;
+
+    (group.detail || []).forEach(d => {
+
+      const status = String(d.status || "").toLowerCase();
+
+      if (status.includes("approved")) {
+
+        if (d.wo) approvedSet.add(d.wo);
+
+        fsTotal += Number(d.amount || 0) || 0;
+      }
+
+    });
+
+    group.approved = approvedSet.size;
+    group.fs = fsTotal;
+
+  });
 }
