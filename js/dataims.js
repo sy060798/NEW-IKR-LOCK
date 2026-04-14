@@ -250,3 +250,74 @@ function autoCleanApprovedWO() {
   renderIKR?.();
   renderIMS?.();
 }
+
+
+// ===============================
+// SYNC IMS → IKR (ONLY APPROVED)
+// ===============================
+async function mergeIMS_to_IKR() {
+
+  if (!Array.isArray(dataIMS) || !Array.isArray(dataIKR)) return;
+
+  let changedWO = [];
+
+  dataIMS.forEach(ims => {
+
+    (ims.detail || []).forEach(x => {
+
+      let wo = x.wo;
+      if (!wo) return;
+
+      // ================= FILTER ONLY APPROVED =================
+      let status = String(x.status || "").toLowerCase();
+
+      if (!status.includes("approved")) return; 
+      // ❌ selain approved langsung skip
+
+      let found = null;
+
+      // cari di IKR
+      for (let g of dataIKR) {
+        let d = (g.detail || []).find(v => v.wo === wo);
+        if (d) {
+          found = { group: g, item: d };
+          break;
+        }
+      }
+
+      // ================= UPDATE IKR ONLY =================
+      if (found) {
+
+        found.item.status = "APPROVED";
+
+        if (!found.group.approved) found.group.approved = 0;
+        found.group.approved += 1;
+
+        changedWO.push(wo);
+      }
+
+    });
+
+  });
+
+  renderIKR?.();
+
+  // ================= AUTO SYNC SERVER =================
+  try {
+
+    await fetch(SERVER_URL + "/api/save", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        type: "IKR",
+        data: dataIKR,
+        updatedWO: changedWO
+      })
+    });
+
+  } catch (err) {
+    console.log("Server sync gagal", err);
+  }
+}
