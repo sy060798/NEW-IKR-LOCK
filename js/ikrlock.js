@@ -231,77 +231,54 @@ reader.readAsBinaryString(file);
 }
 // ================= MASTER GRUOING =================
 
-function renderIKRGroup() {
-
+function renderIKR() {
   const tb = document.querySelector("#tblIKR tbody");
   if (!tb) return;
 
   tb.innerHTML = "";
 
-  let group = {};
+  const sorted = [...dataIKR].sort((a, b) => {
+    const regionA = (a.region || "").localeCompare(b.region || "");
+    if (regionA !== 0) return regionA;
 
-  dataIKR.forEach(d => {
-    let key = d.region + "_" + d.tahun + "_" + d.bulan;
+    const tahunA = (a.tahun || 0) - (b.tahun || 0);
+    if (tahunA !== 0) return tahunA;
 
-    if (!group[key]) {
-      group[key] = {
-        region: d.region,
-        tahun: d.tahun,
-        bulan: d.bulan,
-        items: []
-      };
-    }
+    const bulanA = (a.bulan || "").localeCompare(b.bulan || "");
+    if (bulanA !== 0) return bulanA;
 
-    group[key].items.push(d);
+    return (a.wotype || "").localeCompare(b.wotype || "");
   });
 
-  let no = 1;
-
-  Object.values(group).forEach(g => {
-
+  sorted.forEach((d, i) => {
     tb.innerHTML += `
-      <tr style="background:#222;color:#fff;font-weight:bold">
-        <td colspan="13">
-          📍 ${g.region} | ${g.tahun} | ${g.bulan}
+      <tr>
+        <td>${i + 1}</td>
+        <td><input type="checkbox" class="chkIKR"></td>
+
+        <td>${d.region}</td>
+        <td>${d.tahun}</td>
+        <td>${d.wotype}</td>
+        <td>${d.bulan}</td>
+
+        <td>${d.jumlah}</td>
+
+        <td>${d.approved || 0}</td>
+
+        <td>${formatRp(d.amount)}</td>
+        <td>${formatRp(d.fs)}</td>
+
+        <td contenteditable>${d.remark || ""}</td>
+        <td contenteditable>${d.invoice || ""}</td>
+        <td contenteditable>${d.note || ""}</td>
+
+        <td>
+          <input type="checkbox" ${d.done === "YES" ? "checked" : ""}>
         </td>
       </tr>
     `;
-
-    g.items.forEach(d => {
-      tb.innerHTML += `
-        <tr>
-          <td>${no++}</td>
-          <td><input type="checkbox" class="chkIKR"></td>
-          <td>${d.region}</td>
-          <td>${d.tahun}</td>
-          <td>${d.wotype}</td>
-          <td>${d.bulan}</td>
-
-          <td>
-            <span onclick="showDetail(${dataIKR.indexOf(d)})"
-              style="cursor:pointer;font-weight:bold">
-              ${d.jumlah}
-            </span>
-          </td>
-
-          <td>${d.approved}</td>
-          <td>${formatRp(d.amount)}</td>
-          <td>${formatRp(d.fs)}</td>
-
-          <td contenteditable>${d.remark || ""}</td>
-          <td contenteditable>${d.invoice || ""}</td>
-          <td contenteditable>${d.note || ""}</td>
-
-          <td>
-            <input type="checkbox" ${d.done === "YES" ? "checked" : ""}>
-          </td>
-        </tr>
-      `;
-    });
-
   });
 }
-
 // ================= POPUP DETAIL =================
 let popupExportData = [];
 
