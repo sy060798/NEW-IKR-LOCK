@@ -188,12 +188,12 @@ function renderIKR() {
         <td>${d.wotype}</td>
         <td>${d.bulan}</td>
 
-        <td>
-          <span style="color:#00eaff;cursor:pointer"
-            onclick="showDetail(${i})">
-            ${d.jumlah}
+       <td>
+        <span style="color:#000;cursor:pointer;font-weight:bold"
+          onclick="showDetail(${i})">
+          ${d.jumlah}
           </span>
-        </td>
+          </td>
 
         <td>${d.approved}</td>
         <td>${formatRp(d.amount)}</td>
