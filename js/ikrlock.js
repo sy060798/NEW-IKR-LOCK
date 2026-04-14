@@ -88,16 +88,30 @@ function importIKR(e) {
 
   if (!region || !woEnd) return;
 
-  let dt = new Date(woEnd);
-  if (isNaN(dt)) return;
+  // FORMAT: 01/02/2026 09:55:17
+let txt = String(woEnd).trim().split(" ")[0];
+let p = txt.split("/");
 
-  let tahun = dt.getFullYear();
-  let bulan = dt.toLocaleString("id-ID", {
-    month: "short"
-  });
+if (p.length !== 3) return;
 
-  let key = region + "_" + tahun + "_" + bulan;
+// dd/mm/yyyy
+let hari = parseInt(p[0]);
+let bln  = parseInt(p[1]) - 1;
+let thn  = parseInt(p[2]);
 
+let dt = new Date(thn, bln, hari);
+
+if (isNaN(dt)) return;
+
+let tahun = thn;
+
+let namaBulan = [
+  "Jan","Feb","Mar","Apr","Mei","Jun",
+  "Jul","Agu","Sep","Okt","Nov","Des"
+];
+
+let bulan = namaBulan[bln];
+      
   // ================= INIT MAP =================
   if (!map[key]) {
     map[key] = {
