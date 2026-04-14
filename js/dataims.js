@@ -66,10 +66,12 @@ function importIMS(e) {
     r["Invoice"] ||
     "";
 
-  let wo =
-    r["Wonumber"] ||
-    r["WO Number"] ||
-    "-";
+ let wo =
+  r["Wonumber"] ||
+  r["WO Number"] ||
+  "-";
+
+wo = String(wo).trim().toUpperCase();
 
   let total =
     parseInt(
@@ -80,9 +82,9 @@ function importIMS(e) {
 
   pra = String(pra).trim();
   invoice = String(invoice).trim();
-  wo = String(wo).trim();
+  
 
-  let key = pra + "_" + invoice;
+  let key = (pra || "NO_PRA") + "_" + (invoice || "NO_INV");
 
   if (!map[key]) {
     map[key] = {
@@ -97,17 +99,22 @@ function importIMS(e) {
     };
   }
 
-  if (!map[key].woSet.has(wo)) {
-    map[key].woSet.add(wo);
-    map[key].jumlah++;
+  let existing = map[key].detail.find(d => d.wo === wo);
 
-    map[key].total += total;
+if (!existing) {
+  map[key].woSet.add(wo);
+  map[key].jumlah++;
 
-    map[key].detail.push({
-      wo,
-      total
-    });
-  }
+  map[key].detail.push({
+    wo,
+    total
+  });
+
+  map[key].total += total;
+} else {
+  existing.total += total;
+  map[key].total += total;
+}
 });
 
 // ✅ PINDAH KE SINI (DI LUAR LOOP)
@@ -118,10 +125,13 @@ let hasilBaru = Object.values(map).map(x => {
 
 dataIMS = hasilBaru;
 renderIMS();
-syncIMSkeIKR();
-    
-    e.target.value = "";
-    alert("UPLOAD IMS OK");
+
+if (typeof syncIMSkeIKR === "function") {
+  syncIMSkeIKR();
+}
+
+e.target.value = "";
+alert("UPLOAD IMS OK");
   };
 
   reader.readAsBinaryString(file);
@@ -131,9 +141,14 @@ syncIMSkeIKR();
 function hapusIMS() {
   const chk = document.querySelectorAll(".chkIMS");
   dataIMS = dataIMS.filter((_, i) => !chk[i]?.checked);
+
   renderIMS();
-  syncIMSkeIKR();
+
+  if (typeof syncIMSkeIKR === "function") {
+    syncIMSkeIKR();
+  }
 }
+
 window.hapusIMS = hapusIMS;
 
 // ================= DOWNLOAD =================
