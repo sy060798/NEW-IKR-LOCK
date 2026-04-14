@@ -481,9 +481,10 @@ function normalRegion(txt){
     .trim()
     .toLowerCase();
 
-  // hapus kata umum depan
+  // hapus awalan umum
   r = r.replace(/^kota\s+/,"");
   r = r.replace(/^kabupaten\s+/,"");
+  r = r.replace(/^kab\.\s+/,"");
   r = r.replace(/^kab\s+/,"");
 
   // rapihin spasi
