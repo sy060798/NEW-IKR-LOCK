@@ -1,7 +1,6 @@
 // ================= GLOBAL =================
 let dataIKR = [];
 let popupExportData = [];
-const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
