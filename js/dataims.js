@@ -4,11 +4,22 @@ let dataIMS = [];
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
 
-  const fileIMS = document.getElementById("fileIMS");
+  const checkAll = document.getElementById("checkIMS");
 
-  if (fileIMS) fileIMS.addEventListener("change", importIMS);
+  if (!checkAll) return;
 
-  renderIMS();
+  checkAll.addEventListener("change", () => {
+
+    const checked = checkAll.checked;
+
+    document
+      .querySelectorAll("#tblIMS tbody input[type='checkbox']")
+      .forEach(cb => {
+        cb.checked = checked;
+      });
+
+  });
+
 });
 
 // ================= IMPORT IMS =================
