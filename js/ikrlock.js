@@ -207,6 +207,7 @@ function importIKR(e) {
 
     recalcApprovedValues();
     renderIKR();
+    syncIMSkeIKR();
 
     e.target.value = "";
     alert("UPLOAD OK");
@@ -276,6 +277,7 @@ function formatRp(n) {
 function hapusIKR() {
   const chk = document.querySelectorAll(".chkIKR");
   dataIKR = dataIKR.filter((_, i) => !chk[i]?.checked);
+  syncIMSkeIKR(); 
   renderIKR();
 }
 window.hapusIKR = hapusIKR;
@@ -358,6 +360,7 @@ async function loadIKRFromServer() {
     dataIKR = Array.isArray(data) ? data : [];
 
     recalcApprovedValues();
+    syncIMSkeIKR();
     renderIKR();
   } catch (err) {
     console.log("server error");
