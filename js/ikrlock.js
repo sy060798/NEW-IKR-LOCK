@@ -217,21 +217,6 @@ function importIKR(e) {
 
 
 
-// ================= NORMAL REGION =================
-function normalRegion(txt) {
-  let r = String(txt || "").toLowerCase().trim();
-
-  const map = {
-    "bks": "bekasi",
-    "bdg": "bandung",
-    "sby": "surabaya",
-    "yk": "jogja"
-  };
-
-  if (map[r]) r = map[r];
-
-  return r.replace(/\b\w/g, s => s.toUpperCase());
-}
 
 // ================= RENDER =================
 function renderIKR() {
@@ -342,9 +327,6 @@ document.getElementById("popup").style.display = "block";
 
 } 
 
-window.closePopup = () => {
-  document.getElementById("popup").style.display = "none";
-};
 
 // ================= EXPORT DETAIL =================
 function exportPopupExcel() {
@@ -387,7 +369,246 @@ function recalcApprovedValues() {
   if (!Array.isArray(dataIKR)) return;
 
   dataIKR.forEach(group => {
-    group.approved = 0;
-    group.fs = 0;
+    let approvedSet = new Set();
+    let fsTotal = 0;
+
+    (group.detail || []).forEach(d => {
+      if ((d.status || "").toLowerCase().includes("approved")) {
+        approvedSet.add(d.wo);
+        fsTotal += Number(d.amount || 0);
+      }
+    });
+
+    group.approved = approvedSet.size;
+    group.fs = fsTotal;
   });
 }
+
+// ===============================
+// AUTO LOAD SAAT BUKA
+// ===============================
+
+function normalRegion(txt){
+
+  let r = String(txt || "")
+    .trim()
+    .toLowerCase();
+
+  // hapus awalan umum
+  r = r.replace(/^kota\s+/,"");
+  r = r.replace(/^kabupaten\s+/,"");
+  r = r.replace(/^kab\.\s+/,"");
+  r = r.replace(/^kab\s+/,"");
+
+  // rapihin spasi
+  r = r.replace(/\s+/g," ").trim();
+
+  // ================= TYPO MANUAL =================
+  const typoMap = {
+    "pelembang":"palembang",
+    "palembng":"palembang",
+    "plembang":"palembang",
+
+    "beksi":"bekasi",
+    "beksai":"bekasi",
+    "bks":"bekasi",
+
+    "jombnag":"jombang",
+    "jombng":"jombang",
+
+    "surbaya":"surabaya",
+    "sby":"surabaya",
+
+    "bdg":"bandung",
+    "smg":"semarang",
+    "jkt barat":"jakbar",
+    "jakarta barat":"jakbar",
+    "jkt selatan":"jaksel",
+    "jakarta selatan":"jaksel",
+
+    "yk":"jogja",
+    "yogyakarta":"jogja"
+  };
+
+  if (typoMap[r]) r = typoMap[r];
+
+  // ================= MASTER REGION =================
+  const regionMap = {
+
+    // BEKASI
+    "bekasi":"bekasi",
+    "kota bekasi":"bekasi",
+    "kab bekasi":"bekasi",
+    "bekasi timur":"bekasi",
+    "bekasi barat":"bekasi",
+    "bekasi utara":"bekasi",
+    "bekasi selatan":"bekasi",
+
+    // PALEMBANG
+    "palembang":"palembang",
+    "kota palembang":"palembang",
+
+    // BANDUNG
+    "bandung":"bandung",
+    "kota bandung":"bandung",
+    "kab bandung":"bandung",
+    "bandung barat":"bandung",
+
+    // BOGOR
+    "bogor":"bogor",
+    "kota bogor":"bogor",
+    "kab bogor":"bogor",
+
+    // JAKARTA
+    "jakbar":"jakbar",
+    "jakarta barat":"jakbar",
+
+    "jaksel":"jaksel",
+    "jakarta selatan":"jaksel",
+
+    // JOGJA
+    "jogja":"jogja",
+    "yogyakarta":"jogja",
+
+    // SURABAYA
+    "surabaya":"surabaya",
+
+    // SEMARANG
+    "semarang":"semarang",
+
+    // SOLO
+    "solo":"solo",
+    "surakarta":"solo",
+
+    // TASIK
+    "tasik":"tasikmalaya",
+    "tasikmalaya":"tasikmalaya",
+
+    // LAINNYA
+    "bali":"bali",
+    "banjarmasin":"banjarmasin",
+    "cirebon":"cirebon",
+    "legok":"legok",
+    "makassar":"makassar",
+    "malang":"malang",
+    "medan":"medan",
+    "purwokerto":"purwokerto",
+    "binjai":"binjai",
+    "ciamis":"ciamis",
+    "garut":"garut",
+    "lampung":"lampung",
+    "majalengka":"majalengka",
+    "cianjur":"cianjur",
+    "jatinegara":"jatinegara",
+    "purwakarta":"purwakarta",
+    "serang":"serang",
+    "jember":"jember",
+    "jombang":"jombang",
+    "karawang":"karawang",
+    "kediri":"kediri",
+    "lubuk pakam":"lubuk pakam",
+    "meruya":"meruya",
+    "probolinggo":"probolinggo",
+    "sukabumi":"sukabumi"
+  };
+
+  if (regionMap[r]) r = regionMap[r];
+
+  // kapital semua kata
+  return r.replace(/\b\w/g, s => s.toUpperCase());
+}
+
+
+// ===============================
+window.closePopup = () => {
+  const popup = document.getElementById("popup");
+  if (popup) popup.style.display = "none";
+};
+// ===============SISTEM GRUPING===============
+function renderIKRGroupFooter() {
+
+  const tb = document.querySelector("#tblIKR tbody");
+  if (!tb) return;
+
+  const monthOrder = {
+    "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4,
+    "Mei": 5, "Jun": 6, "Jul": 7, "Agu": 8,
+    "Sep": 9, "Okt": 10, "Nov": 11, "Des": 12
+  };
+
+  const woOrder = {
+    "Activation Broadband": 1,
+    "TroubleShooting BroadBand": 2
+  };
+
+  let group = {};
+
+  // ================= GROUP FIX =================
+  dataIKR.forEach(d => {
+
+    let key =
+      d.region + "_" +
+      d.tahun + "_" +
+      d.bulan + "_" +
+      d.wotype;   // 🔥 INI WAJIB TAMBAH WO TYPE
+
+    if (!group[key]) {
+      group[key] = {
+        region: d.region,
+        tahun: d.tahun,
+        bulan: d.bulan,
+        wotype: d.wotype,
+        jumlah: 0,
+        amount: 0,
+        fs: 0
+      };
+    }
+
+    group[key].jumlah += Number(d.jumlah || 0);
+    group[key].amount += Number(d.amount || 0);
+    group[key].fs += Number(d.fs || 0);
+  });
+
+  // ================= SORT RAPI =================
+  let sortedGroup = Object.values(group).sort((a, b) => {
+
+    const regionA = (a.region || "").localeCompare(b.region || "");
+    if (regionA !== 0) return regionA;
+
+    const tahunA = (a.tahun || 0) - (b.tahun || 0);
+    if (tahunA !== 0) return tahunA;
+
+    const bulanA = (monthOrder[a.bulan] || 99) - (monthOrder[b.bulan] || 99);
+    if (bulanA !== 0) return bulanA;
+
+    const woA = (woOrder[a.wotype] || 99) - (woOrder[b.wotype] || 99);
+    if (woA !== 0) return woA;
+
+    return 0;
+  });
+
+  // ================= RENDER =================
+  tb.innerHTML += `
+  <tr style="background:#111;color:#fff">
+    <td colspan="14" style="padding:10px">
+      📊 SUMMARY REGION GROUPING
+    </td>
+  </tr>
+`;
+
+sortedGroup.forEach(g => {
+  tb.innerHTML += `
+    <tr style="background:#f2f2f2;font-weight:bold">
+      <td colspan="6">
+        ${g.region} | ${g.tahun} | ${g.bulan} | ${g.wotype}
+      </td>
+
+      <td>${g.jumlah}</td>
+      <td>0</td>
+      <td>${formatRp(g.amount)}</td>
+      <td>${formatRp(g.fs)}</td>
+
+      <td colspan="4"></td>
+    </tr>
+  `;
+});
