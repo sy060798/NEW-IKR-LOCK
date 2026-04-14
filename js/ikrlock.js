@@ -55,61 +55,106 @@ function importIKR(e) {
     // ================= LOOP DATA =================
     raw.forEach(r => {
 
-      let region = r.City || r.city || r.Region || "";
-      let woEnd = r["Wo End"] || "";
-      let boq = parseInt(String(r["Boq Total"] || 0).replace(/[^0-9]/g, "")) || 0;
+  // ================= AMBIL DATA =================
+  let region =
+    r.City ||
+    r.city ||
+    r.Region ||
+    r.region ||
+    "";
 
-      if (!region || !woEnd) return;
+  let woEnd =
+    r["Wo End"] ||
+    r["WO END"] ||
+    r["wo end"] ||
+    "";
 
-      let dt = new Date(woEnd);
-      if (isNaN(dt)) return;
+  let boq =
+    parseInt(
+      String(
+        r["Boq Total"] ||
+        r["BOQ TOTAL"] ||
+        r["boq total"] ||
+        0
+      ).replace(/[^0-9]/g, "")
+    ) || 0;
 
-      let tahun = dt.getFullYear();
-      let bulan = dt.toLocaleString("id-ID", { month: "short" });
+  // ================= PATCH WO TYPE =================
+  let wotype =
+    r["Job Name"] ||
+    r["JOB NAME"] ||
+    r["job name"] ||
+    "";
 
-      let key = region + "_" + tahun + "_" + bulan;
+  if (!region || !woEnd) return;
 
-      // ================= INIT MAP =================
-      if (!map[key]) {
-        map[key] = {
-          region,
-          tahun,
-          bulan,
-          wotype: "",
-          jumlah: 0,
-          approved: 0,
-          amount: 0,
-          fs: 0,
-          remark: "",
-          invoice: "",
-          note: "",
-          done: "NO",
-          detail: [],
-          woSet: new Set()
-        };
-      }
+  let dt = new Date(woEnd);
+  if (isNaN(dt)) return;
 
-      // ================= AMOUNT =================
-      map[key].amount += boq;
+  let tahun = dt.getFullYear();
+  let bulan = dt.toLocaleString("id-ID", {
+    month: "short"
+  });
 
-      // ================= WO + DETAIL =================
-      const wo = String(r.Wonumber || "-").trim();
-      const status = r.Status || "-";
+  let key = region + "_" + tahun + "_" + bulan;
 
-      // hanya hitung WO unik
-      if (!map[key].woSet.has(wo)) {
-        map[key].woSet.add(wo);
-        map[key].jumlah++;
-      }
+  // ================= INIT MAP =================
+  if (!map[key]) {
+    map[key] = {
+      region,
+      tahun,
+      bulan,
+      wotype: wotype,
+      jumlah: 0,
+      approved: 0,
+      amount: 0,
+      fs: 0,
+      remark: "",
+      invoice: "",
+      note: "",
+      done: "NO",
+      detail: [],
+      woSet: new Set()
+    };
+  }
 
-      // tetap simpan detail
-      map[key].detail.push({
-        wo,
-        status,
-        amount: boq
-      });
+  // kalau awal kosong lalu ketemu isi
+  if (!map[key].wotype && wotype) {
+    map[key].wotype = wotype;
+  }
 
-    });
+  // ================= AMOUNT =================
+  map[key].amount += boq;
+
+  // ================= WO + DETAIL =================
+  const wo =
+    String(
+      r.Wonumber ||
+      r["Wonumber"] ||
+      r["WO Number"] ||
+      r["WO NUMBER"] ||
+      "-"
+    ).trim();
+
+  const status =
+    r.Status ||
+    r["Status"] ||
+    "-";
+
+  // ================= HITUNG WO UNIK =================
+  if (!map[key].woSet.has(wo)) {
+    map[key].woSet.add(wo);
+    map[key].jumlah++;
+  }
+
+  // ================= DETAIL =================
+  map[key].detail.push({
+    wo,
+    status,
+    amount: boq
+  });
+
+});
 
     // ================= FINAL CLEAN =================
     dataIKR = Object.values(map).map(x => {
