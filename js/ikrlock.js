@@ -298,6 +298,50 @@ function generatePivot() {}
 function generateStatus() {}
 function uploadServerAll() {}
 
+
+// ================= DOWNLOAD EXCEL =================
+function downloadIKR() {
+
+  if (!dataIKR.length) {
+    alert("Tidak ada data");
+    return;
+  }
+
+  const exportData = dataIKR.map((d,i)=>({
+    No: i+1,
+    Region: d.region,
+    Tahun: d.tahun,
+    "WO Type": d.wotype,
+    Bulan: d.bulan,
+    "Jumlah WO": d.jumlah,
+    "WO Approved": d.approved,
+    Amount: d.amount,
+    "FS Amount": d.fs,
+    Remark: d.remark,
+    Invoice: d.invoice,
+    Note: d.note,
+    Done: d.done
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(exportData);
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb, ws, "DATA IKR");
+
+  XLSX.writeFile(wb, "DATA_IKR_LOCK.xlsx");
+}
+
+function downloadIMS() {}
+function hapusIMS() {}
+function generatePivot() {}
+function generateStatus() {}
+function uploadServerAll() {}
+
+window.downloadIKR = downloadIKR;
+
+
+
+
 window.closePopup = () => {
   const popup = document.getElementById("popup");
   if (popup) popup.style.display = "none";
