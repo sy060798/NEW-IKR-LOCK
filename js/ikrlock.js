@@ -702,8 +702,9 @@ function renderIKRGroupFooter() {
 }
 
 
-// taruh di bawah semua function IKR kamu
+// ================= sistem sycron ims =================
 function recalcApprovedValues() {
+
   if (!Array.isArray(dataIKR)) return;
 
   dataIKR.forEach(group => {
@@ -711,11 +712,22 @@ function recalcApprovedValues() {
     let approvedSet = new Set();
     let fsTotal = 0;
 
-    (group.detail || []).forEach(d => {
+    const details = Array.isArray(group.detail) ? group.detail : [];
 
-      if ((d.status || "").toLowerCase().includes("approved")) {
-        approvedSet.add(d.wo);
-        fsTotal += Number(d.amount || 0);
+    details.forEach(d => {
+
+      const status = String(d.status || "").toLowerCase();
+
+      if (status.includes("approved")) {
+
+        if (d.wo) approvedSet.add(d.wo);
+
+        const amount = Number(d.amount || 0);
+
+        if (!isNaN(amount)) {
+          fsTotal += amount;
+        }
+
       }
 
     });
