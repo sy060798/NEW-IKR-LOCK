@@ -42,59 +42,37 @@ function importIMS(e) {
 
     raw.forEach(r => {
 
-      // ================= CITY =================
-      let city = (r.City || r.city || "").toString().trim();
+      let city = (r.City || "").toString().trim();
       if (!city) return;
 
-      // ================= PRA INVOICE =================
       let pra =
         r["Pra Invoice Number"] ||
-        r["PRA INVOICE NUMBER"] ||
         r["Pra Invoice"] ||
-        r["PRA INVOICE"] ||
         "";
 
-      // ================= INVOICE =================
       let invoice =
         r["Invoice Number"] ||
-        r["INVOICE NUMBER"] ||
         r["Invoice"] ||
-        r["INVOICE"] ||
         "";
+
+      let wo =
+        r["Wonumber"] ||
+        r["WO Number"] ||
+        "-";
+
+      let total =
+        parseInt(
+          String(r["Invoice Total"] || 0).replace(/[^0-9]/g, "")
+        ) || 0;
+
+      let job = (r["Job Name"] || "").toString().trim();
 
       pra = String(pra).trim();
       invoice = String(invoice).trim();
+      wo = String(wo).trim();
 
-      // ================= JUMLAH WO =================
-      let wo =
-        parseInt(
-          String(
-            r["Jumlah WO"] ||
-            r["JUMLAH WO"] ||
-            0
-          ).replace(/[^0-9]/g, "")
-        ) || 0;
-
-      // ================= JOB =================
-      let job =
-        (r["Job Name"] || r["JOB NAME"] || "").toString().trim();
-
-      // ================= TOTAL =================
-      let total =
-        parseInt(
-          String(
-            r["Invoice Total"] ||
-            r["INVOICE TOTAL"] ||
-            0
-          ).replace(/[^0-9]/g, "")
-        ) || 0;
-
-      // ================= KEY =================
-      let key =
-        city.toUpperCase() + "_" +
-        pra + "_" +
-        invoice + "_" +
-        job;
+      // 🔥 GROUP BY PRA + INVOICE
+      let key = pra + "_" + invoice;
 
       if (!map[key]) {
         map[key] = {
@@ -103,36 +81,34 @@ function importIMS(e) {
           invoice,
           jumlah: 0,
           job,
-          total: 0
+          total: 0,
+          detail: [],
+          woSet: new Set()
         };
       }
 
-      map[key].jumlah += wo;
-      map[key].total += total;
-    });
-
-    // ================= MERGE DATA =================
-    let hasilBaru = Object.values(map);
-
-    let gabung = [...dataIMS, ...hasilBaru];
-    let finalMap = {};
-
-    gabung.forEach(d => {
-      let key =
-        d.city + "_" +
-        d.pra + "_" +
-        d.invoice + "_" +
-        d.job;
-
-      if (!finalMap[key]) {
-        finalMap[key] = { ...d };
-      } else {
-        finalMap[key].jumlah += Number(d.jumlah || 0);
-        finalMap[key].total += Number(d.total || 0);
+      // ✅ HITUNG WO UNIQUE
+      if (!map[key].woSet.has(wo)) {
+        map[key].woSet.add(wo);
+        map[key].jumlah++;
       }
+
+      // ✅ TOTAL
+      map[key].total += total;
+
+      // ✅ DETAIL
+      map[key].detail.push({
+        wo,
+        total
+      });
     });
 
-    dataIMS = Object.values(finalMap);
+    let hasilBaru = Object.values(map).map(x => {
+      delete x.woSet;
+      return x;
+    });
+
+    dataIMS = hasilBaru;
 
     renderIMS();
 
@@ -141,30 +117,6 @@ function importIMS(e) {
   };
 
   reader.readAsBinaryString(file);
-}
-// ================= RENDER =================
-function renderIMS() {
-  const tb = document.querySelector("#tblIMS tbody");
-  if (!tb) return;
-
-  tb.innerHTML = "";
-
-  dataIMS.forEach((d, i) => {
-    tb.innerHTML += `
-      <tr>
-        <td>${i + 1}</td>
-        <td><input type="checkbox" class="chkIMS"></td>
-        <td onclick="showPopupIMS(${i})" style="cursor:pointer;font-weight:bold">
-          ${d.city}
-        </td>
-        <td>${d.pra}</td>
-        <td>${d.invoice}</td>
-        <td>${d.jumlah}</td>
-        <td>${d.job}</td>
-        <td>${formatRp(d.total)}</td>
-      </tr>
-    `;
-  });
 }
 
 // ================= DELETE =================
@@ -197,29 +149,26 @@ function showPopupIMS(i) {
 
   popupExportIMS = [];
 
-  tb.innerHTML = `
-    <tr>
-      <td>${d.city}</td>
-      <td>${d.pra}</td>
-      <td>${d.invoice}</td>
-      <td>${d.jumlah}</td>
-      <td>${d.job}</td>
-      <td>${formatRp(d.total)}</td>
-    </tr>
-  `;
+  (d.detail || []).forEach(x => {
+    tb.innerHTML += `
+      <tr>
+        <td>${d.pra}</td>
+        <td>${d.invoice}</td>
+        <td>${x.wo}</td>
+        <td>${formatRp(x.total)}</td>
+      </tr>
+    `;
 
-  popupExportIMS.push({
-    City: d.city,
-    Pra_Invoice: d.pra,
-    Invoice: d.invoice,
-    Jumlah_WO: d.jumlah,
-    Job_Name: d.job,
-    Invoice_Total: d.total
+    popupExportIMS.push({
+      Pra_Invoice: d.pra,
+      Invoice: d.invoice,
+      WO: x.wo,
+      Total: x.total
+    });
   });
 
   document.getElementById("popupIMS").style.display = "block";
 }
-
 function closePopupIMS() {
   document.getElementById("popupIMS").style.display = "none";
 }
@@ -236,4 +185,32 @@ function exportPopupIMS() {
 // ================= FORMAT =================
 function formatRp(n) {
   return "Rp " + Number(n || 0).toLocaleString("id-ID");
+}
+
+
+function renderIMS() {
+  const tb = document.querySelector("#tblIMS tbody");
+  if (!tb) return;
+
+  tb.innerHTML = "";
+
+  dataIMS.forEach((d, i) => {
+    tb.innerHTML += `
+      <tr>
+        <td>${i + 1}</td>
+        <td><input type="checkbox" class="chkIMS"></td>
+        <td onclick="showPopupIMS(${i})" style="cursor:pointer;font-weight:bold">
+          ${d.city}
+        </td>
+        <td>${d.pra}</td>
+        <td>${d.invoice}</td>
+        <td>${d.jumlah}</td>
+        <td>${d.job}</td>
+        <td>${formatRp(d.total)}</td>
+      </tr>
+    `;
+  });
+
+  // 🔥 TAMBAHAN FOOTER
+  renderIMSFooter();
 }
