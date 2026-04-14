@@ -132,6 +132,7 @@ function hapusIMS() {
   const chk = document.querySelectorAll(".chkIMS");
   dataIMS = dataIMS.filter((_, i) => !chk[i]?.checked);
   renderIMS();
+  syncIMSkeIKR();
 }
 window.hapusIMS = hapusIMS;
 
