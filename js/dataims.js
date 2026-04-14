@@ -384,9 +384,12 @@ function hapusIMS() {
 
   const chk = document.querySelectorAll("#tblIMS tbody input[type='checkbox']");
 
-  dataIMS = dataIMS.filter((_, i) => !chk[i]?.checked);
+  dataIMS = dataIMS.filter((_, i) => {
+    return !chk[i]?.checked; // kalau dicentang → dihapus
+  });
 
   renderIMS();
+}
 
   // reset check all setelah render
   const checkAll = document.getElementById("checkIMS");
