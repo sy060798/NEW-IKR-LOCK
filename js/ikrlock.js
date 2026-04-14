@@ -57,11 +57,13 @@ raw.forEach(r => {
 
   // ================= AMBIL DATA =================
   let region =
-    r.City ||
-    r.city ||
-    r.Region ||
-    r.region ||
-    "";
+  r.City ||
+  r.city ||
+  r.Region ||
+  r.region ||
+  "";
+
+region = normalRegion(region);
 
   let woEnd =
     r["Wo End"] ||
