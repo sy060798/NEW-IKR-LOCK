@@ -321,3 +321,39 @@ async function mergeIMS_to_IKR() {
     console.log("Server sync gagal", err);
   }
 }
+
+// taruh di bawah importIMS / renderIMS
+async function mergeIMS_to_IKR() {
+
+  if (!Array.isArray(dataIMS) || !Array.isArray(dataIKR)) return;
+
+  dataIMS.forEach(ims => {
+
+    (ims.detail || []).forEach(x => {
+
+      if (!String(x.status || "").toLowerCase().includes("approved")) return;
+
+      let wo = x.wo;
+
+      for (let g of dataIKR) {
+        let d = (g.detail || []).find(v => v.wo === wo);
+        if (d) d.status = "APPROVED";
+      }
+
+    });
+
+  });
+
+  recalcApprovedValues?.();
+  renderIKR?.();
+
+  try {
+    await fetch(SERVER_URL + "/api/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "IKR", data: dataIKR })
+    });
+  } catch (e) {
+    console.log("sync gagal");
+  }
+}
