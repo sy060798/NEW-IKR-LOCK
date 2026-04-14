@@ -473,26 +473,132 @@ document.addEventListener("DOMContentLoaded", () => {
   loadIKRFromServer();
 });
 
-// ===============================
-// AUTO ditec region
-// ===============================
 function normalRegion(txt){
 
   let r = String(txt || "")
     .trim()
     .toLowerCase();
 
-  // hapus kata umum
-  r = r.replace("kota ","");
-  r = r.replace("kabupaten ","");
-  r = r.replace("kab ","");
+  // hapus kata umum depan
+  r = r.replace(/^kota\s+/,"");
+  r = r.replace(/^kabupaten\s+/,"");
+  r = r.replace(/^kab\s+/,"");
 
-  // typo manual
-  if (r === "pelembang") r = "palembang";
-  if (r === "beksi") r = "bekasi";
-  if (r === "jombnag") r = "jombang";
+  // rapihin spasi
+  r = r.replace(/\s+/g," ").trim();
 
-  // kapital awal kata
+  // ================= TYPO MANUAL =================
+  const typoMap = {
+    "pelembang":"palembang",
+    "palembng":"palembang",
+    "plembang":"palembang",
+
+    "beksi":"bekasi",
+    "beksai":"bekasi",
+    "bks":"bekasi",
+
+    "jombnag":"jombang",
+    "jombng":"jombang",
+
+    "surbaya":"surabaya",
+    "sby":"surabaya",
+
+    "bdg":"bandung",
+    "smg":"semarang",
+    "jkt barat":"jakbar",
+    "jakarta barat":"jakbar",
+    "jkt selatan":"jaksel",
+    "jakarta selatan":"jaksel",
+
+    "yk":"jogja",
+    "yogyakarta":"jogja"
+  };
+
+  if (typoMap[r]) r = typoMap[r];
+
+  // ================= MASTER REGION =================
+  const regionMap = {
+
+    // BEKASI
+    "bekasi":"bekasi",
+    "kota bekasi":"bekasi",
+    "kab bekasi":"bekasi",
+    "bekasi timur":"bekasi",
+    "bekasi barat":"bekasi",
+    "bekasi utara":"bekasi",
+    "bekasi selatan":"bekasi",
+
+    // PALEMBANG
+    "palembang":"palembang",
+    "kota palembang":"palembang",
+
+    // BANDUNG
+    "bandung":"bandung",
+    "kota bandung":"bandung",
+    "kab bandung":"bandung",
+    "bandung barat":"bandung",
+
+    // BOGOR
+    "bogor":"bogor",
+    "kota bogor":"bogor",
+    "kab bogor":"bogor",
+
+    // JAKARTA
+    "jakbar":"jakbar",
+    "jakarta barat":"jakbar",
+
+    "jaksel":"jaksel",
+    "jakarta selatan":"jaksel",
+
+    // JOGJA
+    "jogja":"jogja",
+    "yogyakarta":"jogja",
+
+    // SURABAYA
+    "surabaya":"surabaya",
+
+    // SEMARANG
+    "semarang":"semarang",
+
+    // SOLO
+    "solo":"solo",
+    "surakarta":"solo",
+
+    // TASIK
+    "tasik":"tasikmalaya",
+    "tasikmalaya":"tasikmalaya",
+
+    // LAINNYA
+    "bali":"bali",
+    "banjarmasin":"banjarmasin",
+    "cirebon":"cirebon",
+    "legok":"legok",
+    "makassar":"makassar",
+    "malang":"malang",
+    "medan":"medan",
+    "purwokerto":"purwokerto",
+    "binjai":"binjai",
+    "ciamis":"ciamis",
+    "garut":"garut",
+    "lampung":"lampung",
+    "majalengka":"majalengka",
+    "cianjur":"cianjur",
+    "jatinegara":"jatinegara",
+    "purwakarta":"purwakarta",
+    "serang":"serang",
+    "jember":"jember",
+    "jombang":"jombang",
+    "karawang":"karawang",
+    "kediri":"kediri",
+    "lubuk pakam":"lubuk pakam",
+    "meruya":"meruya",
+    "probolinggo":"probolinggo",
+    "sukabumi":"sukabumi"
+  };
+
+  if (regionMap[r]) r = regionMap[r];
+
+  // kapital semua kata
   return r.replace(/\b\w/g, s => s.toUpperCase());
 }
 
