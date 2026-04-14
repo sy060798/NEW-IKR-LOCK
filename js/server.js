@@ -1,6 +1,6 @@
 // =====================================
 // FILE : js/server.js
-// FIX sesuai server.js backend
+// FULL FIX + LOADING PROGRESS
 // =====================================
 
 if (typeof SERVER_URL === "undefined") {
@@ -14,19 +14,39 @@ if (typeof SERVER_URL === "undefined") {
 // ===============================
 async function uploadServerAll() {
 
+  showLoading();
+
   try {
 
-    alert("Sinkronisasi server dimulai...");
+    setProgress(10, "Memulai koneksi server...");
+    await delay(500);
 
+    setProgress(35, "Upload data IKR...");
     await syncIKRServer();
-    await syncIMSServer();
+    await delay(500);
 
-    alert("Sinkronisasi selesai");
+    setProgress(70, "Upload data IMS...");
+    await syncIMSServer();
+    await delay(500);
+
+    setProgress(95, "Finalisasi...");
+    await delay(500);
+
+    setProgress(100, "Sinkronisasi selesai");
+
+    setTimeout(() => {
+      hideLoading();
+    }, 1200);
 
   } catch (err) {
 
-    console.error(err);
-    alert("Sinkronisasi gagal");
+    console.log(err);
+
+    setProgress(100, "Terjadi kesalahan");
+
+    setTimeout(() => {
+      hideLoading();
+    }, 1500);
 
   }
 
@@ -34,26 +54,82 @@ async function uploadServerAll() {
 
 
 // ===============================
+// DELAY
+// ===============================
+function delay(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+
+// ===============================
+// POPUP LOADING
+// ===============================
+function showLoading() {
+
+  let old = document.getElementById("loadingSync");
+  if (old) old.remove();
+
+  let div = document.createElement("div");
+  div.id = "loadingSync";
+
+  div.innerHTML = `
+    <div class="loadBox">
+      <h3>Sinkronisasi Server</h3>
+
+      <div class="barWrap">
+        <div id="barSync"></div>
+      </div>
+
+      <div id="txtSync">0%</div>
+
+      <small id="msgSync">Memulai...</small>
+    </div>
+  `;
+
+  document.body.appendChild(div);
+}
+
+
+// ===============================
+// UPDATE PROGRESS
+// ===============================
+function setProgress(persen, msg) {
+
+  let bar = document.getElementById("barSync");
+  let txt = document.getElementById("txtSync");
+  let m = document.getElementById("msgSync");
+
+  if (bar) bar.style.width = persen + "%";
+  if (txt) txt.innerText = persen + "%";
+  if (m) m.innerText = msg;
+}
+
+
+// ===============================
+// CLOSE LOADING
+// ===============================
+function hideLoading() {
+  document.getElementById("loadingSync")?.remove();
+}
+
+
+// ===============================
 // SINKRON IKR
-// hapus lama lalu save baru
 // ===============================
 async function syncIKRServer() {
 
   if (typeof dataIKR === "undefined") return;
 
-  await fetch(
-    SERVER_URL + "/api/save",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        type: "IKR",
-        data: dataIKR
-      })
-    }
-  );
+  await fetch(SERVER_URL + "/api/save", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      type: "IKR",
+      data: dataIKR
+    })
+  });
 
 }
 
@@ -65,48 +141,33 @@ async function syncIMSServer() {
 
   if (typeof dataIMS === "undefined") return;
 
-  await fetch(
-    SERVER_URL + "/api/save",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        type: "IMS",
-        data: dataIMS
-      })
-    }
-  );
+  await fetch(SERVER_URL + "/api/save", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      type: "IMS",
+      data: dataIMS
+    })
+  });
 
 }
 
 
 // ===============================
-// AUTO SYNC HAPUS IKR
+// AUTO DELETE SYNC
 // ===============================
 async function autoSyncIKRDelete() {
-
   try {
     await syncIKRServer();
-  } catch (err) {
-    console.log(err);
-  }
-
+  } catch (e) {}
 }
 
-
-// ===============================
-// AUTO SYNC HAPUS IMS
-// ===============================
 async function autoSyncIMSDelete() {
-
   try {
     await syncIMSServer();
-  } catch (err) {
-    console.log(err);
-  }
-
+  } catch (e) {}
 }
 
 
@@ -161,7 +222,7 @@ async function loadIMSServer() {
 
 
 // ===============================
-// AUTO LOAD SAAT BUKA
+// AUTO LOAD PAGE
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
   loadIKRServer();
@@ -169,6 +230,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+// ===============================
+// EXPORT GLOBAL
+// ===============================
 window.uploadServerAll = uploadServerAll;
 window.autoSyncIKRDelete = autoSyncIKRDelete;
 window.autoSyncIMSDelete = autoSyncIMSDelete;
