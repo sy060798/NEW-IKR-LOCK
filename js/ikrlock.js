@@ -52,8 +52,8 @@ function importIKR(e) {
 
     let map = {};
 
-    // ================= LOOP DATA =================
-    raw.forEach(r => {
+   // ================= LOOP DATA =================
+raw.forEach(r => {
 
   // ================= AMBIL DATA =================
   let region =
@@ -79,7 +79,7 @@ function importIKR(e) {
       ).replace(/[^0-9]/g, "")
     ) || 0;
 
-  // ================= PATCH WO TYPE =================
+  // ================= WO TYPE =================
   let wotype =
     r["Job Name"] ||
     r["JOB NAME"] ||
@@ -88,30 +88,32 @@ function importIKR(e) {
 
   if (!region || !woEnd) return;
 
-  // FORMAT: 01/02/2026 09:55:17
-let txt = String(woEnd).trim().split(" ")[0];
-let p = txt.split("/");
+  // ================= FORMAT TANGGAL =================
+  let txt = String(woEnd).trim().split(" ")[0];
+  let p = txt.split("/");
 
-if (p.length !== 3) return;
+  if (p.length !== 3) return;
 
-// dd/mm/yyyy
-let hari = parseInt(p[0]);
-let bln  = parseInt(p[1]) - 1;
-let thn  = parseInt(p[2]);
+  let hari = parseInt(p[0]);
+  let bln  = parseInt(p[1]) - 1;
+  let thn  = parseInt(p[2]);
 
-let dt = new Date(thn, bln, hari);
+  let dt = new Date(thn, bln, hari);
 
-if (isNaN(dt)) return;
+  if (isNaN(dt)) return;
 
-let tahun = thn;
+  let tahun = thn;
 
-let namaBulan = [
-  "Jan","Feb","Mar","Apr","Mei","Jun",
-  "Jul","Agu","Sep","Okt","Nov","Des"
-];
+  let namaBulan = [
+    "Jan","Feb","Mar","Apr","Mei","Jun",
+    "Jul","Agu","Sep","Okt","Nov","Des"
+  ];
 
-let bulan = namaBulan[bln];
-      
+  let bulan = namaBulan[bln];
+
+  // ================= INI YANG KURANG =================
+  let key = region + "_" + tahun + "_" + bulan;
+
   // ================= INIT MAP =================
   if (!map[key]) {
     map[key] = {
@@ -132,7 +134,7 @@ let bulan = namaBulan[bln];
     };
   }
 
-  // kalau awal kosong lalu ketemu isi
+  // kalau kosong isi
   if (!map[key].wotype && wotype) {
     map[key].wotype = wotype;
   }
@@ -140,7 +142,7 @@ let bulan = namaBulan[bln];
   // ================= AMOUNT =================
   map[key].amount += boq;
 
-  // ================= WO + DETAIL =================
+  // ================= WO =================
   const wo =
     String(
       r.Wonumber ||
@@ -155,7 +157,7 @@ let bulan = namaBulan[bln];
     r["Status"] ||
     "-";
 
-  // ================= HITUNG WO UNIK =================
+  // ================= WO UNIK =================
   if (!map[key].woSet.has(wo)) {
     map[key].woSet.add(wo);
     map[key].jumlah++;
