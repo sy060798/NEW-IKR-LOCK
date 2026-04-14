@@ -328,19 +328,22 @@ async function mergeIMS_to_IKR() {
   }
 }
   // ================= CHECK ALL IMS =================
+ // ================= CHECK ALL IMS =================
+document.addEventListener("DOMContentLoaded", () => {
+
   const checkAllIMS = document.getElementById("checkIMS");
 
-  if (checkAllIMS) {
-    checkAllIMS.addEventListener("change", e => {
+  if (!checkAllIMS) return;
 
-      const checked = e.target.checked;
+  checkAllIMS.addEventListener("change", e => {
 
-      document
-        .querySelectorAll("#tblIMS tbody input[type='checkbox']")
-        .forEach(cb => cb.checked = checked);
+    const checked = e.target.checked;
 
-    });
-  }
+    document
+      .querySelectorAll("#tblIMS tbody input[type='checkbox']")
+      .forEach(cb => cb.checked = checked);
+
+  });
 
 });
 
