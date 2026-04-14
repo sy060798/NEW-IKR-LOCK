@@ -1,37 +1,52 @@
-let dataIKR = [];
 // ================= GLOBAL =================
+let dataIKR = [];
 let dataIMS = [];
 
 const SERVER_URL = window.SERVER_URL || "https://tracking-server-production-6a12.up.railway.app";
 
-// ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
-  const file = document.getElementById("fileIKR");
-  const check = document.getElementById("checkIKR");
 
-  if (file) file.addEventListener("change", importIKR);
-  const file = document.getElementById("fileIMS");
-  const checkAll = document.getElementById("checkIMS");
+  // ================= IKR =================
+  const fileIKR = document.getElementById("fileIKR");
+  const checkIKR = document.getElementById("checkIKR");
 
-  if (check) {
-    check.addEventListener("change", e => {
+  if (fileIKR) {
+    fileIKR.addEventListener("change", importIKR);
+  }
+
+  if (checkIKR) {
+    checkIKR.addEventListener("change", e => {
       document.querySelectorAll(".chkIKR").forEach(c => {
         c.checked = e.target.checked;
       });
-  if (file) file.addEventListener("change", importIMS);
-
-  if (checkAll) {
-    checkAll.addEventListener("change", e => {
-      document.querySelectorAll("#tblIMS tbody input[type='checkbox']")
-        .forEach(cb => cb.checked = e.target.checked);
     });
   }
 
-  renderIKR();
-  renderIMS();
-  loadIMSServer(); // auto load
-});
+  // ================= IMS =================
+  const fileIMS = document.getElementById("fileIMS");
+  const checkIMS = document.getElementById("checkIMS");
 
+  if (fileIMS) {
+    fileIMS.addEventListener("change", importIMS);
+  }
+
+  if (checkIMS) {
+    checkIMS.addEventListener("change", e => {
+      document.querySelectorAll("#tblIMS tbody input[type='checkbox']")
+        .forEach(cb => {
+          cb.checked = e.target.checked;
+        });
+    });
+  }
+
+  // ================= INIT RENDER =================
+  if (typeof renderIKR === "function") renderIKR();
+  if (typeof renderIMS === "function") renderIMS();
+
+  // ================= AUTO LOAD SERVER =================
+  if (typeof loadIMSServer === "function") loadIMSServer();
+
+});
 // ================= TAB FIX =================
 function openTab(id, btn) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
