@@ -8,103 +8,208 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- GANTI SELURUH CSS LAMA DENGAN CSS INI -->
 <style>
-body{
-  font-family:Arial;
-  background:#0e0e0e;
-  color:#fff;
-  padding:15px;
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
 }
 
-h1{text-align:center;margin-bottom:15px}
+body{
+  font-family:Segoe UI, Arial, sans-serif;
+  background:#f4f7fb;
+  color:#1e2a3a;
+  display:flex;
+  min-height:100vh;
+}
 
-/* MENU */
-.menu{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+/* ================= SIDEBAR ================= */
+.sidebar{
+  width:240px;
+  background:#ffffff;
+  border-right:1px solid #d9e3f0;
+  padding:20px 15px;
+}
+
+.logo{
+  font-size:22px;
+  font-weight:700;
+  color:#1565c0;
+  margin-bottom:25px;
+}
+
+.side-title{
+  font-size:11px;
+  font-weight:700;
+  color:#7a8ca5;
+  margin:18px 0 8px;
+  text-transform:uppercase;
+}
+
+.menu{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
 .menu button{
-  background:#222;
+  width:100%;
+  border:none;
+  background:transparent;
+  text-align:left;
+  padding:11px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  color:#40566f;
+  font-size:14px;
+  font-weight:600;
+  transition:0.2s;
+}
+
+.menu button:hover{
+  background:#eef5ff;
+  color:#1565c0;
+}
+
+.menu button.active{
+  background:#1565c0;
   color:#fff;
-  border:0;
-  padding:10px;
+}
+
+/* ================= CONTENT ================= */
+.main{
+  flex:1;
+  padding:20px;
+}
+
+.topbar{
+  background:#ffffff;
+  border:1px solid #dce6f2;
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:15px;
+}
+
+.topbar h1{
+  font-size:24px;
+  color:#1565c0;
+}
+
+/* ================= TOOLBAR ================= */
+.toolbar{
+  display:none;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:15px;
+}
+
+.toolbar.active{
+  display:flex;
+}
+
+.toolbar button{
+  background:#1565c0;
+  color:#fff;
+  border:none;
+  padding:10px 14px;
   border-radius:8px;
   cursor:pointer;
-  font-weight:bold;
+  font-weight:600;
 }
-.menu button.active{background:#8e44ad}
 
-/* TOOLBAR */
-.toolbar{display:none;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.toolbar.active{display:flex}
+.toolbar button:hover{
+  background:#0d57ab;
+}
 
-/* TAB */
-.tab{display:none}
-.tab.active{display:block}
+/* ================= TAB ================= */
+.tab{
+  display:none;
+}
 
-/* TABLE */
+.tab.active{
+  display:block;
+}
+
+/* ================= CARD ================= */
 .wrap{
+  background:#ffffff;
+  border:1px solid #dce6f2;
+  border-radius:14px;
   overflow:auto;
-  background:#171717;
-  border-radius:10px;
 }
+
+/* ================= TABLE ================= */
 table{
   width:100%;
-  border-collapse:collapse;
   min-width:1200px;
+  border-collapse:collapse;
 }
+
 th,td{
-  border:1px solid #333;
-  padding:6px;
-  font-size:12px;
+  padding:10px;
+  border-bottom:1px solid #edf2f7;
+  font-size:13px;
   text-align:center;
 }
+
 th{
-  background:#8e44ad;
+  background:#eaf3ff;
+  color:#1565c0;
+  font-weight:700;
   position:sticky;
   top:0;
 }
 
-/* ================= POPUP CLEAN ================= */
+tr:hover{
+  background:#f8fbff;
+}
+
+input[type="checkbox"]{
+  transform:scale(1.1);
+}
+
+/* ================= POPUP ================= */
 .popup-overlay{
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.75);
+  background:rgba(0,0,0,0.55);
   z-index:9999;
 }
 
 .popup-box{
-  width:90%;
-  max-width:850px;
-  margin:5% auto;
-  background:#111;
-  border-radius:12px;
+  width:92%;
+  max-width:900px;
+  margin:4% auto;
+  background:#fff;
+  border-radius:14px;
   overflow:hidden;
-  display:flex;
-  flex-direction:column;
 }
 
 .popup-header{
+  background:#1565c0;
+  color:#fff;
+  padding:14px 18px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:12px 15px;
-  background:#8e44ad;
 }
 
 .popup-header h3{
-  margin:0;
-  font-size:16px;
+  font-size:18px;
 }
 
 .close-btn{
-  background:transparent;
   border:none;
+  background:transparent;
   color:#fff;
-  font-size:20px;
+  font-size:22px;
   cursor:pointer;
 }
 
 .popup-body{
-  padding:10px;
+  padding:15px;
   max-height:60vh;
   overflow:auto;
 }
@@ -114,44 +219,64 @@ th{
   border-collapse:collapse;
 }
 
-.popup-table th,
-.popup-table td{
-  border:1px solid #333;
-  padding:8px;
-  font-size:12px;
+.popup-table th{
+  background:#eaf3ff;
+  color:#1565c0;
 }
 
+.popup-table td,
 .popup-table th{
-  background:#222;
-  position:sticky;
-  top:0;
+  border:1px solid #edf2f7;
+  padding:8px;
 }
 
 .popup-footer{
-  padding:10px;
+  padding:14px;
   text-align:right;
-  background:#0d0d0d;
+  background:#f8fbff;
+}
+
+.btn-green{
+  background:#1e88e5;
+  color:#fff;
+  border:none;
+  padding:9px 15px;
+  border-radius:8px;
+  margin-right:8px;
+  cursor:pointer;
 }
 
 .btn-red{
-  background:#e74c3c;
-  border:none;
+  background:#e53935;
   color:#fff;
-  padding:8px 14px;
-  border-radius:6px;
+  border:none;
+  padding:9px 15px;
+  border-radius:8px;
   cursor:pointer;
 }
 
-  .btn-green{
-  background:#2ecc71;
-  border:none;
-  color:#fff;
-  padding:8px 14px;
-  border-radius:6px;
-  cursor:pointer;
-  margin-right:8px;
+/* ================= RESPONSIVE ================= */
+@media(max-width:900px){
+
+  body{
+    flex-direction:column;
+  }
+
+  .sidebar{
+    width:100%;
+    border-right:none;
+    border-bottom:1px solid #dce6f2;
+  }
+
+  .menu{
+    flex-direction:row;
+    flex-wrap:wrap;
+  }
+
+  .menu button{
+    width:auto;
+  }
 }
-  
 </style>
 </head>
 
