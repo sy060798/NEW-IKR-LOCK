@@ -23,51 +23,83 @@ document.addEventListener("DOMContentLoaded", () => {
   renderIMS();
 });
 
-// ================= import excel =================
-/let existingKey = new Set();
+function importIMS(e) {
 
-raw.forEach(r => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-  let city = r.City || r.city || "";
-  let pra = r["Pra Invoice Number"] || "";
-  let inv = r["Invoice Number"] || "";
-  let job = r["Job Name"] || "";
+  const reader = new FileReader();
 
-  if (!city) return;
+  reader.onload = function (evt) {
 
-  // ================= 🔥 ANTI DUPLICATE (GLOBAL ROW) =================
-  let keyUniq = String(pra).trim() + "_" + String(inv).trim();
+    const wb = XLSX.read(evt.target.result, { type: "binary" });
 
-  if (existingKey.has(keyUniq)) return;
-  existingKey.add(keyUniq);
+    let raw = [];
 
-  // ================= 🔥 GROUP KEY (STABIL) =================
-  let keyGroup = city + "_" + pra + "_" + inv;
+    wb.SheetNames.forEach(s => {
+      const json = XLSX.utils.sheet_to_json(wb.Sheets[s], {
+        defval: "",
+        raw: false
+      });
+      json.forEach(r => raw.push(r));
+    });
 
-  if (!map[keyGroup]) {
-    map[keyGroup] = {
-      city,
-      pra,
-      inv,
-      job,
-      jumlah: 0,
-      total: 0,
-      detail: []
-    };
-  }
+    let map = {};
 
-  map[keyGroup].jumlah++;
-  map[keyGroup].total += parseAngka(r["Invoice Total"]);
+    // ================= 🔥 ANTI DUPLIKAT GLOBAL (PRA + INV) =================
+    let existingKey = new Set();
 
-  map[keyGroup].detail.push({
-    wo: r.Wonumber || "-",
-    status: r.Status || "-",
-    amount: parseAngka(r["Invoice Total"]),
-    pra,
-    inv
-  });
-});
+    raw.forEach(r => {
 
+      let city = r.City || r.city || "";
+      let pra = r["Pra Invoice Number"] || "";
+      let inv = r["Invoice Number"] || "";
+      let job = r["Job Name"] || "";
+
+      if (!city) return;
+
+      // ================= KEY ANTI DUPLIKAT =================
+      let keyUniq = String(pra).trim() + "_" + String(inv).trim();
+
+      if (existingKey.has(keyUniq)) return;
+      existingKey.add(keyUniq);
+
+      // ================= GROUP KEY =================
+      let keyUniq = `${String(pra || "").trim()}_${String(inv || "").trim()}`;
+
+      if (!map[keyGroup]) {
+        map[keyGroup] = {
+          city,
+          pra,
+          inv,
+          job,
+          jumlah: 0,
+          total: 0,
+          detail: []
+        };
+      }
+
+      map[keyGroup].jumlah++;
+      map[keyGroup].total += parseAngka(r["Invoice Total"]);
+
+      map[keyGroup].detail.push({
+        wo: r.Wonumber || "-",
+        status: r.Status || "-",
+        amount: parseAngka(r["Invoice Total"])
+      });
+
+    });
+
+    dataIMS = Object.values(map);
+
+    renderIMS();
+
+    alert("IMS upload sukses");
+    e.target.value = "";
+  };
+
+  reader.readAsBinaryString(file);
+}
 // ================= RENDER IMS =================
 function renderIMS() {
 
