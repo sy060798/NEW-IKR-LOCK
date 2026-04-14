@@ -1,6 +1,5 @@
 if (typeof SERVER_URL === "undefined") {
-var SERVER_URL =
-"https://tracking-server-production-6a12.up.railway.app";
+  var SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
 }
 
 let isUploading = false;
@@ -9,111 +8,102 @@ let isUploading = false;
 // UPLOAD SEMUA DATA
 // ===============================
 async function uploadServerAll() {
+  if (isUploading) return;
 
-if (isUploading) return;
+  isUploading = true;
+  showLoading();
 
-isUploading = true;
-showLoading();
+  try {
+    setProgress(10, "Memulai koneksi server...");
+    await delay(400);
 
-try {
+    setProgress(30, "Upload data IKR...");
+    await syncIKRServer();
 
-setProgress(10, "Memulai koneksi server...");
-await delay(400);
+    await delay(400);
 
-setProgress(30, "Upload data IKR...");
-await syncIKRServer();
+    setProgress(65, "Upload data IMS...");
+    await syncIMSServer();
 
-await delay(400);
+    await delay(400);
 
-setProgress(65, "Upload data IMS...");
-await syncIMSServer();
+    setProgress(90, "Finalisasi data...");
+    await delay(400);
 
-await delay(400);
+    setProgress(100, "Sinkronisasi selesai");
 
-setProgress(90, "Finalisasi data...");
+    setTimeout(() => {
+      hideLoading();
+      isUploading = false;
+    }, 800);
 
-await delay(400);
+  } catch (err) {
+    console.error(err);
 
-setProgress(100, "Sinkronisasi selesai");
+    setProgress(100, "Gagal sinkron");
 
-setTimeout(() => {
-hideLoading();
-isUploading = false;
-}, 800);
-
-} catch (err) {
-
-console.error(err);
-
-setProgress(100, "Gagal sinkron");
-
-setTimeout(() => {
-hideLoading();
-isUploading = false;
-}, 1200);
-
-}
+    setTimeout(() => {
+      hideLoading();
+      isUploading = false;
+    }, 1200);
+  }
 }
 
 // ===============================
 // SYNC IKR
 // ===============================
 async function syncIKRServer() {
+  if (!Array.isArray(dataIKR)) return;
 
-if (!Array.isArray(dataIKR)) return;
+  const res = await fetch(SERVER_URL + "/api/save", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      type: "IKR",
+      data: dataIKR
+    })
+  });
 
-const res = await fetch(SERVER_URL + "/api/save", {
-method: "POST",
-headers: {
-"Content-Type": "application/json"
-},
-body: JSON.stringify({
-type: "IKR",
-data: dataIKR
-})
-});
-
-if (!res.ok) throw new Error("IKR upload gagal");
+  if (!res.ok) throw new Error("IKR upload gagal");
 }
 
 // ===============================
 // SYNC IMS
 // ===============================
 async function syncIMSServer() {
+  if (typeof dataIMS === "undefined" || !Array.isArray(dataIMS)) return;
 
-if (!Array.isArray(dataIMS)) return;
+  const res = await fetch(SERVER_URL + "/api/save", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      type: "IMS",
+      data: dataIMS
+    })
+  });
 
-const res = await fetch(SERVER_URL + "/api/save", {
-method: "POST",
-headers: {
-"Content-Type": "application/json"
-},
-body: JSON.stringify({
-type: "IMS",
-data: dataIMS
-})
-});
-
-if (!res.ok) throw new Error("IMS upload gagal");
+  if (!res.ok) throw new Error("IMS upload gagal");
 }
 
 // ===============================
 // UTIL
 // ===============================
 function delay(ms){
-return new Promise(r => setTimeout(r, ms));
+  return new Promise(r => setTimeout(r, ms));
 }
 
-
 // ===============================
-// loaing server
+// LOADING UI (FIX DUPLICATE ID)
 // ===============================
-
 function showLoading(){
-if (document.getElementById("loadingSync")) return;
+  if (document.getElementById("loadingSync")) return;
 
-let div = document.createElement("div");
-div.id = "loadingSync";
+  let div = document.createElement("div");
+  div.id = "loadingSync";
 
   div.style = `
     position: fixed;
@@ -125,8 +115,7 @@ div.id = "loadingSync";
     z-index: 999999;
   `;
 
-div.innerHTML = `
-    <div class="loadBox">
+  div.innerHTML = `
     <div style="
       width: 320px;
       background: #fff;
@@ -136,9 +125,7 @@ div.innerHTML = `
       font-family: Arial;
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     ">
-     <h3>Sinkronisasi Server</h3>
-      <div class="barWrap">
-        <div id="barSync"></div>
+      <h3>Sinkronisasi Server</h3>
 
       <div style="
         width:100%;
@@ -154,66 +141,65 @@ div.innerHTML = `
           background:#4caf50;
           transition: width 0.3s ease;
         "></div>
-     </div>
+      </div>
 
-     <div id="txtSync">0%</div>
-     <small id="msgSync">Memulai...</small>
-   </div>
- `;
+      <div id="txtSync">0%</div>
+      <small id="msgSync">Memulai...</small>
+    </div>
+  `;
 
-document.body.appendChild(div);
+  document.body.appendChild(div);
 }
 
 function setProgress(persen,msg){
+  let bar = document.getElementById("barSync");
+  let txt = document.getElementById("txtSync");
+  let m   = document.getElementById("msgSync");
 
-let bar = document.getElementById("barSync");
-let txt = document.getElementById("txtSync");
-let m   = document.getElementById("msgSync");
-
-if(bar) bar.style.width = persen + "%";
-if(txt) txt.innerText = persen + "%";
-if(m) m.innerText = msg;
+  if(bar) bar.style.width = persen + "%";
+  if(txt) txt.innerText = persen + "%";
+  if(m) m.innerText = msg;
 }
 
 function hideLoading(){
-document.getElementById("loadingSync")?.remove();
+  document.getElementById("loadingSync")?.remove();
 }
 
 // ===============================
-// LOAD DATA
+// LOAD DATA (SAFE CALL)
 // ===============================
 async function loadIKRServer() {
-try {
-const res = await fetch(SERVER_URL + "/api/get?type=IKR");
-const hasil = await res.json();
+  try {
+    const res = await fetch(SERVER_URL + "/api/get?type=IKR");
+    const hasil = await res.json();
 
-if (Array.isArray(hasil)) {
-dataIKR = hasil;
-renderIKR?.();
-}
-} catch (err) {
-console.log(err);
-}
+    if (Array.isArray(hasil)) {
+      dataIKR = hasil;
+      if (typeof renderIKR === "function") renderIKR();
+    }
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 async function loadIMSServer() {
-try {
-const res = await fetch(SERVER_URL + "/api/get?type=IMS");
-const hasil = await res.json();
+  try {
+    const res = await fetch(SERVER_URL + "/api/get?type=IMS");
+    const hasil = await res.json();
 
-if (Array.isArray(hasil)) {
-dataIMS = hasil;
-renderIMS?.();
-}
-} catch (err) {
-console.log(err);
-}
+    if (Array.isArray(hasil)) {
+      dataIMS = hasil;
+      if (typeof renderIMS === "function") renderIMS();
+    }
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
-loadIKRServer();
-loadIMSServer();
+  loadIKRServer();
+  loadIMSServer();
 });
 
 window.uploadServerAll = uploadServerAll;
