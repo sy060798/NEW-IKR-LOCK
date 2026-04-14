@@ -1,6 +1,11 @@
 // ================= GLOBAL =================
 let dataIMS = [];
 
+const SERVER_URL =
+  typeof window.SERVER_URL !== "undefined"
+    ? window.SERVER_URL
+    : "https://tracking-server-production-6a12.up.railway.app";
+
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -14,9 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document
       .querySelectorAll("#tblIMS tbody input[type='checkbox']")
-      .forEach(cb => {
-        cb.checked = checked;
-      });
+      .forEach(cb => cb.checked = checked);
 
   });
 
@@ -276,62 +279,8 @@ async function mergeIMS_to_IKR() {
 
     (ims.detail || []).forEach(x => {
 
-      let wo = x.wo;
-      if (!wo) return;
-
-      // ================= FILTER ONLY APPROVED =================
-      let status = String(x.status || "").toLowerCase();
-
-      if (!status.includes("approved")) return; 
-      // ❌ selain approved langsung skip
-
-      let found = null;
-
-      // cari di IKR
-      for (let g of dataIKR) {
-        let d = (g.detail || []).find(v => v.wo === wo);
-        if (d) {
-          found = { group: g, item: d };
-          break;
-        }
-      }
-
-      // ================= UPDATE IKR ONLY =================
-      if (found) {
-
-        found.item.status = "APPROVED";
-
-        if (!found.group.approved) found.group.approved = 0;
-        found.group.approved += 1;
-
-        changedWO.push(wo);
-      }
-
-    });
-
-  });
-
-  renderIKR?.();
-
-  let SERVER_URL =
-  typeof SERVER_URL !== "undefined"
-    ? SERVER_URL
-    : "https://tracking-server-production-6a12.up.railway.app";
-
-// ===============================
-// SYNC IMS → IKR (ONLY APPROVED)
-// ===============================
-async function mergeIMS_to_IKR() {
-
-  if (!Array.isArray(dataIMS) || !Array.isArray(dataIKR)) return;
-
-  let changedWO = [];
-
-  dataIMS.forEach(ims => {
-
-    (ims.detail || []).forEach(x => {
-
       const status = String(x.status || "").toLowerCase();
+
       if (!status.includes("approved")) return;
 
       const wo = x.wo;
@@ -343,13 +292,10 @@ async function mergeIMS_to_IKR() {
 
           if (d.wo === wo) {
 
-            // update status
             d.status = "APPROVED";
 
-            // update approved count
             group.approved = (group.approved || 0) + 1;
 
-            // FS hanya dari approved
             group.fs = (group.fs || 0) + (d.amount || 0);
 
             changedWO.push(wo);
@@ -365,14 +311,11 @@ async function mergeIMS_to_IKR() {
 
   renderIKR?.();
 
-  // ================= AUTO SYNC SERVER =================
   try {
 
     await fetch(SERVER_URL + "/api/save", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: "IKR",
         data: dataIKR,
@@ -384,7 +327,6 @@ async function mergeIMS_to_IKR() {
     console.log("Server sync gagal", err);
   }
 }
-
   // ================= CHECK ALL IMS =================
   const checkAllIMS = document.getElementById("checkIMS");
 
