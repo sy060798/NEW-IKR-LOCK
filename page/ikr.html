@@ -389,15 +389,27 @@ color:#666;
   </div>
 
   <!-- TOOLBAR IMS -->
-  <div id="tb-ims" class="toolbar">
-    <button onclick="downloadIMS()">DOWNLOAD EXCEL</button>
+<div id="tb-ims" class="toolbar">
+  <button onclick="downloadIMS()">DOWNLOAD EXCEL</button>
 
-    <input type="file" id="fileIMS" hidden>
+  <input type="file" id="fileIMS" hidden>
 
-    <button onclick="document.getElementById('fileIMS').click()">
-      UPLOAD IMS
-    </button>
-  </div>
+  <button onclick="document.getElementById('fileIMS').click()">
+    UPLOAD IMS
+  </button>
+
+  <!-- ✅ TAMBAHAN CHECK ALL -->
+  <label style="margin-left:10px;">
+    <input type="checkbox" id="checkIMS">
+    SELECT ALL
+  </label>
+
+  <!-- ✅ TAMBAHAN HAPUS -->
+  <button onclick="hapusIMS()" style="background:#e53935;">
+    HAPUS
+  </button>
+
+</div>
 
   <!-- TOOLBAR PIVOT -->
   <div id="tb-pivot" class="toolbar">
