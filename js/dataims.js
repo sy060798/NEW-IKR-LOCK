@@ -136,3 +136,117 @@ function parseAngka(v) {
 function formatRp(n) {
   return "Rp " + (Number(n) || 0).toLocaleString("id-ID");
 }
+
+
+// ===============================
+// SYNC IMS KE SERVER (PATCH)
+// ===============================
+async function syncIMSServer() {
+
+  if (!Array.isArray(dataIMS)) return;
+
+  const res = await fetch(SERVER_URL + "/api/save", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      type: "IMS",
+      data: dataIMS
+    })
+  });
+
+  if (!res.ok) throw new Error("IMS upload gagal");
+}
+
+
+
+// ===============================
+// LOAD IMS DARI SERVER
+// ===============================
+async function loadIMSServer() {
+
+  try {
+
+    const res = await fetch(SERVER_URL + "/api/get?type=IMS");
+    const hasil = await res.json();
+
+    if (Array.isArray(hasil)) {
+      dataIMS = hasil;
+      renderIMS();
+    }
+
+  } catch (err) {
+    console.log("Load IMS gagal", err);
+  }
+
+}
+
+
+// ===============================
+// AUTO DELETE WO APPROVED > 2 HARI
+// ===============================
+function autoCleanApprovedWO() {
+
+  const now = new Date();
+
+  function isExpired(dateStr) {
+    if (!dateStr) return false;
+
+    let d = new Date(dateStr);
+    if (isNaN(d)) return false;
+
+    let diff = now - d;
+    let days = diff / (1000 * 60 * 60 * 24);
+
+    return days >= 2;
+  }
+
+  // ================= IKR CLEAN =================
+  dataIKR = dataIKR.map(group => {
+
+    if (!group.detail) return group;
+
+    group.detail = group.detail.filter(x => {
+
+      // kalau status approved + ada tanggal (kalau belum ada, skip)
+      if (String(x.status).toLowerCase().includes("approved")) {
+
+        if (isExpired(x.date || x.approvedDate)) {
+          group.jumlah = Math.max(0, group.jumlah - 1);
+          return false; // HAPUS WO
+        }
+
+      }
+
+      return true;
+    });
+
+    return group;
+  });
+
+  // ================= IMS CLEAN =================
+  dataIMS = dataIMS.map(group => {
+
+    if (!group.detail) return group;
+
+    group.detail = group.detail.filter(x => {
+
+      if (String(x.status).toLowerCase().includes("approved")) {
+
+        if (isExpired(x.date || x.approvedDate)) {
+          group.jumlah = Math.max(0, group.jumlah - 1);
+          return false;
+        }
+
+      }
+
+      return true;
+    });
+
+    return group;
+  });
+
+  renderIKR?.();
+  renderIMS?.();
+}
