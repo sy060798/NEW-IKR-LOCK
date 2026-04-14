@@ -104,18 +104,55 @@ function delay(ms){
   return new Promise(r => setTimeout(r, ms));
 }
 
+
+// ===============================
+// loaing server
+// ===============================
+
 function showLoading(){
   if (document.getElementById("loadingSync")) return;
 
   let div = document.createElement("div");
   div.id = "loadingSync";
 
+  div.style = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+  `;
+
   div.innerHTML = `
-    <div class="loadBox">
+    <div style="
+      width: 320px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      font-family: Arial;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    ">
       <h3>Sinkronisasi Server</h3>
-      <div class="barWrap">
-        <div id="barSync"></div>
+
+      <div style="
+        width:100%;
+        height:10px;
+        background:#eee;
+        border-radius:10px;
+        overflow:hidden;
+        margin:15px 0;
+      ">
+        <div id="barSync" style="
+          width:0%;
+          height:100%;
+          background:#4caf50;
+          transition: width 0.3s ease;
+        "></div>
       </div>
+
       <div id="txtSync">0%</div>
       <small id="msgSync">Memulai...</small>
     </div>
@@ -123,7 +160,6 @@ function showLoading(){
 
   document.body.appendChild(div);
 }
-
 function setProgress(persen,msg){
 
   let bar = document.getElementById("barSync");
