@@ -187,33 +187,41 @@ body{flex-direction:column}
     </div>
   </div>
 
-  <!-- POPUP -->
-  <div id="popup" class="popup-overlay">
-    <div class="popup-box">
-      <div class="popup-header">
-        <h3>DETAIL WO</h3>
-        <button class="close-btn" onclick="closePopup()">✕</button>
-      </div>
+ <!-- POPUP WO -->
+<div id="popup" class="popup-overlay">
+  <div class="popup-box">
+    
+    <div class="popup-header">
+      <h3>DETAIL WO</h3>
+      <button class="close-btn" onclick="closePopup()">✕</button>
+    </div>
 
-      <div class="popup-body">
-        <table class="popup-table">
-          <thead>
+    <div class="popup-body">
+      <table class="popup-table">
+        <thead>
+          <tr>
             <th>WO</th>
             <th>Reference</th>
             <th>Quotation</th>
             <th>Status</th>
             <th>Amount</th>
-          </thead>
-          <tbody id="popupBody"></tbody>
-        </table>
-      </div>
-
-      <div class="popup-footer">
-        <button onclick="exportPopupExcel()" class="btn-green">EXPORT EXCEL</button>
-        <button onclick="closePopup()" class="btn-red">TUTUP</button>
-      </div>
+          </tr>
+        </thead>
+        <tbody id="popupBody"></tbody>
+      </table>
     </div>
-  <!-- ✅ POPUP IMS (HARUS DI LUAR) -->
+  
+    <div class="popup-footer">
+      <button onclick="exportPopupExcel()" class="btn-green">EXPORT EXCEL</button>
+      <button onclick="closePopup()" class="btn-red">TUTUP</button>
+    </div>
+
+  </div>
+</div> 
+
+
+
+<!-- ================= POPUP IMS ================= -->
 <div id="popupIMS" class="popup-overlay">
   <div class="popup-box">
     
@@ -242,8 +250,6 @@ body{flex-direction:column}
     </div>
 
   </div>
-</div>
-
 </div>
 
 <script src="../js/ikrlock.js"></script>
