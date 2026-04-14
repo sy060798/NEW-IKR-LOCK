@@ -313,6 +313,58 @@ async function mergeIMS_to_IKR() {
 
   renderIKR?.();
 
+  let SERVER_URL =
+  typeof SERVER_URL !== "undefined"
+    ? SERVER_URL
+    : "https://tracking-server-production-6a12.up.railway.app";
+
+// ===============================
+// SYNC IMS → IKR (ONLY APPROVED)
+// ===============================
+async function mergeIMS_to_IKR() {
+
+  if (!Array.isArray(dataIMS) || !Array.isArray(dataIKR)) return;
+
+  let changedWO = [];
+
+  dataIMS.forEach(ims => {
+
+    (ims.detail || []).forEach(x => {
+
+      const status = String(x.status || "").toLowerCase();
+      if (!status.includes("approved")) return;
+
+      const wo = x.wo;
+      if (!wo) return;
+
+      dataIKR.forEach(group => {
+
+        (group.detail || []).forEach(d => {
+
+          if (d.wo === wo) {
+
+            // update status
+            d.status = "APPROVED";
+
+            // update approved count
+            group.approved = (group.approved || 0) + 1;
+
+            // FS hanya dari approved
+            group.fs = (group.fs || 0) + (d.amount || 0);
+
+            changedWO.push(wo);
+          }
+
+        });
+
+      });
+
+    });
+
+  });
+
+  renderIKR?.();
+
   // ================= AUTO SYNC SERVER =================
   try {
 
@@ -332,45 +384,6 @@ async function mergeIMS_to_IKR() {
     console.log("Server sync gagal", err);
   }
 }
-
-// taruh di bawah importIMS / renderIMS
-async function mergeIMS_to_IKR() {
-
-  if (!Array.isArray(dataIMS) || !Array.isArray(dataIKR)) return;
-
-  dataIMS.forEach(ims => {
-
-    (ims.detail || []).forEach(x => {
-
-      if (!String(x.status || "").toLowerCase().includes("approved")) return;
-
-      let wo = x.wo;
-
-      for (let g of dataIKR) {
-        let d = (g.detail || []).find(v => v.wo === wo);
-        if (d) d.status = "APPROVED";
-      }
-
-    });
-
-  });
-
-  recalcApprovedValues?.();
-  renderIKR?.();
-
-  try {
-    await fetch(SERVER_URL + "/api/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "IKR", data: dataIKR })
-    });
-  } catch (e) {
-    console.log("sync gagal");
-  }
-}
-
-
-document.addEventListener("DOMContentLoaded", () => {
 
   // ================= CHECK ALL IMS =================
   const checkAllIMS = document.getElementById("checkIMS");
