@@ -73,10 +73,12 @@ function importIMS(e) {
 
 wo = String(wo).trim().toUpperCase();
 
-  let total =
-    parseInt(
-      String(r["Invoice Total"] || 0).replace(/[^0-9]/g, "")
-    ) || 0;
+ let woTotal =
+  parseInt(
+    String(r["WO Total"] || r["WO"] || 0)
+      .toString()
+      .replace(/[^0-9]/g, "")
+  ) || 0;
 
   let job = (r["Job Name"] || "").toString().trim();
 
@@ -95,34 +97,39 @@ wo = String(wo).trim().toUpperCase();
       job,
       total: 0,
       detail: [],
-      woSet: new Set()
     };
   }
 
   let existing = map[key].detail.find(d => d.wo === wo);
 
 if (!existing) {
-  map[key].woSet.add(wo);
   map[key].jumlah++;
 
   map[key].detail.push({
-    wo,
-    total
-  });
+  wo,
+  total: woTotal
+});
 
-  map[key].total += total;
+  map[key].total += woTotal;
 } else {
-  existing.total += total;
-  map[key].total += total;
+  existing.total += woTotal;
+  map[key].total += woTotal;
 }
 });
 
 // ✅ PINDAH KE SINI (DI LUAR LOOP)
 let hasilBaru = Object.values(map).map(x => {
-  delete x.woSet;
-  return x;
-});
+  const ppn = x.total * 0.11;
+  const fee = x.total * 0.0175;
+  const fs = x.total - ppn + fee;
 
+  return {
+    ...x,
+    ppn,
+    fee,
+    fs
+  };
+});
 dataIMS = hasilBaru;
 renderIMS();
 
@@ -238,7 +245,7 @@ function renderIMS() {
       </td>
 
       <td>${escapeHTML(d.job)}</td>
-      <td>${formatRp(d.total)}</td>
+      <td>${formatRp(d.fs)}</td>
     </tr>
     `;
   });
@@ -257,7 +264,7 @@ function renderIMSFooter() {
 
   dataIMS.forEach(d => {
     totalWO += Number(d.jumlah || 0);
-    totalAmount += Number(d.total || 0);
+    totalAmount += Number(d.fs || 0);
   });
 
   tb.innerHTML += `
