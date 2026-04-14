@@ -355,7 +355,43 @@ function uploadServerAll() {}
 
 window.downloadIKR = downloadIKR;
 
+// ==========================================
+// PATCH LOAD DATA DARI SERVER SAAT BUKA PAGE
+// taruh di file ikrlock.js
+// ==========================================
 
+const SERVER_URL = "https://tracking-server-production-6a12.up.railway.app";
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadIKRFromServer();
+});
+
+// ===============================
+// AMBIL DATA LAMA DARI SERVER
+// ===============================
+async function loadIKRFromServer() {
+
+  try {
+
+    const res = await fetch(SERVER_URL + "/ikr");
+
+    if (!res.ok) throw new Error("Gagal ambil data");
+
+    const hasil = await res.json();
+
+    if (!Array.isArray(hasil)) return;
+
+    dataIKR = hasil;
+
+    renderIKR();
+
+    console.log("Data IKR berhasil dimuat");
+
+  } catch (err) {
+    console.log("Load server gagal", err);
+  }
+
+}
 
 
 window.closePopup = () => {
