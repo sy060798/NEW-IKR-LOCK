@@ -73,11 +73,18 @@ function importIMS(e) {
 
 wo = String(wo).trim().toUpperCase();
 
- let woTotal =
+ const row = {};
+Object.keys(r).forEach(k => {
+  row[k.trim().toLowerCase()] = r[k];
+});
+
+let woTotal =
   parseInt(
-    String(r["WO Total"] || r["WO"] || 0)
-      .toString()
-      .replace(/[^0-9]/g, "")
+    String(
+      row["wo total"] ||
+      row["total"] ||
+      0
+    ).replace(/[^0-9]/g, "")
   ) || 0;
 
   let job = (r["Job Name"] || "").toString().trim();
