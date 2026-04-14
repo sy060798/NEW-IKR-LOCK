@@ -2,28 +2,31 @@
 let dataIMS = [];
 
 const SERVER_URL =
-  typeof window.SERVER_URL !== "undefined"
-    ? window.SERVER_URL
-    : "https://tracking-server-production-6a12.up.railway.app";
+  window.SERVER_URL ||
+  "https://tracking-server-production-6a12.up.railway.app";
+
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
 
-  const checkAll = document.getElementById("checkIMS");
+  const fileIMS = document.getElementById("fileIMS");
+  const checkAllIMS = document.getElementById("checkIMS");
 
-  if (!checkAll) return;
+  if (fileIMS) fileIMS.addEventListener("change", importIMS);
 
-  checkAll.addEventListener("change", () => {
+  if (checkAllIMS) {
+    checkAllIMS.addEventListener("change", e => {
+      const checked = e.target.checked;
 
-    const checked = checkAll.checked;
+      document
+        .querySelectorAll("#tblIMS tbody input[type='checkbox']")
+        .forEach(cb => cb.checked = checked);
+    });
+  }
 
-    document
-      .querySelectorAll("#tblIMS tbody input[type='checkbox']")
-      .forEach(cb => cb.checked = checked);
-
-  });
-
+  renderIMS();
 });
+
 
 // ================= IMPORT IMS =================
 function importIMS(e) {
@@ -85,13 +88,13 @@ function importIMS(e) {
     dataIMS = Object.values(map);
 
     renderIMS();
-
     alert("IMS upload sukses");
     e.target.value = "";
   };
 
   reader.readAsBinaryString(file);
 }
+
 
 // ================= RENDER IMS =================
 function renderIMS() {
@@ -110,7 +113,9 @@ function renderIMS() {
         <td>${d.city}</td>
         <td>${d.pra}</td>
         <td>${d.inv}</td>
-        <td class="click" onclick="showIMS(${i})">${d.jumlah}</td>
+        <td onclick="showIMS(${i})" style="cursor:pointer;color:blue">
+          ${d.jumlah}
+        </td>
         <td>${d.job}</td>
         <td>${formatRp(d.total)}</td>
       </tr>
@@ -118,7 +123,8 @@ function renderIMS() {
   });
 }
 
-// ================= POPUP IMS =================
+
+// ================= POPUP =================
 function showIMS(i) {
 
   let d = dataIMS[i];
@@ -142,46 +148,34 @@ function showIMS(i) {
 
 window.showIMS = showIMS;
 
+
 // ================= UTIL =================
 function parseAngka(v) {
   return parseInt(String(v || 0).replace(/[^0-9]/g, "")) || 0;
 }
 
 function formatRp(n) {
-  return "Rp " + (Number(n) || 0).toLocaleString("id-ID");
+  return "Rp " + (Number(n || 0)).toLocaleString("id-ID");
 }
 
 
-// ===============================
-// SYNC IMS KE SERVER (PATCH)
-// ===============================
+// ================= SYNC SERVER =================
 async function syncIMSServer() {
-
-  if (!Array.isArray(dataIMS)) return;
-
-  const res = await fetch(SERVER_URL + "/api/save", {
+  await fetch(SERVER_URL + "/api/save", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       type: "IMS",
       data: dataIMS
     })
   });
-
-  if (!res.ok) throw new Error("IMS upload gagal");
 }
 
 
-
-// ===============================
-// LOAD IMS DARI SERVER
-// ===============================
+// ================= LOAD SERVER =================
 async function loadIMSServer() {
 
   try {
-
     const res = await fetch(SERVER_URL + "/api/get?type=IMS");
     const hasil = await res.json();
 
@@ -193,174 +187,47 @@ async function loadIMSServer() {
   } catch (err) {
     console.log("Load IMS gagal", err);
   }
-
 }
 
 
-// ===============================
-// AUTO DELETE WO APPROVED > 2 HARI
-// ===============================
-function autoCleanApprovedWO() {
-
-  const now = new Date();
-
-  function isExpired(dateStr) {
-    if (!dateStr) return false;
-
-    let d = new Date(dateStr);
-    if (isNaN(d)) return false;
-
-    let diff = now - d;
-    let days = diff / (1000 * 60 * 60 * 24);
-
-    return days >= 2;
-  }
-
-  // ================= IKR CLEAN =================
-  dataIKR = dataIKR.map(group => {
-
-    if (!group.detail) return group;
-
-    group.detail = group.detail.filter(x => {
-
-      // kalau status approved + ada tanggal (kalau belum ada, skip)
-      if (String(x.status).toLowerCase().includes("approved")) {
-
-        if (isExpired(x.date || x.approvedDate)) {
-          group.jumlah = Math.max(0, group.jumlah - 1);
-          return false; // HAPUS WO
-        }
-
-      }
-
-      return true;
-    });
-
-    return group;
-  });
-
-  // ================= IMS CLEAN =================
-  dataIMS = dataIMS.map(group => {
-
-    if (!group.detail) return group;
-
-    group.detail = group.detail.filter(x => {
-
-      if (String(x.status).toLowerCase().includes("approved")) {
-
-        if (isExpired(x.date || x.approvedDate)) {
-          group.jumlah = Math.max(0, group.jumlah - 1);
-          return false;
-        }
-
-      }
-
-      return true;
-    });
-
-    return group;
-  });
-
-  renderIKR?.();
-  renderIMS?.();
-}
-
-
-// ===============================
-// SYNC IMS → IKR (ONLY APPROVED)
-// ===============================
-async function mergeIMS_to_IKR() {
-
-  if (!Array.isArray(dataIMS) || !Array.isArray(dataIKR)) return;
-
-  let changedWO = [];
-
-  dataIMS.forEach(ims => {
-
-    (ims.detail || []).forEach(x => {
-
-      const status = String(x.status || "").toLowerCase();
-
-      if (!status.includes("approved")) return;
-
-      const wo = x.wo;
-      if (!wo) return;
-
-      dataIKR.forEach(group => {
-
-        (group.detail || []).forEach(d => {
-
-          if (d.wo === wo) {
-
-            d.status = "APPROVED";
-
-            group.approved = (group.approved || 0) + 1;
-
-            group.fs = (group.fs || 0) + (d.amount || 0);
-
-            changedWO.push(wo);
-          }
-
-        });
-
-      });
-
-    });
-
-  });
-
-  renderIKR?.();
-
-  try {
-
-    await fetch(SERVER_URL + "/api/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "IKR",
-        data: dataIKR,
-        updatedWO: changedWO
-      })
-    });
-
-  } catch (err) {
-    console.log("Server sync gagal", err);
-  }
-}
-  // ================= CHECK ALL IMS =================
- // ================= CHECK ALL IMS =================
-document.addEventListener("DOMContentLoaded", () => {
-
-  const checkAllIMS = document.getElementById("checkIMS");
-
-  if (!checkAllIMS) return;
-
-  checkAllIMS.addEventListener("change", e => {
-
-    const checked = e.target.checked;
-
-    document
-      .querySelectorAll("#tblIMS tbody input[type='checkbox']")
-      .forEach(cb => cb.checked = checked);
-
-  });
-
-});
-
-
-// ================= HAPUS IMS =================
+// ================= DELETE SELECTED =================
 function hapusIMS() {
 
   const chk = document.querySelectorAll("#tblIMS tbody input[type='checkbox']");
 
-  dataIMS = dataIMS.filter((_, i) => {
-    return !chk[i]?.checked; // kalau dicentang → dihapus
-  });
+  dataIMS = dataIMS.filter((_, i) => !chk[i]?.checked);
 
   renderIMS();
 }
 
-  // reset check all setelah render
-  const checkAll = document.getElementById("checkIMS");
-  if (checkAll) checkAll.checked = false;
+
+// ================= AUTO CLEAN (OPTIONAL SAFE) =================
+function autoCleanApprovedWO() {
+  const now = new Date();
+
+  function isExpired(dateStr) {
+    if (!dateStr) return false;
+    let d = new Date(dateStr);
+    if (isNaN(d)) return false;
+    return (now - d) / (1000 * 60 * 60 * 24) >= 2;
+  }
+
+  dataIMS = dataIMS.map(g => {
+
+    if (!g.detail) return g;
+
+    g.detail = g.detail.filter(x => {
+      if ((x.status || "").toLowerCase().includes("approved")) {
+        if (isExpired(x.date || x.approvedDate)) {
+          g.jumlah = Math.max(0, g.jumlah - 1);
+          return false;
+        }
+      }
+      return true;
+    });
+
+    return g;
+  });
+
+  renderIMS();
 }
