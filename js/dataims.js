@@ -357,3 +357,38 @@ async function mergeIMS_to_IKR() {
     console.log("sync gagal");
   }
 }
+
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  // ================= CHECK ALL IMS =================
+  const checkAllIMS = document.getElementById("checkIMS");
+
+  if (checkAllIMS) {
+    checkAllIMS.addEventListener("change", e => {
+
+      const checked = e.target.checked;
+
+      document
+        .querySelectorAll("#tblIMS tbody input[type='checkbox']")
+        .forEach(cb => cb.checked = checked);
+
+    });
+  }
+
+});
+
+
+// ================= HAPUS IMS =================
+function hapusIMS() {
+
+  const chk = document.querySelectorAll("#tblIMS tbody input[type='checkbox']");
+
+  dataIMS = dataIMS.filter((_, i) => !chk[i]?.checked);
+
+  renderIMS();
+
+  // reset check all setelah render
+  const checkAll = document.getElementById("checkIMS");
+  if (checkAll) checkAll.checked = false;
+}
