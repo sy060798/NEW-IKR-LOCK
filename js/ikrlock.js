@@ -318,7 +318,7 @@ function showDetail(i) {
 
   popupExportData = [];
 
- (d.detail || []).forEach(x => {
+(d.detail || []).forEach(x => {
   tb.innerHTML += `
     <tr>
       <td>${x.wo}</td>
@@ -336,9 +336,12 @@ function showDetail(i) {
     Status: x.status,
     Amount: x.amount
   });
-}); 
+});
 
 document.getElementById("popup").style.display = "block";
+
+} 
+
 window.closePopup = () => {
   document.getElementById("popup").style.display = "none";
 };
