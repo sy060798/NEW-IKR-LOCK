@@ -246,7 +246,7 @@ function renderIKR() {
         <td>${d.wotype}</td>
         <td>${d.bulan}</td>
         <td>
-          <span onclick="showDetail(${dataIKR.indexOf(d)})"
+          <span onclick="showDetail(${i})"
             style="cursor:pointer;font-weight:bold">
             ${d.jumlah}
           </span>
@@ -280,7 +280,20 @@ window.hapusIKR = hapusIKR;
 
 // ================= DETAIL =================
 function showDetail(i) {
-  const d = dataIKR[i];
+  const sorted = [...dataIKR].sort((a, b) => {
+    const regionA = (a.region || "").localeCompare(b.region || "");
+    if (regionA !== 0) return regionA;
+
+    const tahunA = (a.tahun || 0) - (b.tahun || 0);
+    if (tahunA !== 0) return tahunA;
+
+    const bulanA = (a.bulan || "").localeCompare(b.bulan || "");
+    if (bulanA !== 0) return bulanA;
+
+    return (a.wotype || "").localeCompare(b.wotype || "");
+  });
+
+  const d = sorted[i];
   if (!d) return alert("Data tidak ditemukan");
 
   const tb = document.getElementById("popupBody");
