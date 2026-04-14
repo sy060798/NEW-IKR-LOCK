@@ -1,20 +1,35 @@
 let dataIKR = [];
+// ================= GLOBAL =================
+let dataIMS = [];
 
+const SERVER_URL = window.SERVER_URL || "https://tracking-server-production-6a12.up.railway.app";
+
+// ================= INIT =================
 document.addEventListener("DOMContentLoaded", () => {
   const file = document.getElementById("fileIKR");
   const check = document.getElementById("checkIKR");
 
   if (file) file.addEventListener("change", importIKR);
+  const file = document.getElementById("fileIMS");
+  const checkAll = document.getElementById("checkIMS");
 
   if (check) {
     check.addEventListener("change", e => {
       document.querySelectorAll(".chkIKR").forEach(c => {
         c.checked = e.target.checked;
       });
+  if (file) file.addEventListener("change", importIMS);
+
+  if (checkAll) {
+    checkAll.addEventListener("change", e => {
+      document.querySelectorAll("#tblIMS tbody input[type='checkbox']")
+        .forEach(cb => cb.checked = e.target.checked);
     });
   }
 
   renderIKR();
+  renderIMS();
+  loadIMSServer(); // auto load
 });
 
 // ================= TAB FIX =================
@@ -30,6 +45,8 @@ function openTab(id, btn) {
 }
 
 window.openTab = openTab;
+// ================= IMPORT IMS =================
+function importIMS(e) {
 
 // ================= IMPORT IKR =================
 function importIKR(e) {
@@ -39,16 +56,11 @@ function importIKR(e) {
   const reader = new FileReader();
 
   reader.onload = function (evt) {
+
     const wb = XLSX.read(evt.target.result, { type: "binary" });
 
     let raw = [];
-
-    wb.SheetNames.forEach(s => {
-      XLSX.utils.sheet_to_json(wb.Sheets[s], {
-        defval: "",
-        raw: false
-      }).forEach(r => raw.push(r));
-    });
+@@ -52,688 +45,148 @@ function importIKR(e) {
 
     let map = {};
 
@@ -121,12 +133,25 @@ function importIKR(e) {
         (wotype || "").trim().toUpperCase();
 
       // ================= INIT MAP =================
+      let city = r.City || r.city || "";
+      let pra = r["Pra Invoice Number"] || "";
+      let inv = r["Invoice Number"] || "";
+      let job = r["Job Name"] || "";
+
+      if (!city) return;
+
+      let key = city + "_" + pra;
+
       if (!map[key]) {
         map[key] = {
           region,
           tahun: thn,
           bulan,
           wotype,
+          city,
+          pra,
+          inv,
+          job,
           jumlah: 0,
           approved: 0,
           amount: 0,
@@ -137,6 +162,8 @@ function importIKR(e) {
           done: "NO",
           detail: [],
           woSet: new Set()
+          total: 0,
+          detail: []
         };
       }
 
@@ -163,11 +190,16 @@ function importIKR(e) {
       }
 
       map[key].amount += boq;
+      map[key].jumlah++;
+      map[key].total += parseAngka(r["Invoice Total"]);
 
       map[key].detail.push({
         wo,
         status,
         amount: boq
+        wo: r.Wonumber || "-",
+        status: r.Status || "-",
+        amount: parseAngka(r["Invoice Total"])
       });
 
       existingWO.add(wo);
@@ -208,9 +240,13 @@ function importIKR(e) {
     });
 
     dataIKR = Object.values(finalMap);
+    dataIMS = Object.values(map);
 
     renderIKR();
+    renderIMS();
+    saveIMSToServer();
 
+    alert("IMS upload sukses");
     e.target.value = "";
     alert("UPLOAD OK (WO DUPLICATE SKIP ACTIVE)");
   };
@@ -221,6 +257,10 @@ function importIKR(e) {
 
 function renderIKR() {
   const tb = document.querySelector("#tblIKR tbody");
+// ================= RENDER IMS =================
+function renderIMS() {
+
+  const tb = document.querySelector("#tblIMS tbody");
   if (!tb) return;
 
   tb.innerHTML = "";
@@ -234,6 +274,7 @@ function renderIKR() {
 
     const bulanA = (a.bulan || "").localeCompare(b.bulan || "");
     if (bulanA !== 0) return bulanA;
+  dataIMS.forEach((d, i) => {
 
     return (a.wotype || "").localeCompare(b.wotype || "");
   });
@@ -263,6 +304,13 @@ function renderIKR() {
         <td>
           <input type="checkbox" ${d.done === "YES" ? "checked" : ""}>
         </td>
+        <td><input type="checkbox"></td>
+        <td>${d.city}</td>
+        <td>${d.pra}</td>
+        <td>${d.inv}</td>
+        <td onclick="showIMS(${i})" style="cursor:pointer;color:blue">${d.jumlah}</td>
+        <td>${d.job}</td>
+        <td>${formatRp(d.total)}</td>
       </tr>
     `;
   });
@@ -276,9 +324,14 @@ function showDetail(i) {
 
   const tb = document.getElementById("popupBody");
   const popup = document.getElementById("popup");
+// ================= POPUP =================
+function showIMS(i) {
 
   if (!tb || !popup) return;
+  const d = dataIMS[i];
+  if (!d) return;
 
+  const tb = document.getElementById("popupBody");
   tb.innerHTML = "";
 
   const uniqueMap = new Map();
@@ -287,6 +340,13 @@ function showDetail(i) {
     if (x.wo && !uniqueMap.has(x.wo)) {
       uniqueMap.set(x.wo, x);
     }
+    tb.innerHTML += `
+      <tr>
+        <td>${x.wo}</td>
+        <td>${x.status}</td>
+        <td>${formatRp(x.amount)}</td>
+      </tr>
+    `;
   });
 
   const uniqueData = [...uniqueMap.values()];
@@ -312,6 +372,7 @@ function showDetail(i) {
   }
 
   popup.style.display = "block";
+  document.getElementById("popup").style.display = "block";
 }
 
 window.showDetail = showDetail;
@@ -322,12 +383,16 @@ function exportPopupExcel() {
     alert("Tidak ada data untuk export");
     return;
   }
+window.showIMS = showIMS;
 
   const ws = XLSX.utils.json_to_sheet(popupExportData);
   const wb = XLSX.utils.book_new();
 
   XLSX.utils.book_append_sheet(wb, ws, "DETAIL_WO");
   XLSX.writeFile(wb, "DETAIL_WO.xlsx");
+// ================= UTIL =================
+function parseAngka(v) {
+  return parseInt(String(v || 0).replace(/[^0-9]/g, "")) || 0;
 }
 
 window.exportPopupExcel = exportPopupExcel;
@@ -403,6 +468,8 @@ window.downloadIKR = downloadIKR;
 // ===============================
 async function loadIKRFromServer() {
 
+// ================= SAVE SERVER =================
+async function saveIMSToServer() {
   try {
 
     const res = await fetch(
@@ -431,6 +498,16 @@ async function loadIKRFromServer() {
 
     console.log("Load server gagal", err);
 
+    await fetch(SERVER_URL + "/api/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "IMS",
+        data: dataIMS
+      })
+    });
+  } catch (e) {
+    console.log("Save IMS gagal", e);
   }
 
 }
@@ -440,8 +517,12 @@ async function loadIKRFromServer() {
 // SIMPAN DATA IKR KE SERVER
 // ===============================
 async function saveIKRToServer() {
+// ================= LOAD SERVER =================
+async function loadIMSServer() {
 
   try {
+    const res = await fetch(SERVER_URL + "/api/get?type=IMS");
+    const data = await res.json();
 
     await fetch(
       SERVER_URL + "/api/save",
@@ -605,7 +686,7 @@ function normalRegion(txt){
   return r.replace(/\b\w/g, s => s.toUpperCase());
 }
 
-
+ 
 // ===============================
 window.closePopup = () => {
   const popup = document.getElementById("popup");
@@ -649,6 +730,9 @@ function renderIKRGroupFooter() {
         amount: 0,
         fs: 0
       };
+    if (Array.isArray(data)) {
+      dataIMS = data;
+      renderIMS();
     }
 
     group[key].jumlah += Number(d.jumlah || 0);
@@ -699,11 +783,17 @@ function renderIKRGroupFooter() {
       </tr>
     `;
   });
+  } catch (e) {
+    console.log("Load IMS gagal", e);
+  }
 }
 
+// ================= DELETE =================
+function hapusIMS() {
 
-// taruh di bawah semua function IKR kamu
+// ================= sistem sycron ims =================
 function recalcApprovedValues() {
+
   if (!Array.isArray(dataIKR)) return;
 
   dataIKR.forEach(group => {
@@ -711,11 +801,24 @@ function recalcApprovedValues() {
     let approvedSet = new Set();
     let fsTotal = 0;
 
-    (group.detail || []).forEach(d => {
+    const details = Array.isArray(group.detail) ? group.detail : [];
 
-      if ((d.status || "").toLowerCase().includes("approved")) {
-        approvedSet.add(d.wo);
-        fsTotal += Number(d.amount || 0);
+    details.forEach(d => {
+
+      const status = String(d.status || "").toLowerCase();
+  const chk = document.querySelectorAll("#tblIMS tbody input[type='checkbox']");
+
+      if (status.includes("approved")) {
+  dataIMS = dataIMS.filter((_, i) => !chk[i]?.checked);
+
+        if (d.wo) approvedSet.add(d.wo);
+
+        const amount = Number(d.amount || 0);
+
+        if (!isNaN(amount)) {
+          fsTotal += amount;
+        }
+
       }
 
     });
@@ -724,4 +827,5 @@ function recalcApprovedValues() {
     group.fs = fsTotal;
 
   });
+  renderIMS();
 }
