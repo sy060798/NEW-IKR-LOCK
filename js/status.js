@@ -8,26 +8,23 @@ function generateStatus(){
   tbody.innerHTML = "";
 
   if(!Array.isArray(dataIKR) || dataIKR.length === 0){
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="6">Tidak ada data</td>
-      </tr>
-    `;
+    tbody.innerHTML = `<tr><td colspan="6">Tidak ada data</td></tr>`;
     return;
   }
 
   let map = {};
 
-  dataIKR.forEach(d=>{
+  dataIKR.forEach(d => {
 
-    let jenis = d.wotype || "-";
-    let tahun = d.tahun || "-";
-    let key = jenis + "_" + tahun;
+    let jenis = (d.wotype || "-").toString().trim();
+    let tahun = (d.tahun || "-").toString().trim();
+
+    let key = jenis.toUpperCase() + "_" + tahun;
 
     if(!map[key]){
       map[key] = {
-        jenis: jenis,
-        tahun: tahun,
+        jenis,
+        tahun,
         approved: 0,
         invoice: 0,
         woList: []
@@ -40,10 +37,10 @@ function generateStatus(){
     map[key].approved += woApproved;
     map[key].invoice += fsAmount;
 
-    // ambil daftar WO approved
+    // ================= WO LIST =================
     if(Array.isArray(d.approvedList)){
-      d.approvedList.forEach(x=>{
-        if(x.wo){
+      d.approvedList.forEach(x => {
+        if(x && x.wo){
           map[key].woList.push({
             wo: x.wo,
             invoice: x.invoice || "",
@@ -58,7 +55,7 @@ function generateStatus(){
 
   let no = 1;
 
-  Object.values(map).forEach(r=>{
+  Object.values(map).forEach(r => {
 
     tbody.innerHTML += `
       <tr>
@@ -67,14 +64,8 @@ function generateStatus(){
         <td>${r.tahun}</td>
 
         <td>
-          <span
-            onclick="showStatusWO('${r.jenis}','${r.tahun}')"
-            style="
-              color:#00ff90;
-              cursor:pointer;
-              text-decoration:underline;
-              font-weight:bold;
-            ">
+          <span onclick="showStatusWO('${r.jenis}','${r.tahun}')"
+            style="color:#00ff90;cursor:pointer;text-decoration:underline;font-weight:bold">
             ${r.approved}
           </span>
         </td>
@@ -83,14 +74,7 @@ function generateStatus(){
 
         <td>
           <button
-            style="
-              background:#e74c3c;
-              color:#fff;
-              border:none;
-              padding:5px 10px;
-              border-radius:5px;
-              cursor:pointer
-            "
+            style="background:#e74c3c;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer"
             onclick="hapusStatus('${r.jenis}','${r.tahun}')">
             Hapus
           </button>
@@ -103,25 +87,28 @@ function generateStatus(){
 }
 
 // ================= POPUP DETAIL WO APPROVED =================
-function showStatusWO(jenis,tahun){
+
+function showStatusWO(jenis, tahun){
 
   let list = [];
 
-  dataIKR.forEach(d=>{
+  dataIKR.forEach(d => {
 
     if(
-      String(d.wotype) === String(jenis) &&
-      String(d.tahun) === String(tahun)
+      String(d.wotype).trim() === String(jenis).trim() &&
+      String(d.tahun).trim() === String(tahun).trim()
     ){
 
       if(Array.isArray(d.approvedList)){
-        d.approvedList.forEach(x=>{
-          list.push({
-            pra: x.pra || "",
-            invoice: x.invoice || "",
-            status: x.status || "",
-            wo: x.wo || ""
-          });
+        d.approvedList.forEach(x => {
+          if(x && x.wo){
+            list.push({
+              pra: x.pra || "",
+              invoice: x.invoice || "",
+              status: x.status || "",
+              wo: x.wo
+            });
+          }
         });
       }
 
@@ -129,8 +116,16 @@ function showStatusWO(jenis,tahun){
 
   });
 
-  currentApproved = list;
-  currentDetail = [];
+  // ================= REMOVE DUPLICATE WO =================
+  let unique = [];
+  let seen = new Set();
+
+  list.forEach(x => {
+    if(!seen.has(x.wo)){
+      seen.add(x.wo);
+      unique.push(x);
+    }
+  });
 
   let head = document.querySelector("#tblDetail thead");
   let tb   = document.querySelector("#tblDetail tbody");
@@ -146,16 +141,11 @@ function showStatusWO(jenis,tahun){
 
   tb.innerHTML = "";
 
-  if(list.length===0){
-    tb.innerHTML = `
-      <tr>
-        <td colspan="4">Tidak ada WO Approved</td>
-      </tr>
-    `;
-  }else{
+  if(unique.length === 0){
+    tb.innerHTML = `<tr><td colspan="4">Tidak ada WO Approved</td></tr>`;
+  } else {
 
-    list.forEach(x=>{
-
+    unique.forEach(x => {
       tb.innerHTML += `
         <tr>
           <td>${x.pra}</td>
@@ -164,31 +154,26 @@ function showStatusWO(jenis,tahun){
           <td>${x.wo}</td>
         </tr>
       `;
-
     });
 
   }
 
-  document.getElementById("popupWO").style.display="block";
+  document.getElementById("popupWO").style.display = "block";
 }
 
 // ================= HAPUS STATUS =================
-function hapusStatus(jenis,tahun){
 
-  let ok = confirm(
-    "Hapus semua data:\n" + jenis + " - " + tahun + " ?"
-  );
+function hapusStatus(jenis, tahun){
 
+  let ok = confirm(`Hapus semua data:\n${jenis} - ${tahun} ?`);
   if(!ok) return;
 
-  dataIKR = dataIKR.filter(d => {
-
-    return !(
-      String(d.wotype) === String(jenis) &&
-      String(d.tahun) === String(tahun)
-    );
-
-  });
+  dataIKR = dataIKR.filter(d =>
+    !(
+      String(d.wotype).trim() === String(jenis).trim() &&
+      String(d.tahun).trim() === String(tahun).trim()
+    )
+  );
 
   render();
   generateStatus();
@@ -197,15 +182,16 @@ function hapusStatus(jenis,tahun){
 }
 
 // ================= DOWNLOAD STATUS =================
+
 function downloadStatus(){
 
-  let rows = [];
   let map = {};
 
-  dataIKR.forEach(d=>{
+  dataIKR.forEach(d => {
 
-    let jenis = d.wotype || "-";
-    let tahun = d.tahun || "-";
+    let jenis = (d.wotype || "-").toString().trim();
+    let tahun = (d.tahun || "-").toString().trim();
+
     let key = jenis + "_" + tahun;
 
     if(!map[key]){
@@ -222,7 +208,7 @@ function downloadStatus(){
 
   });
 
-  rows = Object.values(map);
+  let rows = Object.values(map);
 
   let ws = XLSX.utils.json_to_sheet(rows);
   let wb = XLSX.utils.book_new();
@@ -234,6 +220,7 @@ function downloadStatus(){
 }
 
 // ================= AUTO GLOBAL =================
+
 window.generateStatus = generateStatus;
 window.downloadStatus = downloadStatus;
 window.hapusStatus = hapusStatus;
