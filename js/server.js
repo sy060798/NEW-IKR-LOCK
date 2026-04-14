@@ -712,7 +712,23 @@ function renderIKR() {
 
   tb.innerHTML = "";
 
-  dataIKR.forEach((d, i) => {
+  // ================= SORTING (TAMBAHAN SAJA) =================
+  const sorted = [...dataIKR].sort((a, b) => {
+
+    const regionA = (a.region || "").localeCompare(b.region || "");
+    if (regionA !== 0) return regionA;
+
+    const tahunA = (a.tahun || 0) - (b.tahun || 0);
+    if (tahunA !== 0) return tahunA;
+
+    const bulanA = (a.bulan || "").localeCompare(b.bulan || "");
+    if (bulanA !== 0) return bulanA;
+
+    return (a.wotype || "").localeCompare(b.wotype || "");
+  });
+
+  // ================= RENDER =================
+  sorted.forEach((d, i) => {
     tb.innerHTML += `
       <tr>
         <td>${i + 1}</td>
