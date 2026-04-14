@@ -702,3 +702,26 @@ function renderIKRGroupFooter() {
 }
 
 
+// taruh di bawah semua function IKR kamu
+function recalcApprovedValues() {
+  if (!Array.isArray(dataIKR)) return;
+
+  dataIKR.forEach(group => {
+
+    let approvedSet = new Set();
+    let fsTotal = 0;
+
+    (group.detail || []).forEach(d => {
+
+      if ((d.status || "").toLowerCase().includes("approved")) {
+        approvedSet.add(d.wo);
+        fsTotal += Number(d.amount || 0);
+      }
+
+    });
+
+    group.approved = approvedSet.size;
+    group.fs = fsTotal;
+
+  });
+}
