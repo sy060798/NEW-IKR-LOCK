@@ -1,13 +1,13 @@
 // ================= STATUS MENU =================
 
-function generateStatus(){
+function generateStatus() {
 
   let tbody = document.querySelector("#tblStatus tbody");
-  if(!tbody) return;
+  if (!tbody) return;
 
   tbody.innerHTML = "";
 
-  if(!Array.isArray(dataIKR) || dataIKR.length === 0){
+  if (!Array.isArray(dataIKR) || dataIKR.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6">Tidak ada data</td></tr>`;
     return;
   }
@@ -19,9 +19,10 @@ function generateStatus(){
     let jenis = (d.wotype || "-").toString().trim();
     let tahun = (d.tahun || "-").toString().trim();
 
+    // ================= FIX KEY CONSISTENT =================
     let key = jenis.toUpperCase() + "_" + tahun;
 
-    if(!map[key]){
+    if (!map[key]) {
       map[key] = {
         jenis,
         tahun,
@@ -32,15 +33,15 @@ function generateStatus(){
     }
 
     let woApproved = Number(d.approved) || 0;
-    let fsAmount   = Number(d.fs) || 0;
+    let fsAmount = Number(d.fs) || 0;
 
     map[key].approved += woApproved;
     map[key].invoice += fsAmount;
 
     // ================= WO LIST =================
-    if(Array.isArray(d.approvedList)){
+    if (Array.isArray(d.approvedList)) {
       d.approvedList.forEach(x => {
-        if(x && x.wo){
+        if (x && x.wo) {
           map[key].woList.push({
             wo: x.wo,
             invoice: x.invoice || "",
@@ -53,29 +54,31 @@ function generateStatus(){
 
   });
 
+  let html = "";
   let no = 1;
 
   Object.values(map).forEach(r => {
 
-    tbody.innerHTML += `
+    html += `
       <tr>
         <td>${no++}</td>
         <td>${r.jenis}</td>
         <td>${r.tahun}</td>
 
         <td>
-          <span onclick="showStatusWO('${r.jenis}','${r.tahun}')"
+          <span
+            onclick="showStatusWO(${JSON.stringify(r.jenis)},${JSON.stringify(r.tahun)})"
             style="color:#00ff90;cursor:pointer;text-decoration:underline;font-weight:bold">
             ${r.approved}
           </span>
         </td>
 
-        <td>${format(r.invoice)}</td>
+        <td>${window.format ? format(r.invoice) : r.invoice}</td>
 
         <td>
           <button
             style="background:#e74c3c;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer"
-            onclick="hapusStatus('${r.jenis}','${r.tahun}')">
+            onclick="hapusStatus(${JSON.stringify(r.jenis)},${JSON.stringify(r.tahun)})">
             Hapus
           </button>
         </td>
@@ -84,24 +87,26 @@ function generateStatus(){
 
   });
 
+  tbody.innerHTML = html;
 }
+
 
 // ================= POPUP DETAIL WO APPROVED =================
 
-function showStatusWO(jenis, tahun){
+function showStatusWO(jenis, tahun) {
 
   let list = [];
 
   dataIKR.forEach(d => {
 
-    if(
-      String(d.wotype).trim() === String(jenis).trim() &&
+    if (
+      String(d.wotype).trim().toUpperCase() === String(jenis).trim().toUpperCase() &&
       String(d.tahun).trim() === String(tahun).trim()
-    ){
+    ) {
 
-      if(Array.isArray(d.approvedList)){
+      if (Array.isArray(d.approvedList)) {
         d.approvedList.forEach(x => {
-          if(x && x.wo){
+          if (x && x.wo) {
             list.push({
               pra: x.pra || "",
               invoice: x.invoice || "",
@@ -121,14 +126,15 @@ function showStatusWO(jenis, tahun){
   let seen = new Set();
 
   list.forEach(x => {
-    if(!seen.has(x.wo)){
-      seen.add(x.wo);
+    let woKey = String(x.wo).trim().toUpperCase();
+    if (!seen.has(woKey)) {
+      seen.add(woKey);
       unique.push(x);
     }
   });
 
   let head = document.querySelector("#tblDetail thead");
-  let tb   = document.querySelector("#tblDetail tbody");
+  let tb = document.querySelector("#tblDetail tbody");
 
   head.innerHTML = `
     <tr>
@@ -139,14 +145,14 @@ function showStatusWO(jenis, tahun){
     </tr>
   `;
 
-  tb.innerHTML = "";
-
-  if(unique.length === 0){
+  if (unique.length === 0) {
     tb.innerHTML = `<tr><td colspan="4">Tidak ada WO Approved</td></tr>`;
   } else {
 
+    let html = "";
+
     unique.forEach(x => {
-      tb.innerHTML += `
+      html += `
         <tr>
           <td>${x.pra}</td>
           <td>${x.invoice}</td>
@@ -156,21 +162,23 @@ function showStatusWO(jenis, tahun){
       `;
     });
 
+    tb.innerHTML = html;
   }
 
   document.getElementById("popupWO").style.display = "block";
 }
 
+
 // ================= HAPUS STATUS =================
 
-function hapusStatus(jenis, tahun){
+function hapusStatus(jenis, tahun) {
 
   let ok = confirm(`Hapus semua data:\n${jenis} - ${tahun} ?`);
-  if(!ok) return;
+  if (!ok) return;
 
   dataIKR = dataIKR.filter(d =>
     !(
-      String(d.wotype).trim() === String(jenis).trim() &&
+      String(d.wotype).trim().toUpperCase() === String(jenis).trim().toUpperCase() &&
       String(d.tahun).trim() === String(tahun).trim()
     )
   );
@@ -178,12 +186,12 @@ function hapusStatus(jenis, tahun){
   render();
   generateStatus();
   generatePivot();
-
 }
+
 
 // ================= DOWNLOAD STATUS =================
 
-function downloadStatus(){
+function downloadStatus() {
 
   let map = {};
 
@@ -192,9 +200,10 @@ function downloadStatus(){
     let jenis = (d.wotype || "-").toString().trim();
     let tahun = (d.tahun || "-").toString().trim();
 
-    let key = jenis + "_" + tahun;
+    // ================= FIX KEY CONSISTENT =================
+    let key = jenis.toUpperCase() + "_" + tahun;
 
-    if(!map[key]){
+    if (!map[key]) {
       map[key] = {
         Jenis: jenis,
         Tahun: tahun,
@@ -216,8 +225,8 @@ function downloadStatus(){
   XLSX.utils.book_append_sheet(wb, ws, "STATUS");
 
   XLSX.writeFile(wb, "STATUS_IKCR.xlsx");
-
 }
+
 
 // ================= AUTO GLOBAL =================
 
