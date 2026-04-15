@@ -656,7 +656,7 @@ function syncIMSkeIKR() {
 }
 
 
-// ================= SEARCH + CLEAR IKR (IMPROVED) =================
+// ================= SEARCH + CLEAR IKR (ANTI SILANG) =================
 document.addEventListener("DOMContentLoaded", () => {
 
   const input = document.getElementById("searchIKR");
@@ -666,44 +666,61 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function filterTable() {
     let keyword = input.value.toLowerCase().trim();
-    let rows = document.querySelectorAll("#tblIKR tbody tr");
 
-    rows.forEach(row => {
+    const filtered = dataIKR.filter(d =>
+      (d.region || "").toLowerCase().includes(keyword) ||
+      (d.wotype || "").toLowerCase().includes(keyword) ||
+      (d.bulan || "").toLowerCase().includes(keyword)
+    );
 
-      let region = row.children[2]?.innerText.toLowerCase() || "";
-      let wotype = row.children[4]?.innerText.toLowerCase() || "";
-      let bulan  = row.children[5]?.innerText.toLowerCase() || "";
-
-      let match =
-        region.includes(keyword) ||
-        wotype.includes(keyword) ||
-        bulan.includes(keyword);
-
-      row.style.display = match ? "" : "none";
-    });
+    renderIKRCustom(filtered);
   }
 
-  // realtime search
+  // realtime
   input.addEventListener("input", filterTable);
 
-  // ENTER trigger
+  // enter
   input.addEventListener("keypress", e => {
     if (e.key === "Enter") filterTable();
   });
 
-  // CLEAR = reset full (🔥 ini perbaikan utama)
+  // CLEAR = balik normal
   if (btnClear) {
     btnClear.addEventListener("click", () => {
       input.value = "";
-
-      // reset semua row tampil
-      document.querySelectorAll("#tblIKR tbody tr").forEach(row => {
-        row.style.display = "";
-      });
-
-      // optional: re-render biar benar-benar fresh
-      // renderIKR();  <-- kalau mau full reset data
+      renderIKR(); // 🔥 ini kunci anti silang
     });
   }
 
 });
+
+
+//============================
+
+function renderIKRCustom(list) {
+  const tb = document.querySelector("#tblIKR tbody");
+  if (!tb) return;
+
+  tb.innerHTML = "";
+
+  list.forEach((d, i) => {
+    tb.innerHTML += `
+      <tr>
+        <td>${i + 1}</td>
+        <td><input type="checkbox" class="chkIKR"></td>
+        <td>${d.region}</td>
+        <td>${d.tahun}</td>
+        <td>${d.wotype}</td>
+        <td>${d.bulan}</td>
+        <td>${d.jumlah}</td>
+        <td>${d.approved || 0}</td>
+        <td>${formatRp(d.amount)}</td>
+        <td>${formatRp(d.fs)}</td>
+        <td>${d.remark || ""}</td>
+        <td>${d.invoice || ""}</td>
+        <td>${d.note || ""}</td>
+        <td>${d.done || "NO"}</td>
+      </tr>
+    `;
+  });
+}
