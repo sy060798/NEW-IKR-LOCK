@@ -5,8 +5,8 @@ function showStatusWO(jenis, tahun) {
   dataIKR.forEach(d => {
 
     if (
-      String(d.wotype).trim().toUpperCase() === String(jenis).trim().toUpperCase() &&
-      String(d.tahun).trim() === String(tahun).trim()
+      String(d.wotype || "").trim().toUpperCase() === String(jenis).trim().toUpperCase() &&
+      String(d.tahun || "").trim() === String(tahun).trim()
     ) {
 
       if (Array.isArray(d.approvedList)) {
