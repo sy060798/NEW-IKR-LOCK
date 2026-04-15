@@ -249,6 +249,25 @@ body{flex-direction:column}
       <button onclick="closePopupIMS()" class="btn-red">TUTUP</button>
     </div>
 
+<!-- ================= POPUP STATUS ================= -->
+<div id="popupWO" class="popup-overlay">
+  <div class="popup-box">
+
+    <div class="popup-header">
+      <h3>DETAIL STATUS</h3>
+      <button class="close-btn" onclick="document.getElementById('popupWO').style.display='none'">✕</button>
+    </div>
+
+    <div class="popup-body">
+      <table class="popup-table" id="tblDetail">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+    
   </div>
 </div>
 
