@@ -12,7 +12,7 @@ function showStatusWO(jenis, tahun) {
 
       if (Array.isArray(d.approvedList)) {
         d.approvedList.forEach(x => {
-          if (x && (x.pra || x.invoice || x.wo || x.name)) {
+          if (x && (x.pra || x.invoice || x.name)) {
             list.push({
               pra: x.pra || "",
               invoice: x.invoice || "",
@@ -32,7 +32,6 @@ function showStatusWO(jenis, tahun) {
   let unique = [];
 
   list.forEach(x => {
-
     let key =
       String(x.pra).trim().toUpperCase() +
       "|" +
@@ -42,7 +41,6 @@ function showStatusWO(jenis, tahun) {
       seen.add(key);
       unique.push(x);
     }
-
   });
 
   // ================= RENDER =================
@@ -51,10 +49,10 @@ function showStatusWO(jenis, tahun) {
 
   head.innerHTML = `
     <tr>
-      <th>Pra Invoice Number</th>
-      <th>Invoice Number</th>
-      <th>Invoice Name</th>
-      <th>Invoice Total</th>
+      <th>Pra Invoice</th>
+      <th>Invoice</th>
+      <th>Nama</th>
+      <th>Total</th>
     </tr>
   `;
 
@@ -70,7 +68,7 @@ function showStatusWO(jenis, tahun) {
           <td>${x.pra}</td>
           <td>${x.invoice}</td>
           <td>${x.name}</td>
-          <td>${x.total}</td>
+          <td>${typeof window.format === "function" ? window.format(x.total) : x.total}</td>
         </tr>
       `;
     });
@@ -78,7 +76,6 @@ function showStatusWO(jenis, tahun) {
     tb.innerHTML = html;
   }
 
-  // ================= SHOW POPUP =================
   document.getElementById("popupWO").classList.add("active");
 }
 
@@ -87,7 +84,6 @@ function showStatusWO(jenis, tahun) {
 function closePopupWO() {
   document.getElementById("popupWO").classList.remove("active");
 }
-
 
 
 // ================= STATUS TABLE =================
@@ -99,7 +95,7 @@ function generateStatus() {
   tbody.innerHTML = "";
 
   if (!Array.isArray(dataIKR) || dataIKR.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6">Tidak ada data</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7">Tidak ada data</td></tr>`;
     return;
   }
 
@@ -119,8 +115,10 @@ function generateStatus() {
         jenis,
         tahun,
         approved: 0,
-        invoice: 0,
-        woList: []
+        invoiceFS: 0,
+        invoiceCount: 0,
+        invoiceTotal: 0,
+        invSet: new Set()
       };
     }
 
@@ -128,19 +126,29 @@ function generateStatus() {
     let fsAmount = Number(d.fs) || 0;
 
     map[key].approved += woApproved;
-    map[key].invoice += fsAmount;
+    map[key].invoiceFS += fsAmount;
 
     if (Array.isArray(d.approvedList)) {
+
       d.approvedList.forEach(x => {
-        if (x && x.wo) {
-          map[key].woList.push({
-            wo: x.wo,
-            invoice: x.invoice || "",
-            pra: x.pra || "",
-            status: x.status || "APPROVED"
-          });
+
+        if (!x) return;
+
+        let invKey =
+          String(x.invoice || "").trim().toUpperCase() +
+          "|" +
+          String(x.pra || "").trim().toUpperCase();
+
+        // ✅ HITUNG INVOICE UNIQUE
+        if (!map[key].invSet.has(invKey)) {
+          map[key].invSet.add(invKey);
+
+          map[key].invoiceCount += 1;
+          map[key].invoiceTotal += Number(x.total || x.amount || 0);
         }
+
       });
+
     }
 
   });
@@ -163,7 +171,13 @@ function generateStatus() {
           </span>
         </td>
 
-        <td>${typeof window.format === "function" ? window.format(r.invoice) : r.invoice}</td>
+        <td>${r.invoiceCount}</td>
+
+        <td>
+          ${typeof window.format === "function"
+            ? window.format(r.invoiceTotal)
+            : r.invoiceTotal}
+        </td>
 
         <td>
           <button onclick="hapusStatus(${JSON.stringify(r.jenis)},${JSON.stringify(r.tahun)})"
@@ -177,7 +191,6 @@ function generateStatus() {
 
   tbody.innerHTML = html;
 }
-
 
 
 // ================= DELETE STATUS =================
@@ -195,7 +208,6 @@ function hapusStatus(jenis, tahun) {
 
   generateStatus();
 }
-
 
 
 // ================= GLOBAL EXPORT =================
