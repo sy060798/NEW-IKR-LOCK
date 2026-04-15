@@ -654,3 +654,49 @@ function syncIMSkeIKR() {
   // 🔥 WAJIB
   renderIKR();
 }
+
+
+// ================= SEARCH + CLEAR IKR =================
+document.addEventListener("DOMContentLoaded", () => {
+
+  const input = document.getElementById("searchIKR");
+  const btnClear = document.getElementById("clearSearchIKR");
+
+  if (!input) return;
+
+  function filterTable() {
+    let keyword = input.value.toLowerCase();
+    let rows = document.querySelectorAll("#tblIKR tbody tr");
+
+    rows.forEach(row => {
+
+      let region = row.children[2]?.innerText.toLowerCase() || "";
+      let wotype = row.children[4]?.innerText.toLowerCase() || "";
+      let bulan  = row.children[5]?.innerText.toLowerCase() || "";
+
+      let match =
+        region.includes(keyword) ||
+        wotype.includes(keyword) ||
+        bulan.includes(keyword);
+
+      row.style.display = match ? "" : "none";
+    });
+  }
+
+  // SEARCH realtime
+  input.addEventListener("input", filterTable);
+
+  // ENTER = langsung filter
+  input.addEventListener("keypress", e => {
+    if (e.key === "Enter") filterTable();
+  });
+
+  // CLEAR tombol
+  if (btnClear) {
+    btnClear.addEventListener("click", () => {
+      input.value = "";
+      filterTable();
+    });
+  }
+
+});
