@@ -656,7 +656,7 @@ function syncIMSkeIKR() {
 }
 
 
-// ================= SEARCH + CLEAR IKR =================
+// ================= SEARCH + CLEAR IKR (IMPROVED) =================
 document.addEventListener("DOMContentLoaded", () => {
 
   const input = document.getElementById("searchIKR");
@@ -665,7 +665,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!input) return;
 
   function filterTable() {
-    let keyword = input.value.toLowerCase();
+    let keyword = input.value.toLowerCase().trim();
     let rows = document.querySelectorAll("#tblIKR tbody tr");
 
     rows.forEach(row => {
@@ -683,19 +683,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // SEARCH realtime
+  // realtime search
   input.addEventListener("input", filterTable);
 
-  // ENTER = langsung filter
+  // ENTER trigger
   input.addEventListener("keypress", e => {
     if (e.key === "Enter") filterTable();
   });
 
-  // CLEAR tombol
+  // CLEAR = reset full (🔥 ini perbaikan utama)
   if (btnClear) {
     btnClear.addEventListener("click", () => {
       input.value = "";
-      filterTable();
+
+      // reset semua row tampil
+      document.querySelectorAll("#tblIKR tbody tr").forEach(row => {
+        row.style.display = "";
+      });
+
+      // optional: re-render biar benar-benar fresh
+      // renderIKR();  <-- kalau mau full reset data
     });
   }
 
