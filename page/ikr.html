@@ -68,7 +68,15 @@ body{flex-direction:column}
 .menu button{width:auto}
 }
 
- .popup-overlay.active{
+ .popup-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:9999;
+}
+
+.popup-overlay.active{
   display:block;
 } 
 </style>
@@ -258,15 +266,19 @@ body{flex-direction:column}
 
 
 <!-- ================= POPUP STATUS ================= -->
+
 <div id="popupWO" class="popup-overlay">
   <div class="popup-box">
 
     <div class="popup-header">
       <h3>DETAIL STATUS</h3>
+
+      <!-- CLOSE POPUP (FIXED: pakai class, bukan style.display) -->
       <button class="close-btn"
-        onclick="document.getElementById('popupWO').style.display='none'">
+        onclick="document.getElementById('popupWO').classList.remove('active')">
         ✕
       </button>
+
     </div>
 
     <div class="popup-body">
@@ -278,7 +290,8 @@ body{flex-direction:column}
 
   </div>
 </div>
-      
+
+ 
 <script src="../js/ikrlock.js"></script>
 <script src="../js/dataims.js"></script>
 <script src="../js/sincron.js"></script> 
