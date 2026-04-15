@@ -101,6 +101,12 @@ button {
 </div>
 
 <script>
+
+// ================= FORMAT ANGKA =================
+function formatNumber(n){
+  return Number(n || 0).toLocaleString("id-ID");
+}
+
 // ================= SAMPLE DATA =================
 let dataIKR = [
   {
@@ -170,20 +176,22 @@ function showStatusWO(jenis, tahun) {
     </tr>
   `;
 
-  let html = "";
-
-  unique.forEach(x => {
-    html += `
-      <tr>
-        <td>${x.pra}</td>
-        <td>${x.invoice}</td>
-        <td>${x.name}</td>
-        <td>${x.total}</td>
-      </tr>
-    `;
-  });
-
-  tb.innerHTML = html || `<tr><td colspan="4">Tidak ada data</td></tr>`;
+  if(unique.length === 0){
+    tb.innerHTML = `<tr><td colspan="4">Tidak ada data</td></tr>`;
+  } else {
+    let html = "";
+    unique.forEach(x => {
+      html += `
+        <tr>
+          <td>${x.pra}</td>
+          <td>${x.invoice}</td>
+          <td>${x.name}</td>
+          <td>${formatNumber(x.total)}</td>
+        </tr>
+      `;
+    });
+    tb.innerHTML = html;
+  }
 
   document.getElementById("popupWO").classList.add("active");
 }
@@ -198,6 +206,11 @@ function generateStatus() {
 
   let tbody = document.querySelector("#tblStatus tbody");
   tbody.innerHTML = "";
+
+  if(!dataIKR.length){
+    tbody.innerHTML = `<tr><td colspan="7">Tidak ada data</td></tr>`;
+    return;
+  }
 
   let map = {};
 
@@ -256,7 +269,7 @@ function generateStatus() {
         </td>
 
         <td>${r.invoiceCount}</td>
-        <td>${r.invoiceTotal}</td>
+        <td>${formatNumber(r.invoiceTotal)}</td>
 
         <td>
           <button onclick="hapusStatus('${r.jenis}','${r.tahun}')">Hapus</button>
@@ -282,8 +295,16 @@ function hapusStatus(jenis, tahun) {
 }
 
 
-// INIT
+// ================= INIT =================
 generateStatus();
+
+
+// ================= GLOBAL EXPORT (WAJIB) =================
+window.generateStatus = generateStatus;
+window.showStatusWO = showStatusWO;
+window.closePopupWO = closePopupWO;
+window.hapusStatus = hapusStatus;
+
 </script>
 
 </body>
