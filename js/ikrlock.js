@@ -317,6 +317,77 @@ function showDetailReal(i) {
 }
 
 
+// ======================================
+// FIX FILTER AGAR REMARK / INVOICE / NOTE
+// TETAP BISA DIISI
+// ======================================
+
+function renderIKRCustom(list) {
+  const tb = document.querySelector("#tblIKR tbody");
+  if (!tb) return;
+
+  tb.innerHTML = "";
+
+  list.forEach((d, i) => {
+
+    const realIndex = dataIKR.findIndex(x =>
+      x.region === d.region &&
+      x.tahun === d.tahun &&
+      x.bulan === d.bulan &&
+      x.wotype === d.wotype
+    );
+
+    tb.innerHTML += `
+      <tr>
+        <td>${i + 1}</td>
+        <td><input type="checkbox" class="chkIKR"></td>
+
+        <td>${d.region}</td>
+        <td>${d.tahun}</td>
+        <td>${d.wotype}</td>
+        <td>${d.bulan}</td>
+
+        <td>
+          <span onclick="showDetailReal(${realIndex})"
+            style="cursor:pointer;font-weight:bold">
+            ${d.jumlah}
+          </span>
+        </td>
+
+        <td>${d.approved || 0}</td>
+        <td>${formatRp(d.amount)}</td>
+        <td>${formatRp(d.fs)}</td>
+
+        <!-- REMARK -->
+        <td contenteditable
+          oninput="updateField(${realIndex}, 'remark', this.innerText)">
+          ${d.remark || ""}
+        </td>
+
+        <!-- INVOICE -->
+        <td contenteditable
+          oninput="updateField(${realIndex}, 'invoice', this.innerText)">
+          ${d.invoice || ""}
+        </td>
+
+        <!-- NOTE -->
+        <td contenteditable
+          oninput="updateField(${realIndex}, 'note', this.innerText)">
+          ${d.note || ""}
+        </td>
+
+        <!-- DONE -->
+        <td>
+          <input type="checkbox"
+            ${d.done === "YES" ? "checked" : ""}
+            onchange="updateField(${realIndex}, 'done', this.checked ? 'YES' : 'NO')">
+        </td>
+      </tr>
+    `;
+  });
+}
+
+
 // ================= EXPORT DETAIL =================
 function exportPopupExcel() {
   const ws = XLSX.utils.json_to_sheet(popupExportData);
