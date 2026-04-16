@@ -299,7 +299,7 @@ function showDetail(i) {
     return (a.wotype || "").localeCompare(b.wotype || "");
   });
 
-  // ================= VALIDASI INDEX =================
+  // ================= VALIDASI =================
   if (i == null || i < 0) {
     alert("Index tidak valid");
     return;
@@ -307,11 +307,10 @@ function showDetail(i) {
 
   const d = sorted[i];
 
-  // 🔥 FIX TAMBAHAN (ANTI FILTER BUG)
+  // ================= FALLBACK AMAN =================
   if (!d) {
-    console.warn("Index tidak cocok dengan sorted, fallback cari data...");
+    console.warn("Index mismatch, fallback ke dataIKR asli");
 
-    // fallback: cari data berdasarkan match longgar
     const fallback = dataIKR[i];
 
     if (!fallback) {
@@ -319,9 +318,11 @@ function showDetail(i) {
       return;
     }
 
-    return showDetailByData(fallback); // pakai system aman
+    return showDetailByData(fallback);
   }
 
+  return showDetailByData(d);
+}
   // ================= AMBIL ELEMENT =================
   const tb = document.getElementById("popupBody");
   const popup = document.getElementById("popup");
