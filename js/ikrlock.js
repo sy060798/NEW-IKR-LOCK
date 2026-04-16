@@ -208,6 +208,7 @@ function importIKR(e) {
     recalcApprovedValues();
     renderIKR();
     syncIMSkeIKR();
+    pushToGlobal();
 
     e.target.value = "";
     alert("UPLOAD OK");
@@ -379,6 +380,7 @@ async function loadIKRFromServer() {
     recalcApprovedValues();
     syncIMSkeIKR();
     renderIKR();
+    pushToGlobal();
   } catch (err) {
     console.log("server error");
   }
@@ -836,38 +838,12 @@ function renderIKR() {
   });
 }
 
-// FIX: supaya data tidak hilang saat refresh browser
-(function restoreLocal(){
-  const saved = localStorage.getItem("dataIKR");
-  if (saved) {
-    try {
-      dataIKR = JSON.parse(saved);
-    } catch(e){}
-  }
-})();
-
-
-function syncGlobalIKR(){
+// ================= GLOBAL BRIDGE FIX =================
+function syncGlobalIKR() {
   window.dataIKR = Array.isArray(dataIKR) ? dataIKR : [];
 }
 
-// auto sync setiap perubahan data
-function pushToGlobal(){
-  syncGlobalIKR();
-
-  // kalau STATUS ada, langsung refresh
-  if (typeof generateStatus === "function") {
-    generateStatus();
-  }
-}
-
-// ================= GLOBAL BRIDGE =================
-function syncGlobalIKR(){
-  window.dataIKR = Array.isArray(dataIKR) ? dataIKR : [];
-}
-
-// kirim update ke STATUS
-function pushToGlobal(){
+function pushToGlobal() {
   syncGlobalIKR();
 
   clearTimeout(window.__statusTimer);
@@ -879,19 +855,13 @@ function pushToGlobal(){
   }, 200);
 }
 
-// ================= AUTO INIT =================
-(function initBridge(){
-
+// jalankan sekali saat load
+window.addEventListener("load", () => {
   syncGlobalIKR();
 
-  window.addEventListener("load", () => {
-    syncGlobalIKR();
-
-    setTimeout(() => {
-      if (typeof generateStatus === "function") {
-        generateStatus();
-      }
-    }, 500);
-  });
-
-})();
+  setTimeout(() => {
+    if (typeof generateStatus === "function") {
+      generateStatus();
+    }
+  }, 500);
+});
