@@ -284,6 +284,8 @@ window.hapusIKR = hapusIKR;
 
 // ================= DETAIL =================
 function showDetail(i) {
+
+  // ================= SORT =================
   const sorted = [...dataIKR].sort((a, b) => {
     const regionA = (a.region || "").localeCompare(b.region || "");
     if (regionA !== 0) return regionA;
@@ -297,38 +299,55 @@ function showDetail(i) {
     return (a.wotype || "").localeCompare(b.wotype || "");
   });
 
+  // ================= VALIDASI DATA =================
   const d = sorted[i];
-  if (!d) return alert("Data tidak ditemukan");
+  if (!d) {
+    alert("Data tidak ditemukan");
+    return;
+  }
 
+  // ================= AMBIL ELEMENT =================
   const tb = document.getElementById("popupBody");
-  tb.innerHTML = "";
+  const popup = document.getElementById("popup");
 
+  if (!tb) {
+    console.error("❌ popupBody tidak ditemukan di HTML");
+    return;
+  }
+
+  if (!popup) {
+    console.error("❌ popup tidak ditemukan di HTML");
+    return;
+  }
+
+  // ================= RESET =================
+  tb.innerHTML = "";
   popupExportData = [];
 
-(d.detail || []).forEach(x => {
-  tb.innerHTML += `
-    <tr>
-      <td>${x.wo}</td>
-      <td>${x.ref || "-"}</td>
-      <td>${x.quo || "-"}</td>
-      <td>${x.status}</td>
-      <td>${formatRp(x.amount)}</td>
-    </tr>
-  `;
+  // ================= ISI DATA =================
+  (d.detail || []).forEach(x => {
+    tb.innerHTML += `
+      <tr>
+        <td>${x.wo}</td>
+        <td>${x.ref || "-"}</td>
+        <td>${x.quo || "-"}</td>
+        <td>${x.status}</td>
+        <td>${formatRp(x.amount)}</td>
+      </tr>
+    `;
 
-  popupExportData.push({
-    WO: x.wo,
-    Reference: x.ref,
-    Quotation: x.quo,
-    Status: x.status,
-    Amount: x.amount
+    popupExportData.push({
+      WO: x.wo,
+      Reference: x.ref,
+      Quotation: x.quo,
+      Status: x.status,
+      Amount: x.amount
+    });
   });
-});
 
-document.getElementById("popup").style.display = "block";
-
-} 
-
+  // ================= TAMPILKAN POPUP =================
+  popup.style.display = "block";
+}
 
 // ================= EXPORT DETAIL =================
 function exportPopupExcel() {
