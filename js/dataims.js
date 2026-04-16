@@ -261,47 +261,4 @@ function renderIMS() {
   renderIMSFooter();
 }
 
-//==============
 
-function showDetailIMS(i) {
-
-  const d = (dataIMS || [])[i];
-
-  if (!d) {
-    alert("Data IMS tidak ditemukan");
-    return;
-  }
-
-  const tb = document.getElementById("popupBodyIMS");
-  const popup = document.getElementById("popupIMS");
-
-  if (!tb || !popup) {
-    console.error("Popup IMS tidak ditemukan di HTML");
-    return;
-  }
-
-  tb.innerHTML = "";
-
-  (d.detail || []).forEach(x => {
-    tb.innerHTML += `
-      <tr>
-        <td>${x.praInvoiceNumber || "-"}</td>
-        <td>${x.invoiceNumber || "-"}</td>
-        <td>${x.vendorInvoice || "-"}</td>
-        <td>${x.wo || "-"}</td>
-      </tr>
-    `;
-  });
-
-  popup.style.display = "block";
-}
-
-
-function escapeHTML(str) {
-  return String(str || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
