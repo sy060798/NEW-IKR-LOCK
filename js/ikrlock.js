@@ -724,3 +724,107 @@ function renderIKRCustom(list) {
     `;
   });
 }
+
+
+// ================= PATCH FIX SAVE FIELD + DONE =================
+
+// FIX: update field lebih aman (tidak rusak sistem lama)
+function updateField(i, field, value){
+  if (!dataIKR[i]) return;
+
+  dataIKR[i][field] = (typeof value === "string")
+    ? value.trim()
+    : value;
+
+  localStorage.setItem("dataIKR", JSON.stringify(dataIKR));
+}
+
+// FIX: checkbox DONE di renderIKR (biar benar-benar update)
+function renderIKR() {
+  const tb = document.querySelector("#tblIKR tbody");
+  if (!tb) return;
+
+  tb.innerHTML = "";
+
+  const sorted = [...dataIKR].sort((a, b) => {
+    const regionA = (a.region || "").localeCompare(b.region || "");
+    if (regionA !== 0) return regionA;
+
+    const tahunA = (a.tahun || 0) - (b.tahun || 0);
+    if (tahunA !== 0) return tahunA;
+
+    const bulanA = (a.bulan || "").localeCompare(b.bulan || "");
+    if (bulanA !== 0) return bulanA;
+
+    return (a.wotype || "").localeCompare(b.wotype || "");
+  });
+
+  sorted.forEach((d, i) => {
+
+    const realIndex = dataIKR.findIndex(x =>
+      x.region === d.region &&
+      x.tahun === d.tahun &&
+      x.bulan === d.bulan &&
+      x.wotype === d.wotype
+    );
+
+    tb.innerHTML += `
+      <tr>
+        <td>${i + 1}</td>
+        <td><input type="checkbox" class="chkIKR"></td>
+
+        <td>${d.region}</td>
+        <td>${d.tahun}</td>
+        <td>${d.wotype}</td>
+        <td>${d.bulan}</td>
+
+        <td>
+          <span onclick="showDetail(${i})"
+            style="cursor:pointer;font-weight:bold">
+            ${d.jumlah}
+          </span>
+        </td>
+
+        <td>${d.approved || 0}</td>
+        <td>${formatRp(d.amount)}</td>
+        <td>${formatRp(d.fs)}</td>
+
+        <!-- REMARK -->
+        <td contenteditable
+          oninput="updateField(${realIndex}, 'remark', this.innerText)">
+          ${d.remark || ""}
+        </td>
+
+        <!-- INVOICE -->
+        <td contenteditable
+          oninput="updateField(${realIndex}, 'invoice', this.innerText)">
+          ${d.invoice || ""}
+        </td>
+
+        <!-- NOTE -->
+        <td contenteditable
+          oninput="updateField(${realIndex}, 'note', this.innerText)">
+          ${d.note || ""}
+        </td>
+
+        <!-- DONE (FIX SAVE REAL TIME) -->
+        <td>
+          <input type="checkbox"
+            ${d.done === "YES" ? "checked" : ""}
+            onchange="updateField(${realIndex}, 'done', this.checked ? 'YES' : 'NO')">
+        </td>
+
+      </tr>
+    `;
+  });
+}
+
+// FIX: supaya data tidak hilang saat refresh browser
+(function restoreLocal(){
+  const saved = localStorage.getItem("dataIKR");
+  if (saved) {
+    try {
+      dataIKR = JSON.parse(saved);
+    } catch(e){}
+  }
+})();
