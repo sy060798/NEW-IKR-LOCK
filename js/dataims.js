@@ -284,6 +284,8 @@ function showPopupIMS(i) {
   tb.innerHTML = "";
   popupExportIMS = [];
 
+  if (!Array.isArray(d.detail)) return;
+
   (d.detail || []).forEach(x => {
 
     const pra = x.pra || d.pra;
@@ -295,7 +297,7 @@ function showPopupIMS(i) {
         <td>${escapeHTML(pra)}</td>
         <td>${escapeHTML(inv)}</td>
         <td>${escapeHTML(wo)}</td>
-        <td>${formatRp(x.total)}</td>
+        <td>${formatRp(x.total || 0)}</td>
       </tr>
     `;
 
@@ -303,7 +305,7 @@ function showPopupIMS(i) {
       Pra_Invoice: pra,
       Invoice: inv,
       WO: wo,
-      Total: x.total
+      Total: x.total || 0
     });
   });
 
