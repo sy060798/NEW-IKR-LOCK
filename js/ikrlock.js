@@ -369,16 +369,32 @@ function exportPopupExcel() {
 }
 
 // ================= DOWNLOAD =================
-function downloadIKR() {
+function downloadExcelIKR() {
   if (!dataIKR.length) return alert("Tidak ada data");
 
-  const ws = XLSX.utils.json_to_sheet(dataIKR);
+  const exportData = dataIKR.map(d => ({
+    Region: d.region,
+    Tahun: d.tahun,
+    Bulan: d.bulan,
+    WOType: d.wotype,
+    Jumlah: d.jumlah,
+    Approved: d.approved,
+    Amount: d.amount,
+    FS: d.fs,
+
+    // 🔥 INI YANG KURANG SEBELUMNYA
+    Remark: d.remark || "",
+    Invoice: d.invoice || "",
+    Note: d.note || "",
+    Done: d.done || "NO"
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(exportData);
   const wb = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(wb, ws, "DATA IKR");
-  XLSX.writeFile(wb, "DATA_IKR_LOCK.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, "IKR");
+  XLSX.writeFile(wb, "DATA_IKR.xlsx");
 }
-window.downloadIKR = downloadIKR;
 
 // ================= SERVER =================
 async function loadIKRFromServer() {
