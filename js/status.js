@@ -4,8 +4,15 @@ function formatNumber(n){
   return Number(n || 0).toLocaleString("id-ID");
 }
 
+// ================= CEK DATA GLOBAL =================
+function getDataIKR(){
+  return window.dataIKR || [];
+}
+
 // ================= POPUP =================
 function showStatusWO(jenis, tahun) {
+
+  let dataIKR = getDataIKR(); // 🔥 ambil dari ikrlock.js
 
   let list = [];
 
@@ -75,10 +82,12 @@ function closePopupWO() {
 // ================= GENERATE =================
 function generateStatus() {
 
+  let dataIKR = getDataIKR(); // 🔥 penting
+
   let tbody = document.querySelector("#tblStatus tbody");
   tbody.innerHTML = "";
 
-  if (!window.dataIKR || !dataIKR.length) {
+  if (!dataIKR.length) {
     tbody.innerHTML = `<tr><td colspan="7">Tidak ada data</td></tr>`;
     return;
   }
@@ -146,9 +155,11 @@ function generateStatus() {
 // ================= DELETE =================
 function hapusStatus(jenis, tahun) {
 
+  let dataIKR = getDataIKR();
+
   if (!confirm(`Hapus ${jenis} - ${tahun}?`)) return;
 
-  dataIKR = dataIKR.filter(d =>
+  window.dataIKR = dataIKR.filter(d =>
     !(d.wotype === jenis && d.tahun === tahun)
   );
 
