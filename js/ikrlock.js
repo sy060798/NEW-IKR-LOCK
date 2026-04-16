@@ -861,11 +861,29 @@ function pushToGlobal(){
   }
 }
 
-// ================= AUTO INIT =================
-(function initGlobalBridge(){
+// ================= GLOBAL BRIDGE =================
+function syncGlobalIKR(){
+  window.dataIKR = Array.isArray(dataIKR) ? dataIKR : [];
+}
+
+// kirim update ke STATUS
+function pushToGlobal(){
   syncGlobalIKR();
 
-  // backup safety (biar tidak hilang saat reload data)
+  clearTimeout(window.__statusTimer);
+
+  window.__statusTimer = setTimeout(() => {
+    if (typeof generateStatus === "function") {
+      generateStatus();
+    }
+  }, 200);
+}
+
+// ================= AUTO INIT =================
+(function initBridge(){
+
+  syncGlobalIKR();
+
   window.addEventListener("load", () => {
     syncGlobalIKR();
 
@@ -875,4 +893,5 @@ function pushToGlobal(){
       }
     }, 500);
   });
+
 })();
