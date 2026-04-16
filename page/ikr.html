@@ -39,44 +39,13 @@ body{font-family:Segoe UI,Arial,sans-serif;background:#f4f7fb;color:#1e2a3a;disp
 /* CARD */
 .wrap{background:#fff;border:1px solid #dce6f2;border-radius:14px;overflow:auto}
 
-
 /* TABLE */
-table{
-  width:100%;
-  border-collapse:collapse;
-  table-layout:auto; /* 🔥 ganti fixed -> auto biar gak silang */
-}
+table{width:100%;min-width:1200px;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #edf2f7;font-size:13px;text-align:center}
+th{background:#eaf3ff;color:#1565c0;font-weight:700;position:sticky;top:0}
+tr:hover{background:#f8fbff}
+input[type="checkbox"]{transform:scale(1.1)}
 
-/* CELL */
-th, td{
-  padding:10px;
-  border-bottom:1px solid #edf2f7;
-  font-size:13px;
-  text-align:center;
-  white-space:nowrap;   
-  overflow:visible;     
-  text-overflow:clip;   
-}
-
-/* HEADER */
-th{
-  background:#eaf3ff;
-  color:#1565c0;
-  font-weight:700;
-  position:sticky;
-  top:0;
-  z-index:2;
-}
-
-/* HOVER */
-tr:hover{
-  background:#f8fbff;
-}
-
-/* CHECKBOX */
-input[type="checkbox"]{
-  transform:scale(1.1);
-}
 /* POPUP */
 .popup-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999}
 .popup-box{width:92%;max-width:900px;margin:4% auto;background:#fff;border-radius:14px;overflow:hidden}
@@ -99,6 +68,7 @@ body{flex-direction:column}
 .menu button{width:auto}
 }
 
+ .popup-overlay.active{
  .popup-overlay{
   display:none;
   position:fixed;
@@ -134,48 +104,12 @@ body{flex-direction:column}
   </div>
 
   <!-- TOOLBAR IKR -->
-<div id="tb-ikr" class="toolbar active">
-
-  <button onclick="downloadIKR()">DOWNLOAD EXCEL</button>
-
-  <input type="file" id="fileIKR" hidden>
-  <button onclick="document.getElementById('fileIKR').click()">UPLOAD DATA</button>
-
-  <button onclick="hapusIKR()">HAPUS</button>
-
-  <!-- SEARCH GROUP -->
-  <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
-
-    <input 
-      type="text" 
-      id="searchIKR"
-      placeholder="🔍 Cari Region / WO / Bulan..."
-      style="
-        padding:8px 10px;
-        border-radius:8px;
-        border:1px solid #d0d7e2;
-        outline:none;
-        min-width:220px;
-      "
-    >
-
-    <button 
-      id="clearSearchIKR"
-      title="Reset Pencarian"
-      style="
-        background:#95a5a6;
-        color:#fff;
-        border:none;
-        padding:8px 12px;
-        border-radius:8px;
-        cursor:pointer;
-      ">
-      ✕
-    </button>
-
+  <div id="tb-ikr" class="toolbar active">
+    <button onclick="downloadIKR()">DOWNLOAD EXCEL</button>
+    <input type="file" id="fileIKR" hidden>
+    <button onclick="document.getElementById('fileIKR').click()">UPLOAD DATA</button>
+    <button onclick="hapusIKR()">HAPUS</button>
   </div>
-
-</div>
 
   <!-- TOOLBAR IMS -->
   <div id="tb-ims" class="toolbar">
@@ -255,16 +189,12 @@ body{flex-direction:column}
     <div class="wrap" style="padding:10px">
       <table id="tblStatus">
         <thead>
-  <tr>
-    <th>No</th>
-    <th>WO Type</th>
-    <th>Tahun</th>
-    <th>Total WO</th>
-    <th>Jumlah Invoice</th>
-    <th>Total Invoice</th>
-    <th>Action</th>
-  </tr>
-</thead>
+          <tr>
+            <th>Region</th>
+            <th>Total WO</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
         <tbody></tbody>
       </table>
     </div>
@@ -273,7 +203,7 @@ body{flex-direction:column}
  <!-- POPUP WO -->
 <div id="popup" class="popup-overlay">
   <div class="popup-box">
-    
+
     <div class="popup-header">
       <h3>DETAIL WO</h3>
       <button class="close-btn" onclick="closePopup()">✕</button>
@@ -293,7 +223,7 @@ body{flex-direction:column}
         <tbody id="popupBody"></tbody>
       </table>
     </div>
-  
+
     <div class="popup-footer">
       <button onclick="exportPopupExcel()" class="btn-green">EXPORT EXCEL</button>
       <button onclick="closePopup()" class="btn-red">TUTUP</button>
@@ -335,12 +265,13 @@ body{flex-direction:column}
   </div>
 </div>
 
- 
+
+
 <script src="../js/ikrlock.js"></script>
 <script src="../js/dataims.js"></script>
 <script src="../js/sincron.js"></script> 
 <script src="../js/status.js"></script>
-<script src="./js/status.js"></script>
+<script src="../js/server.js"></script>
 
 <script>
 function openTab(id, btn){
