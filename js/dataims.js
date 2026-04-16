@@ -263,40 +263,6 @@ function renderIMS() {
 
 //==============
 
-function renderIMSFooter() {
-  const tb = document.querySelector("#tblIMS tbody");
-  if (!tb) return;
-
-  let totalWO = 0;
-  let totalAmount = 0;
-
-  dataIMS.forEach(d => {
-    totalWO += Number(d.jumlah || 0);
-    totalAmount += Number(d.fs || 0);
-  });
-
-  tb.innerHTML += `
-    <tr style="background:#111;color:#fff;font-weight:bold">
-      <td colspan="5">TOTAL</td>
-      <td>${totalWO}</td>
-      <td></td>
-      <td>${formatRp(totalAmount)}</td>
-    </tr>
-  `;
-}
-
-  function escapeHTML(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-
-function showDetail(i) {
-  ...
-}
-
 function showDetailIMS(i) {
 
   const d = (dataIMS || [])[i];
