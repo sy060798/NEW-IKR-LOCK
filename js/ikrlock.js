@@ -299,24 +299,35 @@ function showDetail(i) {
     return (a.wotype || "").localeCompare(b.wotype || "");
   });
 
-  // ================= VALIDASI DATA =================
-  const d = sorted[i];
-  if (!d) {
-    alert("Data tidak ditemukan");
+  // ================= VALIDASI INDEX =================
+  if (i == null || i < 0) {
+    alert("Index tidak valid");
     return;
+  }
+
+  const d = sorted[i];
+
+  // 🔥 FIX TAMBAHAN (ANTI FILTER BUG)
+  if (!d) {
+    console.warn("Index tidak cocok dengan sorted, fallback cari data...");
+
+    // fallback: cari data berdasarkan match longgar
+    const fallback = dataIKR[i];
+
+    if (!fallback) {
+      alert("Data tidak ditemukan");
+      return;
+    }
+
+    return showDetailByData(fallback); // pakai system aman
   }
 
   // ================= AMBIL ELEMENT =================
   const tb = document.getElementById("popupBody");
   const popup = document.getElementById("popup");
 
-  if (!tb) {
-    console.error("❌ popupBody tidak ditemukan di HTML");
-    return;
-  }
-
-  if (!popup) {
-    console.error("❌ popup tidak ditemukan di HTML");
+  if (!tb || !popup) {
+    console.error("Popup belum siap di DOM");
     return;
   }
 
@@ -345,7 +356,6 @@ function showDetail(i) {
     });
   });
 
-  // ================= TAMPILKAN POPUP =================
   popup.style.display = "block";
 }
 
