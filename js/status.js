@@ -1,129 +1,8 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<title>Status WO</title>
+// status.js
 
-<style>
-body {
-  font-family: Arial;
-  padding: 20px;
-}
-
-/* TABLE */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: center;
-}
-
-th {
-  background: #2c3e50;
-  color: #fff;
-}
-
-/* BUTTON */
-button {
-  padding: 5px 10px;
-  border: none;
-  background: #e74c3c;
-  color: #fff;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-/* POPUP */
-.popup {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: none;
-  background: rgba(0,0,0,0.5);
-}
-
-.popup.active {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.popup-content {
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  width: 80%;
-}
-</style>
-</head>
-
-<body>
-
-<h2>Status WO</h2>
-
-<table id="tblStatus">
-  <thead>
-    <tr>
-      <th>No</th>
-      <th>WO Type</th>
-      <th>Tahun</th>
-      <th>Total WO</th>
-      <th>Jumlah Invoice</th>
-      <th>Total Invoice</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td colspan="7">Tidak ada data</td></tr>
-  </tbody>
-</table>
-
-<!-- POPUP -->
-<div id="popupWO" class="popup">
-  <div class="popup-content">
-    <h3>Detail Invoice</h3>
-
-    <table id="tblDetail">
-      <thead></thead>
-      <tbody></tbody>
-    </table>
-
-    <br>
-    <button onclick="closePopupWO()">Tutup</button>
-  </div>
-</div>
-
-<script>
-
-// ================= FORMAT ANGKA =================
 function formatNumber(n){
   return Number(n || 0).toLocaleString("id-ID");
 }
-
-// ================= SAMPLE DATA =================
-let dataIKR = [
-  {
-    wotype: "Activation Broadband",
-    tahun: "2026",
-    approved: 1,
-    approvedList: [
-      {
-        pra: "PRA001",
-        invoice: "INV001",
-        name: "Customer A",
-        total: 280000
-      }
-    ]
-  }
-];
-
 
 // ================= POPUP =================
 function showStatusWO(jenis, tahun) {
@@ -152,7 +31,6 @@ function showStatusWO(jenis, tahun) {
 
   });
 
-  // UNIQUE
   let seen = new Set();
   let unique = [];
 
@@ -176,22 +54,16 @@ function showStatusWO(jenis, tahun) {
     </tr>
   `;
 
-  if(unique.length === 0){
-    tb.innerHTML = `<tr><td colspan="4">Tidak ada data</td></tr>`;
-  } else {
-    let html = "";
-    unique.forEach(x => {
-      html += `
+  tb.innerHTML = unique.length === 0
+    ? `<tr><td colspan="4">Tidak ada data</td></tr>`
+    : unique.map(x => `
         <tr>
           <td>${x.pra}</td>
           <td>${x.invoice}</td>
           <td>${x.name}</td>
           <td>${formatNumber(x.total)}</td>
         </tr>
-      `;
-    });
-    tb.innerHTML = html;
-  }
+      `).join("");
 
   document.getElementById("popupWO").classList.add("active");
 }
@@ -200,14 +72,13 @@ function closePopupWO() {
   document.getElementById("popupWO").classList.remove("active");
 }
 
-
-// ================= GENERATE STATUS =================
+// ================= GENERATE =================
 function generateStatus() {
 
   let tbody = document.querySelector("#tblStatus tbody");
   tbody.innerHTML = "";
 
-  if(!dataIKR.length){
+  if (!window.dataIKR || !dataIKR.length) {
     tbody.innerHTML = `<tr><td colspan="7">Tidak ada data</td></tr>`;
     return;
   }
@@ -232,55 +103,45 @@ function generateStatus() {
     map[key].approved += Number(d.approved) || 0;
 
     if (Array.isArray(d.approvedList)) {
-
       d.approvedList.forEach(x => {
 
         let invKey = (x.invoice || "") + "|" + (x.pra || "");
 
         if (!map[key].invSet.has(invKey)) {
           map[key].invSet.add(invKey);
-
-          map[key].invoiceCount += 1;
+          map[key].invoiceCount++;
           map[key].invoiceTotal += Number(x.total || 0);
         }
 
       });
-
     }
 
   });
 
-  let html = "";
   let no = 1;
 
-  Object.values(map).forEach(r => {
+  tbody.innerHTML = Object.values(map).map(r => `
+    <tr>
+      <td>${no++}</td>
+      <td>${r.jenis}</td>
+      <td>${r.tahun}</td>
 
-    html += `
-      <tr>
-        <td>${no++}</td>
-        <td>${r.jenis}</td>
-        <td>${r.tahun}</td>
+      <td>
+        <span onclick="showStatusWO('${r.jenis}','${r.tahun}')"
+              style="color:green;cursor:pointer;font-weight:bold">
+          ${r.approved}
+        </span>
+      </td>
 
-        <td>
-          <span onclick="showStatusWO('${r.jenis}','${r.tahun}')"
-                style="color:green;cursor:pointer;font-weight:bold">
-            ${r.approved}
-          </span>
-        </td>
+      <td>${r.invoiceCount}</td>
+      <td>${formatNumber(r.invoiceTotal)}</td>
 
-        <td>${r.invoiceCount}</td>
-        <td>${formatNumber(r.invoiceTotal)}</td>
-
-        <td>
-          <button onclick="hapusStatus('${r.jenis}','${r.tahun}')">Hapus</button>
-        </td>
-      </tr>
-    `;
-  });
-
-  tbody.innerHTML = html;
+      <td>
+        <button onclick="hapusStatus('${r.jenis}','${r.tahun}')">Hapus</button>
+      </td>
+    </tr>
+  `).join("");
 }
-
 
 // ================= DELETE =================
 function hapusStatus(jenis, tahun) {
@@ -294,18 +155,13 @@ function hapusStatus(jenis, tahun) {
   generateStatus();
 }
 
-
 // ================= INIT =================
-generateStatus();
+window.addEventListener("load", () => {
+  generateStatus();
+});
 
-
-// ================= GLOBAL EXPORT (WAJIB) =================
+// ================= EXPORT =================
 window.generateStatus = generateStatus;
 window.showStatusWO = showStatusWO;
 window.closePopupWO = closePopupWO;
 window.hapusStatus = hapusStatus;
-
-</script>
-
-</body>
-</html>
