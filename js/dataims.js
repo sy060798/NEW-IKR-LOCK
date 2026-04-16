@@ -1,3 +1,10 @@
+window.escapeHTML = function(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 // ================= GLOBAL =================
 let dataIMS = [];
 let popupExportIMS = [];
@@ -261,4 +268,44 @@ function renderIMS() {
   renderIMSFooter();
 }
 
+//============================
 
+function showPopupIMS(i) {
+
+  const d = dataIMS[i];
+  if (!d) {
+    alert("Data IMS tidak ditemukan");
+    return;
+  }
+
+  const tb = document.getElementById("popupBodyIMS");
+  const popup = document.getElementById("popupIMS");
+
+  if (!tb || !popup) {
+    console.error("Popup IMS tidak ditemukan di HTML");
+    return;
+  }
+
+  tb.innerHTML = "";
+  popupExportIMS = [];
+
+  (d.detail || []).forEach(x => {
+    tb.innerHTML += `
+      <tr>
+        <td>${x.praInvoiceNumber || "-"}</td>
+        <td>${x.invoiceNumber || "-"}</td>
+        <td>${x.vendorInvoice || "-"}</td>
+        <td>${x.wo || "-"}</td>
+      </tr>
+    `;
+
+    popupExportIMS.push({
+      Pra_Invoice: x.praInvoiceNumber,
+      Invoice: x.invoiceNumber,
+      Vendor: x.vendorInvoice,
+      WO: x.wo
+    });
+  });
+
+  popup.style.display = "block";
+}
