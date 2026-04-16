@@ -72,7 +72,7 @@ function importIKR(e) {
     r["Quotation Id"] ||
     r["QUOTATION ID"] ||
     "-";
-      
+
       let region = normalRegion(
         r.City || r.city || r.Region || r.region || ""
       );
@@ -284,8 +284,6 @@ window.hapusIKR = hapusIKR;
 
 // ================= DETAIL =================
 function showDetail(i) {
-
-  // ================= SORT =================
   const sorted = [...dataIKR].sort((a, b) => {
     const regionA = (a.region || "").localeCompare(b.region || "");
     if (regionA !== 0) return regionA;
@@ -299,66 +297,38 @@ function showDetail(i) {
     return (a.wotype || "").localeCompare(b.wotype || "");
   });
 
-  // ================= VALIDASI =================
-  if (i == null || i < 0) {
-    alert("Index tidak valid");
-    return;
-  }
-
   const d = sorted[i];
+  if (!d) return alert("Data tidak ditemukan");
 
-  // ================= FALLBACK AMAN =================
-  if (!d) {
-    console.warn("Index mismatch, fallback ke dataIKR asli");
-
-    const fallback = dataIKR[i];
-
-    if (!fallback) {
-      alert("Data tidak ditemukan");
-      return;
-    }
-
-    return showDetailByData(fallback);
-  }
-
-  return showDetailByData(d);
-}
-  // ================= AMBIL ELEMENT =================
   const tb = document.getElementById("popupBody");
-  const popup = document.getElementById("popup");
-
-  if (!tb || !popup) {
-    console.error("Popup belum siap di DOM");
-    return;
-  }
-
-  // ================= RESET =================
   tb.innerHTML = "";
+
   popupExportData = [];
 
-  // ================= ISI DATA =================
-  (d.detail || []).forEach(x => {
-    tb.innerHTML += `
-      <tr>
-        <td>${x.wo}</td>
-        <td>${x.ref || "-"}</td>
-        <td>${x.quo || "-"}</td>
-        <td>${x.status}</td>
-        <td>${formatRp(x.amount)}</td>
-      </tr>
-    `;
+(d.detail || []).forEach(x => {
+  tb.innerHTML += `
+    <tr>
+      <td>${x.wo}</td>
+      <td>${x.ref || "-"}</td>
+      <td>${x.quo || "-"}</td>
+      <td>${x.status}</td>
+      <td>${formatRp(x.amount)}</td>
+    </tr>
+  `;
 
-    popupExportData.push({
-      WO: x.wo,
-      Reference: x.ref,
-      Quotation: x.quo,
-      Status: x.status,
-      Amount: x.amount
-    });
+  popupExportData.push({
+    WO: x.wo,
+    Reference: x.ref,
+    Quotation: x.quo,
+    Status: x.status,
+    Amount: x.amount
   });
+});
 
-  popup.style.display = "block";
-}
+document.getElementById("popup").style.display = "block";
+
+} 
+
 
 // ================= EXPORT DETAIL =================
 function exportPopupExcel() {
@@ -370,32 +340,16 @@ function exportPopupExcel() {
 }
 
 // ================= DOWNLOAD =================
-function downloadExcelIKR() {
+function downloadIKR() {
   if (!dataIKR.length) return alert("Tidak ada data");
 
-  const exportData = dataIKR.map(d => ({
-    Region: d.region,
-    Tahun: d.tahun,
-    Bulan: d.bulan,
-    WOType: d.wotype,
-    Jumlah: d.jumlah,
-    Approved: d.approved,
-    Amount: d.amount,
-    FS: d.fs,
-
-    // 🔥 INI YANG KURANG SEBELUMNYA
-    Remark: d.remark || "",
-    Invoice: d.invoice || "",
-    Note: d.note || "",
-    Done: d.done || "NO"
-  }));
-
-  const ws = XLSX.utils.json_to_sheet(exportData);
+  const ws = XLSX.utils.json_to_sheet(dataIKR);
   const wb = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(wb, ws, "IKR");
-  XLSX.writeFile(wb, "DATA_IKR.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, "DATA IKR");
+  XLSX.writeFile(wb, "DATA_IKR_LOCK.xlsx");
 }
+window.downloadIKR = downloadIKR;
 
 // ================= SERVER =================
 async function loadIKRFromServer() {
