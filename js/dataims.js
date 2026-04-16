@@ -1,4 +1,4 @@
-window.escapeHTML = function(str) {
+function escapeHTML(str) {
   return String(str || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -269,7 +269,6 @@ function renderIMS() {
 }
 
 //============================
-
 function showPopupIMS(i) {
 
   const d = dataIMS[i];
@@ -281,10 +280,7 @@ function showPopupIMS(i) {
   const tb = document.getElementById("popupBodyIMS");
   const popup = document.getElementById("popupIMS");
 
-  if (!tb || !popup) {
-    console.error("Popup IMS tidak ditemukan di HTML");
-    return;
-  }
+  if (!tb || !popup) return;
 
   tb.innerHTML = "";
   popupExportIMS = [];
