@@ -845,3 +845,34 @@ function renderIKR() {
     } catch(e){}
   }
 })();
+
+
+function syncGlobalIKR(){
+  window.dataIKR = Array.isArray(dataIKR) ? dataIKR : [];
+}
+
+// auto sync setiap perubahan data
+function pushToGlobal(){
+  syncGlobalIKR();
+
+  // kalau STATUS ada, langsung refresh
+  if (typeof generateStatus === "function") {
+    generateStatus();
+  }
+}
+
+// ================= AUTO INIT =================
+(function initGlobalBridge(){
+  syncGlobalIKR();
+
+  // backup safety (biar tidak hilang saat reload data)
+  window.addEventListener("load", () => {
+    syncGlobalIKR();
+
+    setTimeout(() => {
+      if (typeof generateStatus === "function") {
+        generateStatus();
+      }
+    }, 500);
+  });
+})();
