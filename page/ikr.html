@@ -225,6 +225,37 @@ tr:hover{background:#f8fbff}
 
   </div>
 </div>
+  
+<!-- ims -->
+  <div id="popupIMS" class="popup-overlay">
+  <div class="popup-box">
+
+    <div class="popup-header">
+      <h3>DETAIL IMS</h3>
+      <button onclick="closePopupIMS()">✕</button>
+    </div>
+
+    <div class="popup-body">
+      <table class="popup-table">
+        <thead>
+          <tr>
+            <th>Pra Invoice Number</th>
+            <th>Invoice Number</th>
+            <th>Vendor Invoice</th>
+            <th>WO Number</th>
+          </tr>
+        </thead>
+
+        <tbody id="popupBodyIMS"></tbody>
+      </table>
+    </div>
+
+    <div class="popup-footer">
+      <button onclick="closePopupIMS()" class="btn-red">TUTUP</button>
+    </div>
+
+  </div>
+</div>
 <script>
 function openTab(id, btn){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
