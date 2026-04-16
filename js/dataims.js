@@ -297,9 +297,10 @@ function showDetail(i) {
   ...
 }
 
-// ================= TARUH DI BAWAH INI =================
 function showDetailIMS(i) {
+
   const d = (dataIMS || [])[i];
+
   if (!d) {
     alert("Data IMS tidak ditemukan");
     return;
@@ -318,10 +319,10 @@ function showDetailIMS(i) {
   (d.detail || []).forEach(x => {
     tb.innerHTML += `
       <tr>
-        <td>${x.praInvoice || "-"}</td>
-        <td>${x.invoice || "-"}</td>
+        <td>${x.praInvoiceNumber || "-"}</td>
+        <td>${x.invoiceNumber || "-"}</td>
+        <td>${x.vendorInvoice || "-"}</td>
         <td>${x.wo || "-"}</td>
-        <td>${formatRp(x.total)}</td>
       </tr>
     `;
   });
