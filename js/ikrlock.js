@@ -838,6 +838,7 @@ function renderIKR() {
   });
 }
 
+
 // ================= GLOBAL BRIDGE FIX =================
 function syncGlobalIKR() {
   window.dataIKR = Array.isArray(dataIKR) ? dataIKR : [];
@@ -865,3 +866,41 @@ window.addEventListener("load", () => {
     }
   }, 500);
 });
+
+// ================= PATCH TAMBAHAN WAJIB (BIAR DATA MUNCUL DI STATUS) =================
+
+// 1. AUTO SYNC setelah load server
+async function loadIKRFromServer() {
+  try {
+    const res = await fetch(SERVER_URL + "/api/get?type=IKR");
+    const data = await res.json();
+
+    dataIKR = Array.isArray(data) ? data : [];
+
+    recalcApprovedValues();
+    syncIMSkeIKR();
+    renderIKR();
+
+    pushToGlobal(); // 🔥 WAJIB BIAR STATUS KE-UPDATE
+
+  } catch (err) {
+    console.log("server error");
+  }
+}
+
+// 2. AUTO SYNC setelah import Excel (tambahkan ini di akhir importIKR)
+function afterImportSync() {
+  syncIMSkeIKR();
+  renderIKR();
+  pushToGlobal(); // 🔥 penting
+}
+
+// 3. AUTO SYNC setelah delete
+function hapusIKR() {
+  const chk = document.querySelectorAll(".chkIKR");
+  dataIKR = dataIKR.filter((_, i) => !chk[i]?.checked);
+
+  syncIMSkeIKR();
+  renderIKR();
+  pushToGlobal(); // 🔥 penting
+}
