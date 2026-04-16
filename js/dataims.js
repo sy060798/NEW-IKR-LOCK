@@ -291,3 +291,40 @@ function renderIMSFooter() {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
+
+
+function showDetail(i) {
+  ...
+}
+
+// ================= TARUH DI BAWAH INI =================
+function showDetailIMS(i) {
+  const d = (dataIMS || [])[i];
+  if (!d) {
+    alert("Data IMS tidak ditemukan");
+    return;
+  }
+
+  const tb = document.getElementById("popupBodyIMS");
+  const popup = document.getElementById("popupIMS");
+
+  if (!tb || !popup) {
+    console.error("Popup IMS tidak ditemukan di HTML");
+    return;
+  }
+
+  tb.innerHTML = "";
+
+  (d.detail || []).forEach(x => {
+    tb.innerHTML += `
+      <tr>
+        <td>${x.praInvoice || "-"}</td>
+        <td>${x.invoice || "-"}</td>
+        <td>${x.wo || "-"}</td>
+        <td>${formatRp(x.total)}</td>
+      </tr>
+    `;
+  });
+
+  popup.style.display = "block";
+}
