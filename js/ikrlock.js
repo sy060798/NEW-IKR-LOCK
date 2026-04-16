@@ -284,21 +284,8 @@ function hapusIKR() {
 window.hapusIKR = hapusIKR;
 
 // ================= DETAIL =================
-function showDetail(i) {
-  const sorted = [...dataIKR].sort((a, b) => {
-    const regionA = (a.region || "").localeCompare(b.region || "");
-    if (regionA !== 0) return regionA;
-
-    const tahunA = (a.tahun || 0) - (b.tahun || 0);
-    if (tahunA !== 0) return tahunA;
-
-    const bulanA = (a.bulan || "").localeCompare(b.bulan || "");
-    if (bulanA !== 0) return bulanA;
-
-    return (a.wotype || "").localeCompare(b.wotype || "");
-  });
-
-  const d = sorted[i];
+function showDetailReal(i) {
+  const d = dataIKR[i];
   if (!d) return alert("Data tidak ditemukan");
 
   const tb = document.getElementById("popupBody");
@@ -306,29 +293,28 @@ function showDetail(i) {
 
   popupExportData = [];
 
-(d.detail || []).forEach(x => {
-  tb.innerHTML += `
-    <tr>
-      <td>${x.wo}</td>
-      <td>${x.ref || "-"}</td>
-      <td>${x.quo || "-"}</td>
-      <td>${x.status}</td>
-      <td>${formatRp(x.amount)}</td>
-    </tr>
-  `;
+  (d.detail || []).forEach(x => {
+    tb.innerHTML += `
+      <tr>
+        <td>${x.wo}</td>
+        <td>${x.ref || "-"}</td>
+        <td>${x.quo || "-"}</td>
+        <td>${x.status}</td>
+        <td>${formatRp(x.amount)}</td>
+      </tr>
+    `;
 
-  popupExportData.push({
-    WO: x.wo,
-    Reference: x.ref,
-    Quotation: x.quo,
-    Status: x.status,
-    Amount: x.amount
+    popupExportData.push({
+      WO: x.wo,
+      Reference: x.ref,
+      Quotation: x.quo,
+      Status: x.status,
+      Amount: x.amount
+    });
   });
-});
 
-document.getElementById("popup").style.display = "block";
-
-} 
+  document.getElementById("popup").style.display = "block";
+}
 
 
 // ================= EXPORT DETAIL =================
@@ -723,6 +709,14 @@ function renderIKRCustom(list) {
   tb.innerHTML = "";
 
   list.forEach((d, i) => {
+
+    const realIndex = dataIKR.findIndex(x =>
+      x.region === d.region &&
+      x.tahun === d.tahun &&
+      x.bulan === d.bulan &&
+      x.wotype === d.wotype
+    );
+
     tb.innerHTML += `
       <tr>
         <td>${i + 1}</td>
@@ -731,7 +725,14 @@ function renderIKRCustom(list) {
         <td>${d.tahun}</td>
         <td>${d.wotype}</td>
         <td>${d.bulan}</td>
-        <td>${d.jumlah}</td>
+
+        <td>
+          <span onclick="showDetailReal(${realIndex})"
+            style="cursor:pointer;font-weight:bold">
+            ${d.jumlah}
+          </span>
+        </td>
+
         <td>${d.approved || 0}</td>
         <td>${formatRp(d.amount)}</td>
         <td>${formatRp(d.fs)}</td>
@@ -743,7 +744,6 @@ function renderIKRCustom(list) {
     `;
   });
 }
-
 
 // ================= PATCH FIX SAVE FIELD + DONE =================
 
