@@ -106,14 +106,14 @@ raw.forEach(r => {
 
   if (!map[key]) {
     map[key] = {
-      city,
-      pra,
-      invoice,
-      jumlah: 0,
-      job,
-      total: 0,
-      detail: [],
-    };
+  city,
+  pra,
+  invoice,
+  jumlah: 0,
+  job,
+  total: 0,
+  detail: []
+};
   }
 
   let existing = map[key].detail.find(d => d.wo === wo);
@@ -122,9 +122,11 @@ raw.forEach(r => {
     map[key].jumlah++;
 
     map[key].detail.push({
-      wo,
-      total: woTotal
-    });
+  wo,
+  total: woTotal,
+  pra,
+  invoice
+});
 
     map[key].total += woTotal;
   } else {
@@ -272,10 +274,7 @@ function renderIMS() {
 function showPopupIMS(i) {
 
   const d = dataIMS[i];
-  if (!d) {
-    alert("Data IMS tidak ditemukan");
-    return;
-  }
+  if (!d) return;
 
   const tb = document.getElementById("popupBodyIMS");
   const popup = document.getElementById("popupIMS");
@@ -286,20 +285,25 @@ function showPopupIMS(i) {
   popupExportIMS = [];
 
   (d.detail || []).forEach(x => {
+
+    const pra = x.pra || d.pra;
+    const inv = x.invoice || d.invoice;
+    const wo = x.wo;
+
     tb.innerHTML += `
       <tr>
-        <td>${x.praInvoiceNumber || "-"}</td>
-        <td>${x.invoiceNumber || "-"}</td>
-        <td>${x.vendorInvoice || "-"}</td>
-        <td>${x.wo || "-"}</td>
+        <td>${escapeHTML(pra)}</td>
+        <td>${escapeHTML(inv)}</td>
+        <td>${escapeHTML(wo)}</td>
+        <td>${formatRp(x.total)}</td>
       </tr>
     `;
 
     popupExportIMS.push({
-      Pra_Invoice: x.praInvoiceNumber,
-      Invoice: x.invoiceNumber,
-      Vendor: x.vendorInvoice,
-      WO: x.wo
+      Pra_Invoice: pra,
+      Invoice: inv,
+      WO: wo,
+      Total: x.total
     });
   });
 
