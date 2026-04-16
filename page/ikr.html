@@ -39,77 +39,22 @@ body{font-family:Segoe UI,Arial,sans-serif;background:#f4f7fb;color:#1e2a3a;disp
 /* CARD */
 .wrap{background:#fff;border:1px solid #dce6f2;border-radius:14px;overflow:auto}
 
-
 /* TABLE */
-table{
-  width:100%;
-  border-collapse:collapse;
-  table-layout:auto; /* 🔥 ganti fixed -> auto biar gak silang */
-}
+table{width:100%;border-collapse:collapse}
+th, td{padding:10px;border-bottom:1px solid #edf2f7;font-size:13px;text-align:center;white-space:nowrap}
+th{background:#eaf3ff;color:#1565c0;font-weight:700;position:sticky;top:0}
+tr:hover{background:#f8fbff}
 
-/* CELL */
-th, td{
-  padding:10px;
-  border-bottom:1px solid #edf2f7;
-  font-size:13px;
-  text-align:center;
-  white-space:nowrap;   
-  overflow:visible;     
-  text-overflow:clip;   
-}
-
-/* HEADER */
-th{
-  background:#eaf3ff;
-  color:#1565c0;
-  font-weight:700;
-  position:sticky;
-  top:0;
-  z-index:2;
-}
-
-/* HOVER */
-tr:hover{
-  background:#f8fbff;
-}
-
-/* CHECKBOX */
-input[type="checkbox"]{
-  transform:scale(1.1);
-}
-/* POPUP */
 .popup-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999}
+.popup-overlay.active{display:block}
+
 .popup-box{width:92%;max-width:900px;margin:4% auto;background:#fff;border-radius:14px;overflow:hidden}
-.popup-header{background:#1565c0;color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
-.popup-header h3{font-size:18px}
-.close-btn{border:none;background:transparent;color:#fff;font-size:22px;cursor:pointer}
+.popup-header{background:#1565c0;color:#fff;padding:14px 18px;display:flex;justify-content:space-between}
 .popup-body{padding:15px;max-height:60vh;overflow:auto}
-.popup-table{width:100%;border-collapse:collapse}
-.popup-table th{background:#eaf3ff;color:#1565c0}
-.popup-table td,.popup-table th{border:1px solid #edf2f7;padding:8px}
 .popup-footer{padding:14px;text-align:right;background:#f8fbff}
-.btn-green{background:#1e88e5;color:#fff;border:none;padding:9px 15px;border-radius:8px;margin-right:8px;cursor:pointer}
-.btn-red{background:#e53935;color:#fff;border:none;padding:9px 15px;border-radius:8px;cursor:pointer}
 
-/* RESPONSIVE */
-@media(max-width:900px){
-body{flex-direction:column}
-.sidebar{width:100%;border-right:none;border-bottom:1px solid #dce6f2}
-.menu{flex-direction:row;flex-wrap:wrap}
-.menu button{width:auto}
-}
-
- .popup-overlay{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.55);
-  z-index:9999;
-}
-
-.popup-overlay.active{
-  display:block;
-} 
+.btn-green{background:#1e88e5;color:#fff;border:none;padding:9px 15px;border-radius:8px}
+.btn-red{background:#e53935;color:#fff;border:none;padding:9px 15px;border-radius:8px}
 </style>
 </head>
 
@@ -133,62 +78,31 @@ body{flex-direction:column}
     <h1>NEW IKR LOCK SYSTEM</h1>
   </div>
 
-  <!-- TOOLBAR IKR -->
+  <!-- TOOLBAR IKR (FIXED) -->
   <div id="tb-ikr" class="toolbar active">
+
     <button onclick="downloadIKR()">DOWNLOAD EXCEL</button>
+
     <input type="file" id="fileIKR" hidden>
     <button onclick="document.getElementById('fileIKR').click()">UPLOAD DATA</button>
+
     <button onclick="hapusIKR()">HAPUS</button>
-    <input type="text" id="searchIKR"
-       placeholder="Cari Region / WO / Bulan..."
-       style="padding:8px;border-radius:6px;border:1px solid #ccc;">
 
-<button id="clearSearchIKR"
-        style="background:#95a5a6;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer">
-  CLEAR
-</button>
-<div id="tb-ikr" class="toolbar active">
+    <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+      <input 
+        type="text" 
+        id="searchIKR"
+        placeholder="🔍 Cari Region / WO / Bulan..."
+        style="padding:8px 10px;border-radius:8px;border:1px solid #d0d7e2;outline:none;min-width:220px;"
+      >
 
-  <button onclick="downloadIKR()">DOWNLOAD EXCEL</button>
-
-  <input type="file" id="fileIKR" hidden>
-  <button onclick="document.getElementById('fileIKR').click()">UPLOAD DATA</button>
-
-  <button onclick="hapusIKR()">HAPUS</button>
-
-  <!-- SEARCH GROUP -->
-  <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
-
-    <input 
-      type="text" 
-      id="searchIKR"
-      placeholder="🔍 Cari Region / WO / Bulan..."
-      style="
-        padding:8px 10px;
-        border-radius:8px;
-        border:1px solid #d0d7e2;
-        outline:none;
-        min-width:220px;
-      "
-    >
-
-    <button 
-      id="clearSearchIKR"
-      title="Reset Pencarian"
-      style="
-        background:#95a5a6;
-        color:#fff;
-        border:none;
-        padding:8px 12px;
-        border-radius:8px;
-        cursor:pointer;
-      ">
-      ✕
-    </button>
+      <button id="clearSearchIKR"
+        style="background:#95a5a6;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;">
+        ✕
+      </button>
+    </div>
 
   </div>
-
-</div>
 
   <!-- TOOLBAR IMS -->
   <div id="tb-ims" class="toolbar">
@@ -258,33 +172,42 @@ body{flex-direction:column}
 
   <!-- TAB PIVOT -->
   <div id="tab-pivot" class="tab">
-    <div class="wrap" style="padding:10px">
-      <canvas id="chartPivot"></canvas>
-    </div>
+    <canvas id="chartPivot"></canvas>
   </div>
 
   <!-- TAB STATUS -->
   <div id="tab-status" class="tab">
-    <div class="wrap" style="padding:10px">
-      <table id="tblStatus">
-        <thead>
-  <tr>
-    <th>No</th>
-    <th>WO Type</th>
-    <th>Tahun</th>
-    <th>Total WO</th>
-    <th>Jumlah Invoice</th>
-    <th>Total Invoice</th>
-    <th>Action</th>
-  </tr>
-</thead>
-        <tbody></tbody>
-      </table>
-    </div>
+    <table id="tblStatus">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>WO Type</th>
+          <th>Tahun</th>
+          <th>Total WO</th>
+          <th>Jumlah Invoice</th>
+          <th>Total Invoice</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 
- <!-- POPUP WO -->
-<div id="popup" class="popup-overlay">
+</div>
+
+<script>
+function openTab(id, btn){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("tab-"+id)?.classList.add("active");
+
+  document.querySelectorAll(".toolbar").forEach(t=>t.classList.remove("active"));
+  document.getElementById("tb-"+id)?.classList.add("active");
+
+  document.querySelectorAll(".menu button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+  <div id="popup" class="popup-overlay">
   <div class="popup-box">
 
     <div class="popup-header">
@@ -313,12 +236,9 @@ body{flex-direction:column}
     </div>
 
   </div>
-</div> 
+</div>
 
-
-
-<!-- ================= POPUP IMS ================= -->
-<div id="popupIMS" class="popup-overlay">
+  <div id="popupIMS" class="popup-overlay">
   <div class="popup-box">
 
     <div class="popup-header">
@@ -347,27 +267,12 @@ body{flex-direction:column}
 
   </div>
 </div>
-
+</script>
 
 <script src="../js/ikrlock.js"></script>
 <script src="../js/dataims.js"></script>
-<script src="../js/sincron.js"></script> 
+<script src="../js/sincron.js"></script>
 <script src="../js/status.js"></script>
-<script src="./js/status.js"></script>
-
-<script>
-function openTab(id, btn){
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  document.getElementById("tab-"+id)?.classList.add("active");
-
-  document.querySelectorAll(".toolbar").forEach(t=>t.classList.remove("active"));
-  document.getElementById("tb-"+id)?.classList.add("active");
-
-  document.querySelectorAll(".menu button").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-}
-window.openTab = openTab;
-</script>
 
 </body>
 </html>
